@@ -1,0 +1,16 @@
+{
+    "name": "navid/7todo",
+    "description": "A simple Todo List Project (With Ajax,PHP & mysql)",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Navid",
+            "email": "navid.syndicate@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "hekmatinasser/verta": "^8.1"
+    }
+}
