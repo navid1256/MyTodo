@@ -77,7 +77,7 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
 
 ## 👤 Author
 
-**Navid**
+Navid Ahmadzadeh
 
 - Email: <navid.syndicate@gmail.com>
 
