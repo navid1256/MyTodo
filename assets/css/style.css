@@ -24,14 +24,14 @@ input {
     border: 1px solid #ccc;
 }
 
-a.remove {
+.fa-trash-o {
     color: #bd1f1f !important;
     float: right;
     font-weight: 200;
     padding-right: 5px;
 }
 
-a.remove:hover {
+.fa-trash-o:hover {
     font-weight: 700;
 }
 
@@ -41,7 +41,7 @@ a.remove:hover {
 }
 
 span.created-at {
-    font-size: 11px;
+    font-size: 14px;
     margin-right: 12px;
 }
 

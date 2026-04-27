@@ -21,18 +21,31 @@
               </div>
             </div>
             <div class="menu">
-              <div class="title">Navigation</div>
-              <ul>
-                <li> <i class="fa fa-home"></i>Home</li>
-                <li><i class="fa fa-signal"></i>Activity</li>
-                <li class="active"> <i class="fa fa-tasks"></i>Manage Tasks</li>
-                <li> <i class="fa fa-envelope"></i>Messages</li>
+              <div class="title">Folders</div>
+              <ul class="folder-list">
+               <li class="<?=isset($_GET['folder_id']) ? '' : 'active'?>">
+                <i class="fa fa-folder"></i>All</li>
+                <?php foreach ($folders as $folder): ?> 
+                <li class="<?=($_GET['folder_id'] == $folder->id) ? 'active':'' ?>">  
+                <a href="?folder_id=<?=$folder->id ?>"><i class="fa fa-folder"></i><?=$folder->name ?></a>
+                <a href="?delete_folder=<?=$folder->id ?>"><i class="fa fa-trash-o" onclick="return confirm('Are You Sure To Delete This Folder ?\n<?=$folder->name ?>')"></i></a> 
+                </li>
+                <?php endforeach; ?>
+                
+                
               </ul>
             </div>
+              <div>
+                <input type="text" id="newFolderInput" style="width: 60%;margin-left: 5%;" placeholder="Add New Folder"/>
+                <button id="newFolderBtn" class="Btn clickable" >+</button>
+              </div>
           </div>
           <div class="view">
             <div class="viewHeader">
-              <div class="title">Manage Tasks</div>
+              <div class="title" style="width:50% ;">
+                <input type="text" id="taskNameInput" style="width: 76%;margin-left: 5%;line-height: 17px;" placeholder="Add New Task">
+                <button id="newTaskBtn" class="Btn clickable">+</button>
+              </div>
               <div class="functions">
                 <div class="button active">Add New Task</div>
                 <div class="button">Completed</div>
@@ -43,34 +56,55 @@
               <div class="list">
                 <div class="title">Today</div>
                 <ul>
-                  <li class="checked"><i class="fa fa-check-square-o"></i><span>Update team page</span>
-                    <div class="info">
-                      <div class="button green">In progress</div><span>Complete by 25/04/2014</span>
-                    </div>
-                  </li>
-                  <li><i class="fa fa-square-o"></i><span>Design a new logo</span>
-                    <div class="info">
-                      <div class="button">Pending</div><span>Complete by 10/04/2014</span>
-                    </div>
-                  </li>
-                  <li><i class="fa fa-square-o"></i><span>Find a front end developer</span>
-                    <div class="info"></div>
-                  </li>
+                  <?php if (sizeof($tasks)): ?>
+                      <?php foreach ($tasks as $task): ?>
+                          <li class="<?= $task->is_done ? 'checked' : '' ; ?>">
+                              <i class="fa <?= $task->is_done ? 'fa-check-square-o' : 'fa-square-o'; ?>"></i>
+                              <span><?= $task->title ?></span>
+                              <div class="info">
+                                  <span class="created-at">Created At <?= $task->created_at ?></span>
+                                  <a href="?delete_task=<?= $task->id ?>">
+                                      <i class="fa fa-trash-o" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= $task->title ?>')"></i>
+                                  </a>
+                              </div>
+                          </li>
+                      <?php endforeach; ?>
+                  <?php else: ?>
+                      <li>No Task Here...</li>
+                  <?php endif; ?>
                 </ul>
+
               </div>
-              <div class="list">
-                <div class="title">Tomorrow</div>
-                <ul>
-                  <li><i class="fa fa-square-o"></i><span>Find front end developer</span>
-                    <div class="info"></div>
-                  </li>
-                </ul>
-              </div>
+              
             </div>
           </div>
         </div>
       </div>
       <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
       <script src= "assets/js/script.js"></script>
+      <script>
+       $(document).ready(function(){
+        $('#newFolderBtn').click(function(){
+        var input = $('input#newFolderInput');
+        $.ajax({
+          url : "bootstrap/ajaxHandler.php",
+          method : "post",
+          data : {action: "newFolder",foldername: input.val()},
+          success : function(response) {
+            if (response == '1') {
+              $("<li><a href='?folder_id=<?=$folder->id ?>'><i class='fa fa-folder'></i>"+ input.val().replace(/'/g, "\\'") + "</a><a href='?delete_folder=<?=$folder->id ?>'><i class='fa fa-trash-o'></i></a></li>" ).appendTo("ul.folder-list");
+                  
+            }else{
+              alert(response);
+            }
+          }
+
+        });
+        });
+       });     
+            
+            
+
+      </script>
 </body>
 </html>
