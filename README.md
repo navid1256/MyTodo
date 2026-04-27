@@ -34,7 +34,7 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
 1. **Clone the repository**
 
    ```bash
-   git clone <(https://github.com/navid1256/7Todo.git)>
+   git clone <https://github.com/navid1256/7Todo.git>
    cd 7Todo
    ```
 
