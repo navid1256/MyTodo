@@ -19,7 +19,7 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
 - **Backend**: PHP
 - **Database**: MySQL
 - **Frontend**: HTML, CSS, JavaScript (AJAX)
-- **Dependencies**: 
+- **Dependencies**:
   - Verta (^2.1) - For Persian/Jalali calendar support
 
 ## 📦 Requirements
@@ -32,12 +32,14 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
 ## 🚀 Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd 7Todo
    ```
 
 2. **Install dependencies**
+
    ```bash
    composer install
    ```
@@ -76,7 +78,8 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
 ## 👤 Author
 
 **Navid**
-- Email: navid.syndicate@gmail.com
+
+- Email: <navid.syndicate@gmail.com>
 
 ## 📄 License
 
