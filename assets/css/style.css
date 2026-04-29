@@ -1,7 +1,11 @@
 @import url(https://fonts.googleapis.com/css?family=Dosis:300|Lato:300,400,600,700|Roboto+Condensed:300,700|Open+Sans+Condensed:300,600|Open+Sans:400,300,600,700|Maven+Pro:400,700);
 @import url("https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css");
+
 html {
-    background-image: url(http://www.ultraimg.com/images/2UeGfhZ.jpg);
+    /* background-image: url(http://www.ultraimg.com/images/2UeGfhZ.jpg); */
+    background-size: cover;
+    background-attachment: fixed;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 body {
