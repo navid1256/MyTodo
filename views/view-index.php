@@ -35,7 +35,7 @@
               <i class="fa fa-folder"></i>All
             </li>
             <?php foreach ($folders as $folder): ?>
-              <li class="<?= ($_GET['folder_id'] == $folder->id) ? 'active' : '' ?>">
+              <li class="<?= (isset($_GET['folder_id']) && $_GET['folder_id'] == $folder->id) ? 'active' : '' ?>">
                 <a href="?folder_id=<?= $folder->id ?>"><i class="fa fa-folder"></i><?= $folder->name ?></a>
                 <a href="?delete_folder=<?= $folder->id ?>"><i class="fa fa-trash-o" onclick="return confirm('Are You Sure To Delete This Folder ?\n<?= $folder->name ?>')"></i></a>
               </li>
