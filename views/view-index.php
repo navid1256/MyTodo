@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= Site_Title ?></title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://c7n.ir/icons/fontawesome/6.7.2/css/all.min.css">
 </head>
 
 <body>
@@ -37,7 +37,7 @@
             <?php foreach ($folders as $folder): ?>
               <li class="<?= (isset($_GET['folder_id']) && $_GET['folder_id'] == $folder->id) ? 'active' : '' ?>">
                 <a href="?folder_id=<?= $folder->id ?>"><i class="fa fa-folder"></i><?= $folder->name ?></a>
-                <a href="?delete_folder=<?= $folder->id ?>"><i class="fa fa-trash-o" onclick="return confirm('Are You Sure To Delete This Folder ?\n<?= $folder->name ?>')"></i></a>
+                <a href="?delete_folder=<?= $folder->id ?>"><i class="fa fa-trash" onclick="return confirm('Are You Sure To Delete This Folder ?\n<?= $folder->name ?>')"></i></a>
               </li>
             <?php endforeach; ?>
 
@@ -58,7 +58,7 @@
           <div class="functions">
             <div class="button active">Add New Task</div>
             <div class="button">Completed</div>
-            <div class="button inverz"><i class="fa fa-trash-o"></i></div>
+            <div class="button inverz"><i class="fa fa-trash fa-sm"></i></div>
           </div>
         </div>
         <div class="content">
@@ -73,7 +73,7 @@
                     <div class="info">
                       <span class="created-at">Created At <?= $task->created_at ?></span>
                       <a href="?delete_task=<?= $task->id ?>">
-                        <i class="fa fa-trash-o" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= $task->title ?>')"></i>
+                        <i class="fa fa-trash" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= $task->title ?>')"></i>
                       </a>
                     </div>
                   </li>
@@ -95,6 +95,10 @@
     $(document).ready(function() {
       $('#newFolderBtn').click(function() {
         var input = $('input#newFolderInput');
+        if (input.val().length < 3) {
+          alert("Folder Name Must Be At Least 3 Characters Long !");
+          return;
+        }
         $.ajax({
           url: "bootstrap/ajaxHandler.php",
           method: "post",

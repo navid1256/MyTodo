@@ -28,14 +28,16 @@ input {
     border: 1px solid #ccc;
 }
 
-.fa-trash-o {
+.fa-trash {
     color: #bd1f1f !important;
     float: right;
     font-weight: 200;
-    padding-right: 5px;
+    font-size: 14px;
+
+
 }
 
-.fa-trash-o:hover {
+.fa-trash:hover {
     font-weight: 700;
 }
 
@@ -263,11 +265,15 @@ span.created-at {
 .main .view .viewHeader .functions .button.inverz {
     background-color: inherit;
     border: 1px solid #AAA;
-    width: 10px;
+    width: auto;
+    min-width: 20px;
     color: #AAA;
     font-size: 1.3em;
-    padding-left: 10px;
-    padding-right: 16px;
+    padding: 0px 10px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .main .view .content {
