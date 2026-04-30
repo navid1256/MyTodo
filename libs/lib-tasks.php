@@ -1,6 +1,12 @@
 <?php
-defined('BASE_PATH') or die("Permision Denied !");
 
+// defined('BASE_PATH') or die("Permision Denied !");
+// if (!defined('BASE_PATH')) {
+//     echo "Permission Denied !";
+//     die();
+// }
+
+defined('BASE_PATH') or die("Permission Denied !");
 /****Folder Function ***/
 function newFolders(string $foldername)
 {
