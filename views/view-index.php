@@ -12,19 +12,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= Site_Title ?></title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="https://c7n.ir/icons/fontawesome/6.7.2/css/all.min.css">
 </head>
 
 <body>
   <div class="page">
     <div class="pageHeader">
       <div class="title">Dashboard</div>
-      <div class="userPanel"><i class="fa fa-chevron-down"></i><span class="username">John Doe</span><img src="https://lh3.googleusercontent.com/_1UScAOZVnGjE6NUNjUehNfl5VIndppY1umPBUmVPxeSTp_X9xnKXkMFatMNQ6CqSyc" width="40" height="40"></div>
+      <div class="userPanel"><i class="fa-solid fa-chevron-down"></i><span class="username">John Doe</span><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%23667eea' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='20' font-family='Arial'%3EJD%3C/text%3E%3C/svg%3E" width="40" height="40"></div>
     </div>
     <div class="main">
       <div class="nav">
         <div class="searchbox">
-          <div><i class="fa fa-search"></i>
+          <div><i class="fa-solid fa-magnifying-glass"></i>
             <input type="search" placeholder="Search" />
           </div>
         </div>
@@ -32,14 +31,15 @@
           <div class="title">Folders</div>
           <ul class="folder-list">
             <li class="<?= isset($_GET['folder_id']) ? '' : 'active' ?>">
-              <i class="fa fa-folder"></i>All
+              <i class="fa-solid fa-folder"></i>All
             </li>
             <?php foreach ($folders as $folder): ?>
               <li class="<?= (isset($_GET['folder_id']) && $_GET['folder_id'] == $folder->id) ? 'active' : '' ?>">
-                <a href="?folder_id=<?= $folder->id ?>"><i class="fa fa-folder"></i><?= $folder->name ?></a>
-                <a href="?delete_folder=<?= $folder->id ?>"><i class="fa fa-trash" onclick="return confirm('Are You Sure To Delete This Folder ?\n<?= $folder->name ?>')"></i></a>
+                <a href="?folder_id=<?= $folder->id ?>"><i class="fa-solid fa-folder"></i><?= $folder->name ?></a>
+                <a href="?delete_folder=<?= $folder->id ?>"><i class="fa-solid fa-trash" onclick="return confirm('Are You Sure To Delete This Folder ?\n<?= $folder->name ?>')"></i></a>
               </li>
             <?php endforeach; ?>
+
 
 
           </ul>
@@ -58,7 +58,7 @@
           <div class="functions">
             <div class="button active">Add New Task</div>
             <div class="button">Completed</div>
-            <div class="button inverz"><i class="fa fa-trash fa-sm"></i></div>
+            <div class="button inverz"><i class="fa-solid fa-trash fa-sm"></i></div>
           </div>
         </div>
         <div class="content">
@@ -68,12 +68,12 @@
               <?php if (sizeof($tasks)): ?>
                 <?php foreach ($tasks as $task): ?>
                   <li class="<?= $task->is_done ? 'checked' : ''; ?>">
-                    <i class="fa <?= $task->is_done ? 'fa-check-square-o' : 'fa-square-o'; ?>"></i>
+                    <i class="<?= $task->is_done ? 'fa-regular fa-square-check' : 'fa-regular fa-square'; ?>"></i>
                     <span><?= $task->title ?></span>
                     <div class="info">
                       <span class="created-at">Created At <?= $task->created_at ?></span>
                       <a href="?delete_task=<?= $task->id ?>">
-                        <i class="fa fa-trash" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= $task->title ?>')"></i>
+                        <i class="fa-solid fa-trash" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= $task->title ?>')"></i>
                       </a>
                     </div>
                   </li>
@@ -89,7 +89,7 @@
       </div>
     </div>
   </div>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src="assets/js/jquery-minimal.js"></script>
   <script src="assets/js/script.js"></script>
   <script>
     $(document).ready(function() {
