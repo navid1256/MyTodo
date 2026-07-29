@@ -1,0 +1,6 @@
+{
+  "phpserver.relativePath": ".",
+  "phpserver.phpPath": "C:\\xampp\\php\\php.exe",
+  "phpserver.ip": "localhost",
+  "phpserver.port": 3000
+}
