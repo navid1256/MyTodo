@@ -6,6 +6,7 @@
 /** @var string $activeView */
 /** @var array $currentUser */
 /** @var int $completedTasksToday */
+/** @var object|null $userProfile */
 $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotifications) : 3;
 $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
 $avatarInitials = mb_strtoupper(mb_substr($currentUsername, 0, 2));
@@ -15,6 +16,17 @@ $avatarSvg = sprintf(
 );
 $avatarUrl = 'data:image/svg+xml,' . rawurlencode($avatarSvg);
 $csrfToken = getCsrfToken();
+$profileData = $userProfile ?? (object) [];
+$profileFields = [
+  'firstname' => (string) ($profileData->firstname ?? ''),
+  'lastname' => (string) ($profileData->lastname ?? ''),
+  'email' => (string) ($profileData->email ?? ($currentUser['email'] ?? '')),
+  'username' => (string) ($profileData->username ?? $currentUsername),
+  'job_title' => (string) ($profileData->job_title ?? ''),
+  'date_of_birth' => (string) ($profileData->date_of_birth ?? ''),
+  'gender' => (string) ($profileData->gender ?? ''),
+  'country' => '',
+];
 
 $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showDueTime = false) {
   if (!sizeof($taskItems)) {
@@ -85,10 +97,10 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
           </button>
 
           <div class="profileDropdown" id="profileDropdown" hidden>
-            <button type="button">
+            <a class="profileDropdownLink" href="?view=profile">
               <i class="fa-regular fa-user" aria-hidden="true"></i>
               <span>My Profile</span>
-            </button>
+            </a>
             <button type="button">
               <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
               <span>Account Settings</span>
@@ -145,7 +157,67 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
           </ul>
         </div>
       </div>
-      <div class="view" id="tasks">
+      <div class="view<?= $activeView === 'profile' ? ' profileView' : '' ?>" id="tasks">
+        <?php if ($activeView === 'profile'): ?>
+          <section class="profilePage" aria-labelledby="profilePageTitle">
+            <h1 class="srOnly" id="profilePageTitle">My Profile</h1>
+            <div class="profileOverview">
+              <div class="profilePicture">
+                <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8') ?> profile picture">
+                <span>Profile picture</span>
+              </div>
+
+              <div class="profileFields">
+                <label class="profileField">
+                  <span>First Name</span>
+                  <input type="text" name="firstname" value="<?= htmlspecialchars($profileFields['firstname'], ENT_QUOTES, 'UTF-8') ?>">
+                </label>
+                <label class="profileField">
+                  <span>Last Name</span>
+                  <input type="text" name="lastname" value="<?= htmlspecialchars($profileFields['lastname'], ENT_QUOTES, 'UTF-8') ?>">
+                </label>
+                <label class="profileField">
+                  <span>Email</span>
+                  <input type="email" value="<?= htmlspecialchars($profileFields['email'], ENT_QUOTES, 'UTF-8') ?>" readonly>
+                </label>
+                <label class="profileField">
+                  <span>Username</span>
+                  <input type="text" value="<?= htmlspecialchars($profileFields['username'], ENT_QUOTES, 'UTF-8') ?>" readonly>
+                </label>
+                <label class="profileField">
+                  <span>Job Title</span>
+                  <input type="text" name="job_title" value="<?= htmlspecialchars($profileFields['job_title'], ENT_QUOTES, 'UTF-8') ?>">
+                </label>
+                <label class="profileField">
+                  <span>Date of Birth</span>
+                  <input type="date" name="date_of_birth" value="<?= htmlspecialchars($profileFields['date_of_birth'], ENT_QUOTES, 'UTF-8') ?>">
+                </label>
+                <label class="profileField">
+                  <span>Gender</span>
+                  <select name="gender">
+                    <option value="" <?= $profileFields['gender'] === '' ? 'selected' : '' ?>>Select gender</option>
+                    <option value="male" <?= $profileFields['gender'] === 'male' ? 'selected' : '' ?>>Male</option>
+                    <option value="female" <?= $profileFields['gender'] === 'female' ? 'selected' : '' ?>>Female</option>
+                    <option value="other" <?= $profileFields['gender'] === 'other' ? 'selected' : '' ?>>Other</option>
+                  </select>
+                </label>
+                <label class="profileField">
+                  <span>Country</span>
+                  <input type="text" name="country" value="<?= htmlspecialchars($profileFields['country'], ENT_QUOTES, 'UTF-8') ?>">
+                </label>
+              </div>
+
+              <div class="profileActions">
+                <button class="saveProfileButton" type="button">Save</button>
+              </div>
+            </div>
+
+            <div class="profileSecurity">
+              <h2>Security</h2>
+              <button class="changePasswordButton" type="button">Change Password</button>
+            </div>
+          </section>
+        <?php else: ?>
         <div class="viewHeader">
           <div class="title" style="width:50% ;">
             <input type="text" id="taskNameInput" style="width: 76%;margin-left: 5%;line-height: 17px;" placeholder="Add New Task">
@@ -183,6 +255,7 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
             </div>
           <?php endif; ?>
         </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>

@@ -13,6 +13,31 @@ function getCurrentUserId(): int
     return (int) (getCurrentUser()['id'] ?? 0);
 }
 
+function getCurrentUserProfile(): ?object
+{
+    global $pdo;
+
+    $statement = $pdo->prepare(
+        'SELECT
+            users.id,
+            users.username,
+            users.email,
+            users_info.firstname,
+            users_info.lastname,
+            users_info.job_title,
+            users_info.date_of_birth,
+            users_info.gender
+         FROM users
+         LEFT JOIN users_info ON users_info.user_id = users.id
+         WHERE users.id = :user_id
+         LIMIT 1'
+    );
+    $statement->execute(['user_id' => getCurrentUserId()]);
+    $profile = $statement->fetch(PDO::FETCH_OBJ);
+
+    return $profile ?: null;
+}
+
 function getCsrfToken(): string
 {
     if (empty($_SESSION['csrf_token'])) {
