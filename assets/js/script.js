@@ -5,6 +5,65 @@ Inspired by dribble.com/shots/1507858-Dashboard
   var userMenuToggle = document.getElementById('userMenuToggle');
   var profileDropdown = document.getElementById('profileDropdown');
   var profileMenu = document.querySelector('.profileMenu');
+  var navigationItems = document.querySelectorAll('.navigation-list li');
+
+  function activateNavigationItem(activeItem) {
+    navigationItems.forEach(function(item) {
+      var control = item.querySelector('a, button');
+      var isActive = item === activeItem;
+
+      item.classList.toggle('active', isActive);
+
+      if (control) {
+        if (isActive) {
+          control.setAttribute('aria-current', 'page');
+        } else {
+          control.removeAttribute('aria-current');
+        }
+      }
+    });
+  }
+
+  if (navigationItems.length) {
+    var savedNavigationId = null;
+    var serverActiveItem = document.querySelector('.navigation-list li.active');
+
+    try {
+      savedNavigationId = sessionStorage.getItem('activeNavigationItem');
+    } catch (error) {
+      savedNavigationId = null;
+    }
+
+    if (serverActiveItem) {
+      activateNavigationItem(serverActiveItem);
+    } else if (savedNavigationId) {
+      var savedNavigationItem = document.querySelector(
+        '.navigation-list li[data-nav-id="' + savedNavigationId + '"]'
+      );
+
+      if (savedNavigationItem) {
+        activateNavigationItem(savedNavigationItem);
+      }
+    }
+
+    navigationItems.forEach(function(item) {
+      var control = item.querySelector('a, button');
+
+      if (!control) {
+        return;
+      }
+
+      control.addEventListener('click', function() {
+        activateNavigationItem(item);
+
+        try {
+          sessionStorage.setItem('activeNavigationItem', item.dataset.navId);
+        } catch (error) {
+          // The active color still works when browser storage is unavailable.
+        }
+      });
+    });
+  }
 
   if (!userMenuToggle || !profileDropdown || !profileMenu) {
     return;

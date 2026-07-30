@@ -2,7 +2,34 @@
 
 /** @var array $folders */
 /** @var array $tasks */
+/** @var array $todayTasks */
+/** @var array $tomorrowTasks */
+/** @var string $activeView */
 $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotifications) : 3;
+
+$renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showDueTime = false) {
+  if (!sizeof($taskItems)) {
+    echo '<li class="emptyTask">' . htmlspecialchars($emptyMessage, ENT_QUOTES, 'UTF-8') . '</li>';
+    return;
+  }
+
+  foreach ($taskItems as $task): ?>
+    <li class="<?= $task->is_done ? 'checked' : ''; ?>">
+      <i class="<?= $task->is_done ? 'fa-regular fa-square-check' : 'fa-regular fa-square'; ?>"></i>
+      <span><?= htmlspecialchars($task->title, ENT_QUOTES, 'UTF-8') ?></span>
+      <div class="info">
+        <?php if ($showDueTime && !empty($task->due_at)): ?>
+          <span class="created-at">Due at <?= date('H:i', strtotime($task->due_at)) ?></span>
+        <?php else: ?>
+          <span class="created-at">Created At <?= htmlspecialchars($task->created_at, ENT_QUOTES, 'UTF-8') ?></span>
+        <?php endif; ?>
+        <a href="?view=<?= urlencode($viewName) ?>&amp;delete_task=<?= $task->id ?>">
+          <i class="fa-regular fa-trash-can" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= htmlspecialchars($task->title, ENT_QUOTES, 'UTF-8') ?>')"></i>
+        </a>
+      </div>
+    </li>
+  <?php endforeach;
+};
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,25 +97,25 @@ $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotific
         <div class="menu">
           <div class="title">Navigation</div>
           <ul class="navigation-list">
-            <li>
-              <a href="index.php">
+            <li class="<?= $activeView === 'home' ? 'active' : '' ?>" data-nav-id="home">
+              <a href="?view=home" <?= $activeView === 'home' ? 'aria-current="page"' : '' ?>>
                 <i class="fa-solid fa-house"></i>
                 <span>Home</span>
               </a>
             </li>
-            <li>
+            <li data-nav-id="activity">
               <button type="button">
                 <i class="fa-solid fa-chart-simple"></i>
                 <span>Activity</span>
               </button>
             </li>
-            <li class="active">
-              <a href="#tasks" aria-current="page">
+            <li class="<?= $activeView === 'manage-tasks' ? 'active' : '' ?>" data-nav-id="manage-tasks">
+              <a href="?view=manage-tasks#tasks" <?= $activeView === 'manage-tasks' ? 'aria-current="page"' : '' ?>>
                 <i class="fa-solid fa-server"></i>
                 <span>Manage Tasks</span>
               </a>
             </li>
-            <li>
+            <li data-nav-id="messages">
               <button type="button">
                 <i class="fa-solid fa-envelope"></i>
                 <span>Messages</span>
@@ -110,29 +137,27 @@ $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotific
           </div>
         </div>
         <div class="content">
-          <div class="list">
-            <div class="title">Today</div>
-            <ul>
-              <?php if (sizeof($tasks)): ?>
-                <?php foreach ($tasks as $task): ?>
-                  <li class="<?= $task->is_done ? 'checked' : ''; ?>">
-                    <i class="<?= $task->is_done ? 'fa-regular fa-square-check' : 'fa-regular fa-square'; ?>"></i>
-                    <span><?= $task->title ?></span>
-                    <div class="info">
-                      <span class="created-at">Created At <?= $task->created_at ?></span>
-                      <a href="?delete_task=<?= $task->id ?>">
-                        <i class="fa-regular fa-trash-can" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= $task->title ?>')"></i>
-                      </a>
-                    </div>
-                  </li>
-                <?php endforeach; ?>
-              <?php else: ?>
-                <li>No Task Here...</li>
-              <?php endif; ?>
-            </ul>
-
-          </div>
-
+          <?php if ($activeView === 'home'): ?>
+            <div class="list">
+              <div class="title">Today</div>
+              <ul>
+                <?php $renderTaskItems($todayTasks, 'home', 'No tasks due today.', true); ?>
+              </ul>
+            </div>
+            <div class="list scheduledTaskList">
+              <div class="title">Tomorrow</div>
+              <ul>
+                <?php $renderTaskItems($tomorrowTasks, 'home', 'No tasks due tomorrow.', true); ?>
+              </ul>
+            </div>
+          <?php else: ?>
+            <div class="list">
+              <div class="title">All Tasks</div>
+              <ul>
+                <?php $renderTaskItems($tasks, 'manage-tasks', 'No tasks found.'); ?>
+              </ul>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
