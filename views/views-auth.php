@@ -9,6 +9,7 @@ $oldInput = array_merge(
 );
 $baseUrl = defined('BASE_URL') ? BASE_URL : '/';
 $isRegister = $activeAuthForm === 'register';
+$csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,6 +29,10 @@ $isRegister = $activeAuthForm === 'register';
                 <div class="auth-form <?= !$isRegister ? 'on' : '' ?>" id="login">
                     <div class="form-title">Log In</div>
                     <form action="<?= htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') ?>auth.php?action=login" method="POST">
+                        <input
+                            name="csrf_token"
+                            type="hidden"
+                            value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
                         <?php if ($activeAuthForm === 'login' && $authErrors): ?>
                             <div class="auth-errors" role="alert">
                                 <?php foreach ($authErrors as $error): ?>
@@ -54,6 +59,10 @@ $isRegister = $activeAuthForm === 'register';
                 <div class="auth-form <?= $isRegister ? 'on' : '' ?>" id="signup">
                     <div class="form-title">Register</div>
                     <form action="<?= htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') ?>auth.php?action=register" method="POST">
+                        <input
+                            name="csrf_token"
+                            type="hidden"
+                            value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
                         <?php if ($activeAuthForm === 'register' && $authErrors): ?>
                             <div class="auth-errors" role="alert">
                                 <?php foreach ($authErrors as $error): ?>

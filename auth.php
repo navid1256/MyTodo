@@ -12,14 +12,21 @@ $oldInput = [
     'username' => '',
 ];
 $activeAuthForm = ($_GET['action'] ?? '') === 'register' ? 'register' : 'login';
+$csrfToken = getCsrfToken();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $action = $_GET['action'] ?? '';
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $username = isset($_POST['username']) && is_string($_POST['username'])
+        ? trim($_POST['username'])
+        : '';
+    $password = isset($_POST['password']) && is_string($_POST['password'])
+        ? $_POST['password']
+        : '';
     $oldInput['username'] = $username;
 
-    if ($action === 'login') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? null)) {
+        $authErrors[] = 'Your session has expired. Please submit the form again.';
+    } elseif ($action === 'login') {
         $activeAuthForm = 'login';
 
         if ($username === '' || $password === '') {
@@ -32,8 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'register') {
         $activeAuthForm = 'register';
-        $email = trim($_POST['email'] ?? '');
-        $passwordConfirmation = $_POST['password_confirmation'] ?? '';
+        $email = isset($_POST['email']) && is_string($_POST['email'])
+            ? trim($_POST['email'])
+            : '';
+        $passwordConfirmation = isset($_POST['password_confirmation']) && is_string($_POST['password_confirmation'])
+            ? $_POST['password_confirmation']
+            : '';
         $oldInput['email'] = $email;
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {

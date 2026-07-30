@@ -6,6 +6,8 @@ if (getCurrentUserId() === 0) {
     exit();
 }
 
+$currentUser = getCurrentUser();
+
 if (isset($_GET['delete_task'])&& is_numeric($_GET['delete_task'])) {
     $deletedCount = deleteTask($_GET['delete_task']);
     echo "$deletedCount Tasks Succesfully Deleted";

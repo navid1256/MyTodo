@@ -2,8 +2,22 @@
 include "constant.php";
 
 if (session_status() === PHP_SESSION_NONE) {
+    $sessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'mytodo-sessions';
+
+    if (!is_dir($sessionPath) && !mkdir($sessionPath, 0775, true) && !is_dir($sessionPath)) {
+        throw new RuntimeException('Unable to create the session storage directory.');
+    }
+
+    session_save_path($sessionPath);
+    session_set_cookie_params([
+        'httponly' => true,
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'samesite' => 'Lax',
+        'path' => '/',
+    ]);
+
     if (!session_start()) {
-        throw new RuntimeException('Unable to start the session using the configured PHP session path.');
+        throw new RuntimeException('Unable to start the session.');
     }
 }
 
