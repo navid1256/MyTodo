@@ -3,5 +3,6 @@ $database_config =(object)[
     'host'=> 'localhost',
     'user'=> 'root',
     'pass'=> '',
-    'db'=> '7todo'
+    'db'=> 'mytodo',
+    'port'=> '3306'
 ];

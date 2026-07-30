@@ -1,2 +1,0 @@
-ALTER TABLE tasks
-    MODIFY COLUMN folder_id INT(10) UNSIGNED NULL;
