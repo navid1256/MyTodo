@@ -21,6 +21,13 @@ body {
     font-family: 'Karla', sans-serif !important;
 }
 
+.svg-definitions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
 textarea,
 input {
     border: none;
@@ -190,6 +197,68 @@ button:focus {
 .auth-form:nth-child(1) input {
     width: 100%;
     margin: 5px 0;
+}
+
+.password-field {
+    position: relative;
+    width: 100%;
+    margin: 5px 0;
+}
+
+.password-field input {
+    width: 100%;
+    margin: 0 !important;
+    padding-right: 50px;
+}
+
+.auth-form .password-field .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    margin: 0;
+    padding: 0;
+    color: #777;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: none;
+    transform: translateY(-50%);
+}
+
+.auth-form .password-field .password-toggle:hover,
+.auth-form .password-field .password-toggle:focus-visible {
+    color: #333;
+    background-color: rgba(0, 0, 0, 0.06);
+    outline: none;
+}
+
+.auth-form .password-field .password-toggle .password-icon {
+    width: 20px;
+    height: 20px;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.auth-form .password-field .password-toggle .password-icon-open {
+    display: none;
+}
+
+.auth-form .password-field .password-toggle[aria-pressed="true"] .password-icon-closed {
+    display: none;
+}
+
+.auth-form .password-field .password-toggle[aria-pressed="true"] .password-icon-open {
+    display: block;
 }
 
 .success {
