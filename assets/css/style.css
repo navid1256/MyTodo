@@ -402,7 +402,7 @@ span.created-at {
     float: right;
     height: 30px;
     line-height: 30px;
-    background-color: #AAA;
+    background-color: #5ae556;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
     border-radius: 4px;
@@ -415,6 +415,27 @@ span.created-at {
 
 .main .view .viewHeader .functions .button.active {
     background-color: #54b9cd;
+}
+
+.main .view .viewHeader .functions .completedButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0px 15px;
+}
+
+.main .view .viewHeader .functions .completedCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    line-height: 1;
+    color: #4cad48;
+    background-color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 .main .view .viewHeader .functions .button.inverz {
@@ -523,4 +544,130 @@ span.created-at {
 
 .clear {
     clear: both;
+}
+
+body,
+.page,
+.pageHeader,
+.main,
+.main .nav,
+.main .nav .searchbox,
+.main .nav .searchbox input,
+.profileDropdown,
+.profileDropdown button,
+.main .view .content .list ul li {
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease,
+        color 0.25s ease;
+}
+
+html.dark-mode body {
+    background: linear-gradient(30deg, #0f172a, #164e63, #0f766e) fixed;
+    color: #dbe5ec;
+}
+
+html.dark-mode .page {
+    background-color: rgba(15, 23, 42, 0.88);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.55);
+}
+
+html.dark-mode .pageHeader {
+    background-color: #183f55;
+}
+
+html.dark-mode .notificationBadge {
+    border-color: #183f55;
+}
+
+html.dark-mode .profileDropdown {
+    border-color: #344351;
+    background-color: #18232d;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    color: #e4ebf0;
+}
+
+html.dark-mode .profileDropdown button {
+    color: #e4ebf0;
+}
+
+html.dark-mode .profileDropdown button:hover,
+html.dark-mode .profileDropdown button:focus-visible {
+    background-color: #24333f;
+}
+
+html.dark-mode .profileDropdown button i {
+    color: #aab8c3;
+}
+
+html.dark-mode .profileDropdown .signOutButton {
+    border-top-color: #344351;
+    color: #ff6671;
+}
+
+html.dark-mode .profileDropdown .signOutButton i {
+    color: #ff6671;
+}
+
+html.dark-mode .main {
+    background-color: #111a23;
+}
+
+html.dark-mode .main .nav {
+    background-color: #18242e;
+}
+
+html.dark-mode .main .nav .searchbox,
+html.dark-mode .main .nav .searchbox input {
+    background-color: #24333f;
+    color: #e3ebf0;
+}
+
+html.dark-mode .main .nav .searchbox i {
+    color: #93a4b0;
+}
+
+html.dark-mode .main .nav .menu,
+html.dark-mode .main .nav .menu ul li a,
+html.dark-mode .main .nav .menu ul li button {
+    color: #c5d0d8;
+}
+
+html.dark-mode .main .nav .menu ul li.active a,
+html.dark-mode .main .nav .menu ul li.active button {
+    color: #69bd34;
+}
+
+html.dark-mode .main .nav .menu ul li:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark-mode .main .view .viewHeader {
+    border-bottom-color: #33424f;
+}
+
+html.dark-mode .main .view .viewHeader input {
+    border-color: #40515f;
+    background-color: #1d2a35;
+    color: #e5edf2;
+}
+
+html.dark-mode .main .view .viewHeader input::placeholder {
+    color: #91a2ae;
+}
+
+html.dark-mode .main .view .content .list ul {
+    color: #c7d2da;
+}
+
+html.dark-mode .main .view .content .list ul li {
+    border-color: #3b4a57;
+}
+
+html.dark-mode .main .view .content .list ul li.checked {
+    background-color: #1b2a34;
+}
+
+html.dark-mode .main .view .content .list ul li.emptyTask {
+    color: #91a2ae;
 }

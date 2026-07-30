@@ -23,10 +23,11 @@ if (!in_array($activeView, $allowedViews, true)) {
 $tasks = $activeView === 'manage-tasks' ? getTasks() : [];
 $todayTasks = [];
 $tomorrowTasks = [];
+$userTimezone = new DateTimeZone('Asia/Tehran');
+$today = new DateTimeImmutable('today', $userTimezone);
+$completedTasksToday = countCompletedTasksForDate($today);
 
 if ($activeView === 'home') {
-    $userTimezone = new DateTimeZone('Asia/Tehran');
-    $today = new DateTimeImmutable('today', $userTimezone);
     $tomorrow = $today->modify('+1 day');
     $todayTasks = getTasksForDate($today);
     $tomorrowTasks = getTasksForDate($tomorrow);

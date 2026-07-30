@@ -73,3 +73,26 @@ function getTasksForDate(DateTimeInterface $date)
 
     return $stmt->fetchAll(PDO::FETCH_OBJ);
 }
+
+function countCompletedTasksForDate(DateTimeInterface $date): int
+{
+    global $pdo;
+    $current_user_id = getCurrentUserId();
+    $start = DateTimeImmutable::createFromInterface($date)->setTime(0, 0);
+    $end = $start->modify('+1 day');
+
+    $sql = "SELECT COUNT(*)
+            FROM tasks
+            WHERE user_id = :user_id
+              AND is_done = 1
+              AND due_at >= :start_at
+              AND due_at < :end_at";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':user_id' => $current_user_id,
+        ':start_at' => $start->format('Y-m-d H:i:s'),
+        ':end_at' => $end->format('Y-m-d H:i:s'),
+    ]);
+
+    return (int) $stmt->fetchColumn();
+}
