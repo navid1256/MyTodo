@@ -23,6 +23,16 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfTo
 </head>
 
 <body>
+    <svg class="svg-definitions" aria-hidden="true" focusable="false">
+        <symbol id="password-eye-closed" viewBox="0 0 24 24">
+            <path d="M3.5 9.25c1.75 3.35 4.58 5.05 8.5 5.05s6.75-1.7 8.5-5.05" />
+            <path d="M5.5 12.05 4.1 13.5M8.55 13.75l-.65 1.9M12 14.3v2M15.45 13.75l.65 1.9M18.5 12.05l1.4 1.45" />
+        </symbol>
+        <symbol id="password-eye-open" viewBox="0 0 24 24">
+            <path d="M2.75 12s3.35-5 9.25-5 9.25 5 9.25 5-3.35 5-9.25 5-9.25-5-9.25-5Z" />
+            <circle cx="12" cy="12" r="2.35" />
+        </symbol>
+    </svg>
     <!-- partial:index.partial.html -->
     <div id="background" class="<?= $isRegister ? 'two' : '' ?>">
         <?php if ($authSuccess): ?>
@@ -53,12 +63,28 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfTo
                             autocomplete="username"
                             placeholder="Username"
                             value="<?= htmlspecialchars((string) $oldInput['username'], ENT_QUOTES, 'UTF-8') ?>" />
-                        <input
-                            name="password"
-                            type="password"
-                            required
-                            autocomplete="current-password"
-                            placeholder="Password" />
+                        <div class="password-field">
+                            <input
+                                id="login-password"
+                                name="password"
+                                type="password"
+                                required
+                                autocomplete="current-password"
+                                placeholder="Password" />
+                            <button
+                                class="password-toggle"
+                                type="button"
+                                data-password-target="login-password"
+                                aria-label="Show password"
+                                aria-pressed="false">
+                                <svg class="password-icon password-icon-closed" aria-hidden="true">
+                                    <use href="#password-eye-closed"></use>
+                                </svg>
+                                <svg class="password-icon password-icon-open" aria-hidden="true">
+                                    <use href="#password-eye-open"></use>
+                                </svg>
+                            </button>
+                        </div>
                         <button type="submit">Log In</button>
                     </form>
                 </div>
@@ -93,20 +119,52 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfTo
                             autocomplete="username"
                             placeholder="Username"
                             value="<?= htmlspecialchars((string) $oldInput['username'], ENT_QUOTES, 'UTF-8') ?>" />
-                        <input
-                            name="password"
-                            type="password"
-                            required
-                            minlength="8"
-                            autocomplete="new-password"
-                            placeholder="Password" />
-                        <input
-                            name="password_confirmation"
-                            type="password"
-                            required
-                            minlength="8"
-                            autocomplete="new-password"
-                            placeholder="Confirm Password" />
+                        <div class="password-field">
+                            <input
+                                id="register-password"
+                                name="password"
+                                type="password"
+                                required
+                                minlength="8"
+                                autocomplete="new-password"
+                                placeholder="Password" />
+                            <button
+                                class="password-toggle"
+                                type="button"
+                                data-password-target="register-password"
+                                aria-label="Show password"
+                                aria-pressed="false">
+                                <svg class="password-icon password-icon-closed" aria-hidden="true">
+                                    <use href="#password-eye-closed"></use>
+                                </svg>
+                                <svg class="password-icon password-icon-open" aria-hidden="true">
+                                    <use href="#password-eye-open"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="password-field">
+                            <input
+                                id="register-password-confirmation"
+                                name="password_confirmation"
+                                type="password"
+                                required
+                                minlength="8"
+                                autocomplete="new-password"
+                                placeholder="Confirm Password" />
+                            <button
+                                class="password-toggle"
+                                type="button"
+                                data-password-target="register-password-confirmation"
+                                aria-label="Show password"
+                                aria-pressed="false">
+                                <svg class="password-icon password-icon-closed" aria-hidden="true">
+                                    <use href="#password-eye-closed"></use>
+                                </svg>
+                                <svg class="password-icon password-icon-open" aria-hidden="true">
+                                    <use href="#password-eye-open"></use>
+                                </svg>
+                            </button>
+                        </div>
                         <button type="submit">Sign Up</button>
                     </form>
                 </div>
@@ -125,6 +183,7 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfTo
         const signupForm = document.getElementById('signup');
         const background = document.getElementById('background');
         const imageOverlay = document.getElementById('image-overlay');
+        const passwordToggles = document.querySelectorAll('.password-toggle');
 
         switchButton.addEventListener('click', function() {
             loginForm.classList.toggle('on');
@@ -133,6 +192,24 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfTo
             switchButton.classList.toggle('two');
             background.classList.toggle('two');
             imageOverlay.classList.toggle('two');
+        });
+
+        passwordToggles.forEach(function(toggleButton) {
+            toggleButton.addEventListener('click', function() {
+                const passwordInput = document.getElementById(toggleButton.dataset.passwordTarget);
+
+                if (!passwordInput) {
+                    return;
+                }
+
+                const shouldShowPassword = passwordInput.type === 'password';
+                passwordInput.type = shouldShowPassword ? 'text' : 'password';
+                toggleButton.setAttribute('aria-pressed', String(shouldShowPassword));
+                toggleButton.setAttribute(
+                    'aria-label',
+                    shouldShowPassword ? 'Hide password' : 'Show password'
+                );
+            });
         });
     </script>
 
