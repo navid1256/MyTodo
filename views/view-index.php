@@ -5,6 +5,7 @@
 /** @var array $tomorrowTasks */
 /** @var string $activeView */
 /** @var array $currentUser */
+/** @var int $completedTasksToday */
 $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotifications) : 3;
 $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
 $avatarInitials = mb_strtoupper(mb_substr($currentUsername, 0, 2));
@@ -47,6 +48,15 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= Site_Title ?></title>
+  <script>
+    try {
+      if (localStorage.getItem('mytodo-theme') === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      }
+    } catch (error) {
+      // The dashboard still works when browser storage is unavailable.
+    }
+  </script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
@@ -83,9 +93,9 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
               <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
               <span>Account Settings</span>
             </button>
-            <button type="button">
-              <i class="fa-regular fa-rectangle-list" aria-hidden="true"></i>
-              <span>Billing &amp; Plans</span>
+            <button id="themeToggle" type="button" aria-pressed="false">
+              <i id="themeIcon" class="fa-solid fa-moon" aria-hidden="true"></i>
+              <span id="themeLabel">Dark Mode</span>
             </button>
             <form action="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>logout.php" method="POST">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
@@ -143,7 +153,10 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
           </div>
           <div class="functions">
             <div class="button active">Add New Task</div>
-            <div class="button">Completed</div>
+            <div class="button completedButton" aria-label="<?= $completedTasksToday ?> tasks completed today">
+              <span class="completedCount"><?= $completedTasksToday ?></span>
+              <span>Completed</span>
+            </div>
             <div class="button inverz"><i class="fa-regular fa-trash-can"></i></div>
           </div>
         </div>
