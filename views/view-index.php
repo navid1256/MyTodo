@@ -4,7 +4,16 @@
 /** @var array $todayTasks */
 /** @var array $tomorrowTasks */
 /** @var string $activeView */
+/** @var array $currentUser */
 $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotifications) : 3;
+$currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
+$avatarInitials = mb_strtoupper(mb_substr($currentUsername, 0, 2));
+$avatarSvg = sprintf(
+  "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect fill='#667eea' width='40' height='40'/><text x='50%%' y='50%%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='16' font-family='Arial'>%s</text></svg>",
+  htmlspecialchars($avatarInitials, ENT_QUOTES | ENT_XML1, 'UTF-8')
+);
+$avatarUrl = 'data:image/svg+xml,' . rawurlencode($avatarSvg);
+$csrfToken = getCsrfToken();
 
 $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showDueTime = false) {
   if (!sizeof($taskItems)) {
@@ -60,8 +69,8 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
             type="button"
             aria-expanded="false"
             aria-controls="profileDropdown">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%23667eea' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='20' font-family='Arial'%3EJD%3C/text%3E%3C/svg%3E" width="40" height="40" alt="John Doe">
-            <span class="username">John Doe</span>
+            <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" width="40" height="40" alt="<?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8') ?>">
+            <span class="username"><?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8') ?></span>
             <i class="profileChevron fa-solid fa-chevron-down" aria-hidden="true"></i>
           </button>
 
@@ -78,10 +87,13 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
               <i class="fa-regular fa-rectangle-list" aria-hidden="true"></i>
               <span>Billing &amp; Plans</span>
             </button>
-            <button class="signOutButton" type="button">
-              <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
-              <span>Sign out</span>
-            </button>
+            <form action="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>logout.php" method="POST">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+              <button class="signOutButton" type="submit">
+                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                <span>Sign out</span>
+              </button>
+            </form>
           </div>
         </div>
       </div>

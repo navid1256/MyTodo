@@ -13,6 +13,23 @@ function getCurrentUserId(): int
     return (int) (getCurrentUser()['id'] ?? 0);
 }
 
+function getCsrfToken(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['csrf_token'];
+}
+
+function verifyCsrfToken(mixed $token): bool
+{
+    return is_string($token)
+        && isset($_SESSION['csrf_token'])
+        && is_string($_SESSION['csrf_token'])
+        && hash_equals($_SESSION['csrf_token'], $token);
+}
+
 function findUserByUsername(string $username): ?object
 {
     global $pdo;
@@ -71,7 +88,7 @@ function loginUser(string $username, string $password): bool
     }
 
     $passwordInfo = password_get_info($user->password);
-    $isHashedPassword = $passwordInfo['algo'] !== null;
+    $isHashedPassword = $passwordInfo['algoName'] !== 'unknown';
     $passwordIsValid = $isHashedPassword
         ? password_verify($password, $user->password)
         : hash_equals($user->password, $password);
@@ -112,4 +129,27 @@ function registerUser(string $email, string $username, string $password): int
     ]);
 
     return (int) $pdo->lastInsertId();
+}
+
+function logoutUser(): void
+{
+    $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+        $cookieParameters = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            [
+                'expires' => time() - 42000,
+                'path' => $cookieParameters['path'],
+                'domain' => $cookieParameters['domain'],
+                'secure' => $cookieParameters['secure'],
+                'httponly' => $cookieParameters['httponly'],
+                'samesite' => $cookieParameters['samesite'] ?? 'Lax',
+            ]
+        );
+    }
+
+    session_destroy();
 }
