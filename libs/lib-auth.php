@@ -26,7 +26,8 @@ function getCurrentUserProfile(): ?object
             users_info.lastname,
             users_info.job_title,
             users_info.date_of_birth,
-            users_info.gender
+            users_info.gender,
+            users_info.country
          FROM users
          LEFT JOIN users_info ON users_info.user_id = users.id
          WHERE users.id = :user_id
@@ -36,6 +37,47 @@ function getCurrentUserProfile(): ?object
     $profile = $statement->fetch(PDO::FETCH_OBJ);
 
     return $profile ?: null;
+}
+
+function updateCurrentUserProfile(array $profileData): void
+{
+    global $pdo;
+
+    $statement = $pdo->prepare(
+        'INSERT INTO users_info (
+            user_id,
+            firstname,
+            lastname,
+            job_title,
+            date_of_birth,
+            gender,
+            country
+         ) VALUES (
+            :user_id,
+            :firstname,
+            :lastname,
+            :job_title,
+            :date_of_birth,
+            :gender,
+            :country
+         )
+         ON DUPLICATE KEY UPDATE
+            firstname = VALUES(firstname),
+            lastname = VALUES(lastname),
+            job_title = VALUES(job_title),
+            date_of_birth = VALUES(date_of_birth),
+            gender = VALUES(gender),
+            country = VALUES(country)'
+    );
+    $statement->execute([
+        'user_id' => getCurrentUserId(),
+        'firstname' => $profileData['firstname'] !== '' ? $profileData['firstname'] : null,
+        'lastname' => $profileData['lastname'] !== '' ? $profileData['lastname'] : null,
+        'job_title' => $profileData['job_title'] !== '' ? $profileData['job_title'] : null,
+        'date_of_birth' => $profileData['date_of_birth'] !== '' ? $profileData['date_of_birth'] : null,
+        'gender' => $profileData['gender'] !== '' ? $profileData['gender'] : null,
+        'country' => $profileData['country'] !== '' ? $profileData['country'] : null,
+    ]);
 }
 
 function getCsrfToken(): string

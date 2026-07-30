@@ -575,6 +575,30 @@ span.created-at {
     color: #1f2933;
 }
 
+.profileMessage {
+    margin: 0 0 18px;
+    padding: 12px 16px;
+    border: 1px solid;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.profileMessage p {
+    margin: 4px 0;
+}
+
+.profileMessageSuccess {
+    border-color: #9bd47a;
+    background-color: #e5f7db;
+    color: #2f6f20;
+}
+
+.profileMessageError {
+    border-color: #efaaaa;
+    background-color: #fde5e5;
+    color: #9f1c1c;
+}
+
 .profileOverview {
     display: grid;
     grid-template-columns: 210px minmax(0, 1fr);
@@ -855,6 +879,18 @@ html.dark-mode .main .view .content .list ul li.emptyTask {
 html.dark-mode .profilePage,
 html.dark-mode .profileField {
     color: #d7e0e6;
+}
+
+html.dark-mode .profileMessageSuccess {
+    border-color: #4d7e39;
+    background-color: #203a27;
+    color: #bce7a9;
+}
+
+html.dark-mode .profileMessageError {
+    border-color: #7d4549;
+    background-color: #3a2428;
+    color: #ffb7bd;
 }
 
 html.dark-mode .profileOverview {

@@ -8,15 +8,25 @@
 /** @var int $completedTasksToday */
 /** @var object|null $userProfile */
 $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotifications) : 3;
+$profileData = $userProfile ?? (object) [];
 $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
-$avatarInitials = mb_strtoupper(mb_substr($currentUsername, 0, 2));
+$profileFirstName = trim((string) ($profileData->firstname ?? ''));
+$profileLastName = trim((string) ($profileData->lastname ?? ''));
+$hasFullName = $profileFirstName !== '' && $profileLastName !== '';
+$currentDisplayName = $hasFullName
+  ? $profileFirstName . ' ' . $profileLastName
+  : $currentUsername;
+$avatarInitials = $hasFullName
+  ? mb_strtoupper(mb_substr($profileFirstName, 0, 1) . mb_substr($profileLastName, 0, 1))
+  : mb_strtoupper(mb_substr($currentUsername, 0, 2));
 $avatarSvg = sprintf(
   "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect fill='#667eea' width='40' height='40'/><text x='50%%' y='50%%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='16' font-family='Arial'>%s</text></svg>",
   htmlspecialchars($avatarInitials, ENT_QUOTES | ENT_XML1, 'UTF-8')
 );
 $avatarUrl = 'data:image/svg+xml,' . rawurlencode($avatarSvg);
 $csrfToken = getCsrfToken();
-$profileData = $userProfile ?? (object) [];
+$profileErrors = isset($profileErrors) && is_array($profileErrors) ? $profileErrors : [];
+$profileSuccess = isset($profileSuccess) && is_string($profileSuccess) ? $profileSuccess : null;
 $profileFields = [
   'firstname' => (string) ($profileData->firstname ?? ''),
   'lastname' => (string) ($profileData->lastname ?? ''),
@@ -25,7 +35,7 @@ $profileFields = [
   'job_title' => (string) ($profileData->job_title ?? ''),
   'date_of_birth' => (string) ($profileData->date_of_birth ?? ''),
   'gender' => (string) ($profileData->gender ?? ''),
-  'country' => '',
+  'country' => (string) ($profileData->country ?? ''),
 ];
 
 $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showDueTime = false) {
@@ -91,8 +101,8 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
             type="button"
             aria-expanded="false"
             aria-controls="profileDropdown">
-            <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" width="40" height="40" alt="<?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8') ?>">
-            <span class="username"><?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8') ?></span>
+            <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" width="40" height="40" alt="<?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?>">
+            <span class="username"><?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?></span>
             <i class="profileChevron fa-solid fa-chevron-down" aria-hidden="true"></i>
           </button>
 
@@ -161,9 +171,24 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
         <?php if ($activeView === 'profile'): ?>
           <section class="profilePage" aria-labelledby="profilePageTitle">
             <h1 class="srOnly" id="profilePageTitle">My Profile</h1>
-            <div class="profileOverview">
+            <?php if ($profileSuccess): ?>
+              <div class="profileMessage profileMessageSuccess" role="status">
+                <?= htmlspecialchars($profileSuccess, ENT_QUOTES, 'UTF-8') ?>
+              </div>
+            <?php endif; ?>
+            <?php if ($profileErrors): ?>
+              <div class="profileMessage profileMessageError" role="alert">
+                <?php foreach ($profileErrors as $profileError): ?>
+                  <p><?= htmlspecialchars((string) $profileError, ENT_QUOTES, 'UTF-8') ?></p>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+
+            <form class="profileOverview" action="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>index.php?view=profile" method="POST">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+              <input type="hidden" name="profile_action" value="save">
               <div class="profilePicture">
-                <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8') ?> profile picture">
+                <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?> profile picture">
                 <span>Profile picture</span>
               </div>
 
@@ -208,9 +233,9 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
               </div>
 
               <div class="profileActions">
-                <button class="saveProfileButton" type="button">Save</button>
+                <button class="saveProfileButton" type="submit">Save</button>
               </div>
-            </div>
+            </form>
 
             <div class="profileSecurity">
               <h2>Security</h2>
