@@ -180,7 +180,7 @@ button:focus {
     height: 350px;
 }
 
-.auth-form:nth-child(1) #form-title {
+.auth-form:nth-child(1) .form-title {
     font-size: 2em;
     font-weight: bold;
     margin: 15px;
@@ -231,7 +231,7 @@ button:focus {
     margin-top: 100px;
 }
 
-.auth-form:nth-child(2) #form-title {
+.auth-form:nth-child(2) .form-title {
     font-size: 2em;
     font-weight: bold;
     margin: 15px;
