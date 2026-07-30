@@ -20,11 +20,90 @@ if (!in_array($activeView, $allowedViews, true)) {
     $activeView = 'manage-tasks';
 }
 
+$userTimezone = new DateTimeZone('Asia/Tehran');
+$userProfile = getCurrentUserProfile();
+$profileErrors = [];
+$profileSuccess = isset($_SESSION['profile_success']) && is_string($_SESSION['profile_success'])
+    ? $_SESSION['profile_success']
+    : null;
+unset($_SESSION['profile_success']);
+
+if ($activeView === 'profile' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $profileAction = isset($_POST['profile_action']) && is_string($_POST['profile_action'])
+        ? $_POST['profile_action']
+        : '';
+    $readProfileValue = static function (string $field): string {
+        return isset($_POST[$field]) && is_string($_POST[$field])
+            ? trim($_POST[$field])
+            : '';
+    };
+    $profileInput = [
+        'firstname' => $readProfileValue('firstname'),
+        'lastname' => $readProfileValue('lastname'),
+        'job_title' => $readProfileValue('job_title'),
+        'date_of_birth' => $readProfileValue('date_of_birth'),
+        'gender' => $readProfileValue('gender'),
+        'country' => $readProfileValue('country'),
+    ];
+
+    if ($profileAction !== 'save') {
+        $profileErrors[] = 'Invalid profile request.';
+    } elseif (!verifyCsrfToken($_POST['csrf_token'] ?? null)) {
+        $profileErrors[] = 'Your session has expired. Please submit the form again.';
+    }
+
+    foreach ([
+        'firstname' => 'First name',
+        'lastname' => 'Last name',
+        'job_title' => 'Job title',
+        'country' => 'Country',
+    ] as $field => $label) {
+        if (mb_strlen($profileInput[$field]) > 100) {
+            $profileErrors[] = "$label must not exceed 100 characters.";
+        }
+    }
+
+    if (!in_array($profileInput['gender'], ['', 'male', 'female', 'other'], true)) {
+        $profileErrors[] = 'Please select a valid gender.';
+    }
+
+    if ($profileInput['date_of_birth'] !== '') {
+        $birthDate = DateTimeImmutable::createFromFormat(
+            '!Y-m-d',
+            $profileInput['date_of_birth'],
+            $userTimezone
+        );
+        $birthDateErrors = DateTimeImmutable::getLastErrors();
+        $birthDateIsInvalid = !$birthDate
+            || ($birthDateErrors !== false
+                && ($birthDateErrors['warning_count'] > 0 || $birthDateErrors['error_count'] > 0))
+            || $birthDate->format('Y-m-d') !== $profileInput['date_of_birth'];
+
+        if ($birthDateIsInvalid) {
+            $profileErrors[] = 'Please enter a valid date of birth.';
+        } elseif ($birthDate > new DateTimeImmutable('today', $userTimezone)) {
+            $profileErrors[] = 'Date of birth cannot be in the future.';
+        }
+    }
+
+    if (!$profileErrors) {
+        try {
+            updateCurrentUserProfile($profileInput);
+            $_SESSION['profile_success'] = 'Your profile has been saved successfully.';
+
+            header('Location: ' . BASE_URL . 'index.php?view=profile');
+            exit();
+        } catch (PDOException $exception) {
+            $profileErrors[] = 'Your profile could not be saved. Please try again.';
+        }
+    }
+
+    $userProfile = (object) array_merge((array) $userProfile, $profileInput);
+}
+
 $tasks = $activeView === 'manage-tasks' ? getTasks() : [];
 $todayTasks = [];
 $tomorrowTasks = [];
-$userProfile = null;
-$userTimezone = new DateTimeZone('Asia/Tehran');
 $today = new DateTimeImmutable('today', $userTimezone);
 $completedTasksToday = countCompletedTasksForDate($today);
 
@@ -34,9 +113,6 @@ if ($activeView === 'home') {
     $tomorrowTasks = getTasksForDate($tomorrow);
 }
 
-if ($activeView === 'profile') {
-    $userProfile = getCurrentUserProfile();
-}
 // dd($tasks);
 
 include "views/view-index.php";
