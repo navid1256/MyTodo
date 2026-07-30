@@ -1,5 +1,11 @@
 <?php
 include_once "init.php";
+
+if (getCurrentUserId() === 0) {
+    http_response_code(401);
+    diepage("Authentication required.");
+}
+
 if (!isAjaxRequest()) {
     diepage("Invalid Request");
 }

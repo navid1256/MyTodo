@@ -1,5 +1,11 @@
 <?php
 include "bootstrap/init.php";
+
+if (getCurrentUserId() === 0) {
+    header('Location: ' . BASE_URL . 'auth.php');
+    exit();
+}
+
 if (isset($_GET['delete_task'])&& is_numeric($_GET['delete_task'])) {
     $deletedCount = deleteTask($_GET['delete_task']);
     echo "$deletedCount Tasks Succesfully Deleted";

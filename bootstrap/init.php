@@ -1,5 +1,12 @@
 <?php
 include "constant.php";
+
+if (session_status() === PHP_SESSION_NONE) {
+    if (!session_start()) {
+        throw new RuntimeException('Unable to start the session using the configured PHP session path.');
+    }
+}
+
 include BASE_PATH."bootstrap/config.php";
 
 include BASE_PATH."libs/helpers.php";

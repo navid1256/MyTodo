@@ -198,6 +198,21 @@ button:focus {
     color: #205217 !important;
 }
 
+.auth-errors {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    color: #9f1c1c;
+    background: #fde8e8;
+    border: 1px solid #efb4b4;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    text-align: left;
+}
+
+.auth-errors p {
+    margin: 4px 0;
+}
+
 .auth-form:nth-child(1) input:focus {
     border: solid #F8CB98;
 }
@@ -209,7 +224,11 @@ button:focus {
 }
 
 .auth-form:nth-child(2) {
-    height: 350px;
+    height: 480px;
+}
+
+#signup {
+    margin-top: 100px;
 }
 
 .auth-form:nth-child(2) #form-title {
