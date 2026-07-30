@@ -9,16 +9,28 @@ if (!isset($_POST['action']) || empty($_POST['action'])) {
 }
 
 switch ($_POST['action']) {
-    case 'newFolder':
-        if (!isset($_POST['foldername'])|| strlen($_POST['foldername']) < 3) {
-            echo ".نام فولدر باید بیشتر از 3 حرف باشد";
-            die();
-        }
-        echo newFolders($_POST['foldername']);
-        break;
     case 'newTask':
-        # code...
-        break;            
+        $taskTitle = trim($_POST['task_title'] ?? '');
+        $dueAtValue = trim($_POST['due_at'] ?? '');
+
+        if (mb_strlen($taskTitle) < 3) {
+            diepage("Task title must be at least 3 characters long.");
+        }
+
+        $timezone = new DateTimeZone('Asia/Tehran');
+        $dueAt = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $dueAtValue, $timezone);
+        $dateErrors = DateTimeImmutable::getLastErrors();
+
+        if (
+            !$dueAt
+            || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
+            || $dueAt->format('Y-m-d\TH:i') !== $dueAtValue
+        ) {
+            diepage("A valid task date and time is required.");
+        }
+
+        echo addTask($taskTitle, $dueAt);
+        break;
     default:
         diepage("Invalid Action");
         break;

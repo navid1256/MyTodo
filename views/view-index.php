@@ -1,6 +1,5 @@
 <?php
 
-/** @var array $folders */
 /** @var array $tasks */
 /** @var array $todayTasks */
 /** @var array $tomorrowTasks */
@@ -164,36 +163,6 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
   </div>
   <script src="assets/js/jquery-minimal.js"></script>
   <script src="assets/js/script.js"></script>
-  <script>
-    $(document).ready(function() {
-      $('#newFolderBtn').click(function() {
-        var input = $('input#newFolderInput');
-        if (input.val().length < 3) {
-          alert("Folder Name Must Be At Least 3 Characters Long !");
-          return;
-        }
-        $.ajax({
-          url: "bootstrap/ajaxHandler.php",
-          method: "post",
-          data: {
-            action: "newFolder",
-            foldername: input.val()
-          },
-          success: function(response) {
-            if (response == '1') {
-              location.reload();
-            } else {
-              alert(response);
-            }
-          },
-          error: function(xhr, status, error) {
-            alert("Error Creating Folder: " + error);
-          }
-
-        });
-      });
-    });
-  </script>
 </body>
 
 </html>
