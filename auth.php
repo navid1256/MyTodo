@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userId = registerUser($email, $username, $password);
                 setAuthenticatedUser((object) [
                     'id' => $userId,
-                    'name' => $username,
+                    'username' => $username,
                     'email' => $email,
                 ]);
 

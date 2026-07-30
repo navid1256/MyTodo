@@ -18,9 +18,9 @@ function findUserByUsername(string $username): ?object
     global $pdo;
 
     $statement = $pdo->prepare(
-        'SELECT id, name, email, password
+        'SELECT id, username, email, password
          FROM users
-         WHERE name = :username
+         WHERE username = :username
          LIMIT 1'
     );
     $statement->execute(['username' => $username]);
@@ -55,7 +55,7 @@ function setAuthenticatedUser(object $user): void
 
     $_SESSION['user'] = [
         'id' => (int) $user->id,
-        'username' => $user->name,
+        'username' => $user->username,
         'email' => $user->email,
     ];
 }
@@ -102,7 +102,7 @@ function registerUser(string $email, string $username, string $password): int
     global $pdo;
 
     $statement = $pdo->prepare(
-        'INSERT INTO users (name, email, password)
+        'INSERT INTO users (username, email, password)
          VALUES (:username, :email, :password)'
     );
     $statement->execute([
