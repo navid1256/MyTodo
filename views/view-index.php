@@ -194,31 +194,31 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
 
               <div class="profileFields">
                 <label class="profileField">
-                  <span>First Name</span>
-                  <input type="text" name="firstname" value="<?= htmlspecialchars($profileFields['firstname'], ENT_QUOTES, 'UTF-8') ?>">
+                  <span>First Name :</span>
+                  <input type="text" name="firstname" placeholder="Enter your first name" value="<?= htmlspecialchars($profileFields['firstname'], ENT_QUOTES, 'UTF-8') ?>">
                 </label>
                 <label class="profileField">
-                  <span>Last Name</span>
-                  <input type="text" name="lastname" value="<?= htmlspecialchars($profileFields['lastname'], ENT_QUOTES, 'UTF-8') ?>">
+                  <span>Last Name :</span>
+                  <input type="text" name="lastname" placeholder="Enter your last name" value="<?= htmlspecialchars($profileFields['lastname'], ENT_QUOTES, 'UTF-8') ?>">
                 </label>
                 <label class="profileField">
-                  <span>Email</span>
-                  <input type="email" value="<?= htmlspecialchars($profileFields['email'], ENT_QUOTES, 'UTF-8') ?>" readonly>
+                  <span>Email :</span>
+                  <input type="email" placeholder="Email address" value="<?= htmlspecialchars($profileFields['email'], ENT_QUOTES, 'UTF-8') ?>" readonly>
                 </label>
                 <label class="profileField">
-                  <span>Username</span>
-                  <input type="text" value="<?= htmlspecialchars($profileFields['username'], ENT_QUOTES, 'UTF-8') ?>" readonly>
+                  <span>Username :</span>
+                  <input type="text" placeholder="Username" value="<?= htmlspecialchars($profileFields['username'], ENT_QUOTES, 'UTF-8') ?>" readonly>
                 </label>
                 <label class="profileField">
-                  <span>Job Title</span>
-                  <input type="text" name="job_title" value="<?= htmlspecialchars($profileFields['job_title'], ENT_QUOTES, 'UTF-8') ?>">
+                  <span>Job Title :</span>
+                  <input type="text" name="job_title" placeholder="Enter your job title" value="<?= htmlspecialchars($profileFields['job_title'], ENT_QUOTES, 'UTF-8') ?>">
                 </label>
                 <label class="profileField">
-                  <span>Date of Birth</span>
-                  <input type="date" name="date_of_birth" value="<?= htmlspecialchars($profileFields['date_of_birth'], ENT_QUOTES, 'UTF-8') ?>">
+                  <span>Date of Birth :</span>
+                  <input type="date" name="date_of_birth" placeholder="Select your date of birth" value="<?= htmlspecialchars($profileFields['date_of_birth'], ENT_QUOTES, 'UTF-8') ?>">
                 </label>
                 <label class="profileField">
-                  <span>Gender</span>
+                  <span>Gender :</span>
                   <select name="gender">
                     <option value="" <?= $profileFields['gender'] === '' ? 'selected' : '' ?>>Select gender</option>
                     <option value="male" <?= $profileFields['gender'] === 'male' ? 'selected' : '' ?>>Male</option>
@@ -227,8 +227,8 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
                   </select>
                 </label>
                 <label class="profileField">
-                  <span>Country</span>
-                  <input type="text" name="country" value="<?= htmlspecialchars($profileFields['country'], ENT_QUOTES, 'UTF-8') ?>">
+                  <span>Country :</span>
+                  <input type="text" name="country" placeholder="Enter your country" value="<?= htmlspecialchars($profileFields['country'], ENT_QUOTES, 'UTF-8') ?>">
                 </label>
               </div>
 
@@ -249,7 +249,7 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
             <button id="newTaskBtn" class="Btn clickable">+</button>
           </div>
           <div class="functions">
-            <div class="button active">Add New Task</div>
+            <button class="button active" id="openTaskModal" type="button">Add New Task</button>
             <div class="button completedButton" aria-label="<?= $completedTasksToday ?> tasks completed today">
               <span class="completedCount"><?= $completedTasksToday ?></span>
               <span>Completed</span>
@@ -279,6 +279,70 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
               </ul>
             </div>
           <?php endif; ?>
+        </div>
+
+        <div class="taskModalBackdrop" id="taskModal" hidden>
+          <section
+            class="taskModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="taskModalTitle">
+            <h2 class="srOnly" id="taskModalTitle">Add New Task</h2>
+            <button class="taskModalClose" id="closeTaskModal" type="button" aria-label="Close task modal">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+
+            <form id="newTaskForm" novalidate>
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+
+              <label class="srOnly" for="taskModalText">Task text</label>
+              <textarea
+                id="taskModalText"
+                name="task_title"
+                maxlength="512"
+                placeholder="Input Text"
+                required></textarea>
+
+              <div class="taskModalOptions">
+                <button
+                  class="taskOptionButton"
+                  id="setTaskDateButton"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="taskDateTimePanel">
+                  Set Date &amp; Time
+                </button>
+                <button
+                  class="taskOptionButton"
+                  id="setTaskReminderButton"
+                  type="button"
+                  aria-pressed="false">
+                  Set Reminder
+                </button>
+                <button
+                  class="taskOptionButton"
+                  id="setTaskRepeatButton"
+                  type="button"
+                  aria-pressed="false">
+                  Repeat
+                </button>
+              </div>
+
+              <div class="taskDateTimePanel" id="taskDateTimePanel" hidden>
+                <label for="taskDueAt">Task date and time</label>
+                <input id="taskDueAt" name="due_at" type="datetime-local">
+              </div>
+
+              <p class="taskModalMessage" id="taskModalMessage" role="alert" aria-live="polite"></p>
+
+              <div class="taskModalActions">
+                <button class="saveTaskButton" id="saveTaskButton" type="submit">Save</button>
+              </div>
+            </form>
+          </section>
         </div>
         <?php endif; ?>
       </div>

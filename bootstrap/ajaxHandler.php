@@ -7,11 +7,18 @@ if (getCurrentUserId() === 0) {
 }
 
 if (!isAjaxRequest()) {
+    http_response_code(400);
     diepage("Invalid Request");
 }
 
 if (!isset($_POST['action']) || empty($_POST['action'])) {
+    http_response_code(400);
     diepage("Invalid Action");
+}
+
+if (!verifyCsrfToken($_POST['csrf_token'] ?? null)) {
+    http_response_code(403);
+    diepage("Your session has expired. Please refresh the page and try again.");
 }
 
 switch ($_POST['action']) {
@@ -20,7 +27,13 @@ switch ($_POST['action']) {
         $dueAtValue = trim($_POST['due_at'] ?? '');
 
         if (mb_strlen($taskTitle) < 3) {
+            http_response_code(422);
             diepage("Task title must be at least 3 characters long.");
+        }
+
+        if (mb_strlen($taskTitle) > 512) {
+            http_response_code(422);
+            diepage("Task title must not exceed 512 characters.");
         }
 
         $timezone = new DateTimeZone('Asia/Tehran');
@@ -32,12 +45,14 @@ switch ($_POST['action']) {
             || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
             || $dueAt->format('Y-m-d\TH:i') !== $dueAtValue
         ) {
+            http_response_code(422);
             diepage("A valid task date and time is required.");
         }
 
         echo addTask($taskTitle, $dueAt);
         break;
     default:
+        http_response_code(400);
         diepage("Invalid Action");
         break;
 }
