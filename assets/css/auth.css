@@ -198,6 +198,25 @@ button:focus {
     color: #205217 !important;
 }
 
+.auth-success {
+    position: absolute;
+    z-index: 100;
+    top: clamp(20px, calc(50% - 430px), 90px);
+    left: 50%;
+    width: min(440px, calc(100% - 40px));
+    padding: 14px 20px;
+    box-sizing: border-box;
+    transform: translateX(-50%);
+    color: #205217;
+    background: #def9df;
+    border: 1px solid #a4cca6;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(32, 82, 23, 0.16);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    text-align: center;
+}
+
 .auth-errors {
     padding: 8px 12px;
     margin-bottom: 8px;

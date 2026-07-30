@@ -3,6 +3,7 @@ defined('BASE_PATH') || die('Permission Denied!');
 
 $activeAuthForm = ($activeAuthForm ?? 'login') === 'register' ? 'register' : 'login';
 $authErrors = isset($authErrors) && is_array($authErrors) ? $authErrors : [];
+$authSuccess = isset($authSuccess) && is_string($authSuccess) ? $authSuccess : null;
 $oldInput = array_merge(
     ['email' => '', 'username' => ''],
     isset($oldInput) && is_array($oldInput) ? $oldInput : []
@@ -24,6 +25,11 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfTo
 <body>
     <!-- partial:index.partial.html -->
     <div id="background" class="<?= $isRegister ? 'two' : '' ?>">
+        <?php if ($authSuccess): ?>
+            <div class="auth-success" role="status">
+                <?= htmlspecialchars($authSuccess, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+        <?php endif; ?>
         <div id="panel-box">
             <div class="panel">
                 <div class="auth-form <?= !$isRegister ? 'on' : '' ?>" id="login">
