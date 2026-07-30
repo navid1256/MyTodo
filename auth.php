@@ -7,6 +7,11 @@ if (getCurrentUserId() > 0) {
 }
 
 $authErrors = [];
+$authSuccess = isset($_SESSION['auth_success']) && is_string($_SESSION['auth_success'])
+    ? $_SESSION['auth_success']
+    : null;
+unset($_SESSION['auth_success']);
+
 $oldInput = [
     'email' => '',
     'username' => '',
@@ -73,14 +78,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
         if (!$authErrors) {
             try {
-                $userId = registerUser($email, $username, $password);
-                setAuthenticatedUser((object) [
-                    'id' => $userId,
-                    'username' => $username,
-                    'email' => $email,
-                ]);
+                registerUser($email, $username, $password);
+                $_SESSION['auth_success'] = 'Your account has been created successfully. Please log in.';
 
-                header('Location: ' . BASE_URL . 'index.php');
+                header('Location: ' . BASE_URL . 'auth.php?action=login');
                 exit();
             } catch (PDOException $exception) {
                 $authErrors[] = 'Registration could not be completed. Please try again.';
