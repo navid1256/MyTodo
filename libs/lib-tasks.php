@@ -7,77 +7,48 @@
 // }
 
 defined('BASE_PATH') or die("Permission Denied !");
-/****Folder Function ***/
-function newFolders(string $foldername)
-{
-    global $pdo;
-    $current_user_id = getCurrentUserId();
-    $sql = "INSERT INTO folders (name,user_id) VALUES (:foldername,:user_id);";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':foldername' => $foldername, ':user_id' => $current_user_id]);
-    return $stmt->rowCount();
-}
-
-function deleteFolder(int $folder_id)
-{
-    global $pdo;
-    $sql = "DELETE FROM folders WHERE id = :folder_id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':folder_id' => $folder_id]);
-    return $stmt->rowCount();
-}
-
-// function getCurrentUserId(){
-//     return 1;
-// }
-function getFolders()
-{
-    global $pdo;
-    $current_user_id = getCurrentUserId();
-    $sql = "SELECT * FROM folders WHERE user_id = :user_id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':user_id' => $current_user_id]);
-    $records = $stmt->fetchAll(PDO::FETCH_OBJ);
-    return $records;
-}
 
 /***Tasks Function***/
 function deleteTask(int $task_id)
 {
     global $pdo;
-    $sql = "DELETE FROM tasks WHERE id = :task_id";
+    $current_user_id = getCurrentUserId();
+    $sql = "DELETE FROM tasks WHERE id = :task_id AND user_id = :user_id";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':task_id' => $task_id]);
+    $stmt->execute([
+        ':task_id' => $task_id,
+        ':user_id' => $current_user_id,
+    ]);
     return $stmt->rowCount();
 }
 
-function addTask(string $taskTitle, int $folderId)
+function addTask(string $taskTitle, DateTimeInterface $dueAt)
 {
     global $pdo;
     $current_user_id = getCurrentUserId();
-    $sql = "INSERT INTO `tasks` (title,user_id,folder_id) VALUES (:title,:user_id,:folder_id);";
+    $sql = "INSERT INTO tasks (title, user_id, due_at)
+            VALUES (:title, :user_id, :due_at)";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':title' => $taskTitle, ':user_id' => $current_user_id, ':folder_id' => $folderId]);
+    $stmt->execute([
+        ':title' => $taskTitle,
+        ':user_id' => $current_user_id,
+        ':due_at' => $dueAt->format('Y-m-d H:i:s'),
+    ]);
     return $stmt->rowCount();
 }
+
 function getTasks()
 {
     global $pdo;
-    $folder = $_GET['folder_id'] ?? null;
     $current_user_id = getCurrentUserId();
+    $sql = "SELECT *
+            FROM tasks
+            WHERE user_id = :user_id
+            ORDER BY due_at IS NULL, due_at ASC, id DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':user_id' => $current_user_id]);
 
-    if (isset($folder) && is_numeric($folder)) {
-        $sql = "SELECT * FROM tasks WHERE user_id = :user_id AND folder_id = :folder_id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':user_id' => $current_user_id, ':folder_id' => $folder]);
-    } else {
-        $sql = "SELECT * FROM tasks WHERE user_id = :user_id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':user_id' => $current_user_id]);
-    }
-
-    $records = $stmt->fetchAll(PDO::FETCH_OBJ);
-    return $records;
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
 }
 
 function getTasksForDate(DateTimeInterface $date)
