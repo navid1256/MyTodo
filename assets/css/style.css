@@ -407,6 +407,7 @@ span.created-at {
     float: right;
     height: 30px;
     line-height: 30px;
+    border: 0;
     background-color: #5ae556;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
@@ -415,6 +416,8 @@ span.created-at {
     padding: 0px 20px;
     cursor: pointer;
     color: White;
+    font-family: inherit;
+    font-size: inherit;
     font-weight: 700;
 }
 
@@ -427,6 +430,34 @@ span.created-at {
     align-items: center;
     gap: 8px;
     padding: 0px 15px;
+}
+
+.main .view .viewHeader .functions .button.active,
+.main .view .viewHeader .functions .completedButton {
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        filter 0.25s ease;
+}
+
+.main .view .viewHeader .functions .button.active:hover,
+.main .view .viewHeader .functions .button.active:focus-visible {
+    box-shadow:
+        0 0 8px rgba(84, 185, 205, 0.8),
+        0 0 18px rgba(84, 185, 205, 0.55);
+    filter: brightness(1.08);
+    outline: none;
+    transform: translateY(-2px) scale(1.03);
+}
+
+.main .view .viewHeader .functions .completedButton:hover,
+.main .view .viewHeader .functions .completedButton:focus-visible {
+    box-shadow:
+        0 0 8px rgba(90, 229, 86, 0.8),
+        0 0 18px rgba(90, 229, 86, 0.55);
+    filter: brightness(1.06);
+    outline: none;
+    transform: translateY(-2px) scale(1.03);
 }
 
 .main .view .viewHeader .functions .completedCount {
@@ -727,6 +758,195 @@ span.created-at {
     outline: none;
 }
 
+.task-modal-open {
+    overflow: hidden;
+}
+
+.taskModalBackdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(20, 32, 40, 0.48);
+    box-sizing: border-box;
+}
+
+.taskModalBackdrop[hidden] {
+    display: none;
+}
+
+.taskModal {
+    position: relative;
+    width: min(572px, 100%);
+    min-height: 408px;
+    padding: 12px 16px 30px;
+    border: 1px solid #168df0;
+    border-radius: 28px;
+    background-color: #f2f2f2;
+    box-shadow: 0 22px 60px rgba(17, 41, 58, 0.3);
+    box-sizing: border-box;
+}
+
+.taskModalClose {
+    position: absolute;
+    z-index: 1;
+    top: 13px;
+    right: 19px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.78);
+    color: #5c6870;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.taskModalClose:hover,
+.taskModalClose:focus-visible {
+    background-color: #ffffff;
+    color: #1d2f3a;
+    outline: 2px solid rgba(22, 141, 240, 0.35);
+}
+
+#newTaskForm {
+    display: flex;
+    min-height: 364px;
+    flex-direction: column;
+}
+
+#taskModalText {
+    width: 100%;
+    height: 176px;
+    min-height: 130px;
+    margin: 0 0 10px;
+    padding: 28px 30px;
+    resize: vertical;
+    border: 0;
+    border-radius: 24px;
+    background-color: #ffffff;
+    color: #172027;
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1.45;
+    box-sizing: border-box;
+}
+
+#taskModalText::placeholder {
+    color: #172027;
+    opacity: 1;
+}
+
+#taskModalText:focus {
+    outline: 3px solid rgba(22, 141, 240, 0.3);
+}
+
+.taskModalOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 6px;
+}
+
+.taskOptionButton,
+.saveTaskButton {
+    min-height: 42px;
+    padding: 0 19px;
+    border: 0;
+    border-radius: 999px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.taskOptionButton {
+    background: linear-gradient(180deg, #168df0, #0784e9);
+    box-shadow: 0 5px 10px rgba(7, 132, 233, 0.2);
+}
+
+.taskOptionButton:hover,
+.taskOptionButton:focus-visible,
+.taskOptionButton[aria-pressed="true"] {
+    background: linear-gradient(180deg, #0878d3, #006ec4);
+    box-shadow: 0 7px 15px rgba(7, 132, 233, 0.3);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.taskDateTimePanel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 13px 6px 0;
+    color: #344550;
+}
+
+.taskDateTimePanel[hidden] {
+    display: none;
+}
+
+.taskDateTimePanel label {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.taskDateTimePanel input {
+    min-width: 205px;
+    padding: 8px 10px;
+    border: 1px solid #b9c5cc;
+    border-radius: 9px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+}
+
+.taskModalMessage {
+    min-height: 18px;
+    margin: 8px 8px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.taskModalActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding: 0 6px;
+}
+
+.saveTaskButton {
+    min-width: 74px;
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+}
+
+.saveTaskButton:hover,
+.saveTaskButton:focus-visible {
+    background: linear-gradient(180deg, #24b95a, #169c44);
+    box-shadow: 0 8px 18px rgba(32, 185, 85, 0.3);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.saveTaskButton:disabled {
+    cursor: wait;
+    opacity: 0.7;
+    transform: none;
+}
+
 @media (max-width: 1050px) {
     .profileOverview {
         grid-template-columns: 160px minmax(0, 1fr);
@@ -737,6 +957,42 @@ span.created-at {
     .profileFields {
         grid-template-columns: 1fr;
         gap: 18px;
+    }
+}
+
+@media (max-width: 620px) {
+    .taskModalBackdrop {
+        padding: 14px;
+    }
+
+    .taskModal {
+        min-height: 390px;
+        padding: 12px 12px 24px;
+    }
+
+    #taskModalText {
+        height: 160px;
+        padding: 24px 20px;
+    }
+
+    .taskModalOptions {
+        gap: 8px;
+    }
+
+    .taskOptionButton {
+        min-height: 38px;
+        padding: 0 13px;
+        font-size: 13px;
+    }
+
+    .taskDateTimePanel {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .taskDateTimePanel input {
+        min-width: 0;
     }
 }
 
@@ -921,4 +1177,39 @@ html.dark-mode .profileField input[readonly] {
 
 html.dark-mode .profileSecurity h2 {
     color: #e4ebf0;
+}
+
+html.dark-mode .taskModalBackdrop {
+    background-color: rgba(2, 10, 18, 0.68);
+}
+
+html.dark-mode .taskModal {
+    border-color: #258bdc;
+    background-color: #18242e;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.52);
+}
+
+html.dark-mode .taskModalClose {
+    background-color: #263642;
+    color: #d7e1e8;
+}
+
+html.dark-mode #taskModalText {
+    background-color: #263642;
+    color: #edf3f7;
+}
+
+html.dark-mode #taskModalText::placeholder {
+    color: #bac7cf;
+}
+
+html.dark-mode .taskDateTimePanel {
+    color: #d1dce3;
+}
+
+html.dark-mode .taskDateTimePanel input {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+    color-scheme: dark;
 }
