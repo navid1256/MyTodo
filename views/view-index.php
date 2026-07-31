@@ -50,7 +50,11 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
       <span><?= htmlspecialchars($task->title, ENT_QUOTES, 'UTF-8') ?></span>
       <div class="info">
         <?php if ($showDueTime && !empty($task->due_at)): ?>
-          <span class="created-at">Due at <?= date('H:i', strtotime($task->due_at)) ?></span>
+          <?php if (!empty($task->has_time)): ?>
+            <span class="created-at">Due at <?= date('h:i A', strtotime($task->due_at)) ?></span>
+          <?php else: ?>
+            <span class="created-at">No time set</span>
+          <?php endif; ?>
         <?php else: ?>
           <span class="created-at">Created At <?= htmlspecialchars($task->created_at, ENT_QUOTES, 'UTF-8') ?></span>
         <?php endif; ?>
@@ -244,10 +248,6 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
           </section>
         <?php else: ?>
         <div class="viewHeader">
-          <div class="title" style="width:50% ;">
-            <input type="text" id="taskNameInput" style="width: 76%;margin-left: 5%;line-height: 17px;" placeholder="Add New Task">
-            <button id="newTaskBtn" class="Btn clickable">+</button>
-          </div>
           <div class="functions">
             <button class="button active" id="openTaskModal" type="button">Add New Task</button>
             <div class="button completedButton" aria-label="<?= $completedTasksToday ?> tasks completed today">
@@ -312,7 +312,7 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
                   id="setTaskDateButton"
                   type="button"
                   aria-expanded="false"
-                  aria-controls="taskDateTimePanel">
+                  aria-controls="dateTimeModal">
                   Set Date &amp; Time
                 </button>
                 <button
@@ -331,10 +331,9 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
                 </button>
               </div>
 
-              <div class="taskDateTimePanel" id="taskDateTimePanel" hidden>
-                <label for="taskDueAt">Task date and time</label>
-                <input id="taskDueAt" name="due_at" type="datetime-local">
-              </div>
+              <input id="taskDueAt" name="due_at" type="hidden" value="">
+              <input id="taskHasTime" name="has_time" type="hidden" value="0">
+              <p class="taskDateSummary" id="taskDateSummary">No date selected</p>
 
               <p class="taskModalMessage" id="taskModalMessage" role="alert" aria-live="polite"></p>
 
@@ -342,6 +341,105 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
                 <button class="saveTaskButton" id="saveTaskButton" type="submit">Save</button>
               </div>
             </form>
+          </section>
+        </div>
+
+        <div class="dateTimeModalBackdrop" id="dateTimeModal" hidden>
+          <section
+            class="dateTimeModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dateTimeModalTitle">
+            <button class="dateTimeModalClose" id="closeDateTimeModal" type="button" aria-label="Close date and time modal">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+
+            <div class="calendarHeader">
+              <button class="calendarNavButton" id="previousCalendarMonth" type="button" aria-label="Previous month">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <h2 id="dateTimeModalTitle">July 2026</h2>
+              <button class="calendarNavButton" id="nextCalendarMonth" type="button" aria-label="Next month">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div class="calendarWeekdays" aria-hidden="true">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div class="calendarDays" id="calendarDays" role="grid" aria-labelledby="dateTimeModalTitle"></div>
+
+            <fieldset class="quickDateOptions">
+              <legend class="srOnly">Quick date selection</legend>
+              <label>
+                <input type="radio" name="quick_task_date" value="today" checked>
+                <span>Today</span>
+              </label>
+              <label>
+                <input type="radio" name="quick_task_date" value="tomorrow">
+                <span>Tomorrow</span>
+              </label>
+              <label>
+                <input type="radio" name="quick_task_date" value="no-date">
+                <span>No Date</span>
+              </label>
+            </fieldset>
+
+            <section class="setTimeSection" id="setTimeSection" aria-labelledby="setTimeTitle">
+              <div class="setTimeHeader">
+                <h3 id="setTimeTitle">Set Time</h3>
+                <div class="setTimeToggle" role="radiogroup" aria-label="Enable task time">
+                  <label>
+                    <input id="setTimeYes" type="radio" name="set_task_time" value="yes" checked>
+                    <span>Yes</span>
+                  </label>
+                  <label>
+                    <input id="setTimeNo" type="radio" name="set_task_time" value="no">
+                    <span>No</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="timePicker" id="timePicker">
+                <label>
+                  <span>Hour</span>
+                  <select id="taskTimeHour" aria-label="Hour">
+                    <?php for ($hour = 1; $hour <= 12; $hour++): ?>
+                      <option value="<?= $hour ?>"><?= str_pad((string) $hour, 2, '0', STR_PAD_LEFT) ?></option>
+                    <?php endfor; ?>
+                  </select>
+                </label>
+                <span class="timeSeparator" aria-hidden="true">:</span>
+                <label>
+                  <span>Minute</span>
+                  <select id="taskTimeMinute" aria-label="Minute">
+                    <?php for ($minute = 0; $minute < 60; $minute++): ?>
+                      <option value="<?= $minute ?>"><?= str_pad((string) $minute, 2, '0', STR_PAD_LEFT) ?></option>
+                    <?php endfor; ?>
+                  </select>
+                </label>
+                <label>
+                  <span>Period</span>
+                  <select id="taskTimePeriod" aria-label="AM or PM">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <p class="dateTimeModalMessage" id="dateTimeModalMessage" role="alert" aria-live="polite"></p>
+
+            <div class="dateTimeModalActions">
+              <button class="cancelDateTimeButton" id="cancelDateTimeButton" type="button">Cancel</button>
+              <button class="applyDateTimeButton" id="applyDateTimeButton" type="button">Apply</button>
+            </div>
           </section>
         </div>
         <?php endif; ?>

@@ -22,17 +22,18 @@ function deleteTask(int $task_id)
     return $stmt->rowCount();
 }
 
-function addTask(string $taskTitle, DateTimeInterface $dueAt)
+function addTask(string $taskTitle, ?DateTimeInterface $dueAt, bool $hasTime = false)
 {
     global $pdo;
     $current_user_id = getCurrentUserId();
-    $sql = "INSERT INTO tasks (title, user_id, due_at)
-            VALUES (:title, :user_id, :due_at)";
+    $sql = "INSERT INTO tasks (title, user_id, due_at, has_time)
+            VALUES (:title, :user_id, :due_at, :has_time)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':title' => $taskTitle,
         ':user_id' => $current_user_id,
-        ':due_at' => $dueAt->format('Y-m-d H:i:s'),
+        ':due_at' => $dueAt ? $dueAt->format('Y-m-d H:i:s') : null,
+        ':has_time' => $dueAt && $hasTime ? 1 : 0,
     ]);
     return $stmt->rowCount();
 }

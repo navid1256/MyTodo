@@ -67,7 +67,7 @@ span.created-at {
     width: 80%;
     height: 80%;
     left: 10%;
-    top: 10%;
+    top: 8%;
     background-color: rgba(255, 255, 255, 0.7);
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
@@ -216,6 +216,7 @@ span.created-at {
     min-height: 50px;
     margin: 0 6px;
     padding: 0 20px;
+    box-sizing: border-box;
     align-items: center;
     gap: 16px;
     border: 0;
@@ -885,31 +886,12 @@ span.created-at {
     transform: translateY(-1px);
 }
 
-.taskDateTimePanel {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 13px 6px 0;
-    color: #344550;
-}
-
-.taskDateTimePanel[hidden] {
-    display: none;
-}
-
-.taskDateTimePanel label {
+.taskDateSummary {
+    min-height: 18px;
+    margin: 11px 12px 0;
+    color: #4f6572;
     font-size: 13px;
-    font-weight: 700;
-}
-
-.taskDateTimePanel input {
-    min-width: 205px;
-    padding: 8px 10px;
-    border: 1px solid #b9c5cc;
-    border-radius: 9px;
-    background-color: #ffffff;
-    color: #263842;
-    font-family: inherit;
+    font-weight: 600;
 }
 
 .taskModalMessage {
@@ -945,6 +927,317 @@ span.created-at {
     cursor: wait;
     opacity: 0.7;
     transform: none;
+}
+
+.dateTimeModalBackdrop {
+    position: fixed;
+    z-index: 1100;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.64);
+    box-sizing: border-box;
+}
+
+.dateTimeModalBackdrop[hidden] {
+    display: none;
+}
+
+.dateTimeModal {
+    position: relative;
+    width: min(560px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 26px 34px 28px;
+    overflow-y: auto;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.36);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.dateTimeModalClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dateTimeModalClose:hover,
+.dateTimeModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.calendarHeader {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
+    max-width: 320px;
+    margin: 4px auto 24px;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendarHeader h2 {
+    margin: 0;
+    color: #303f48;
+    font-size: 25px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.calendarNavButton {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #4e5e66;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.calendarNavButton:hover,
+.calendarNavButton:focus-visible {
+    background-color: #eaf2f6;
+    color: #168df0;
+    outline: none;
+}
+
+.calendarWeekdays,
+.calendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.calendarWeekdays {
+    margin-bottom: 8px;
+}
+
+.calendarWeekdays span {
+    padding: 7px 0;
+    color: #26333b;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.calendarDay {
+    display: grid;
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #44535c;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.calendarDay:hover,
+.calendarDay:focus-visible {
+    background-color: #e8f2ff;
+    color: #087edc;
+    outline: none;
+    transform: scale(1.06);
+}
+
+.calendarDay.outsideMonth {
+    color: #b6bec3;
+}
+
+.calendarDay.today:not(.selected) {
+    box-shadow: inset 0 0 0 2px #77aef0;
+    color: #237dd1;
+    font-weight: 800;
+}
+
+.calendarDay.selected {
+    background-color: #72a8ee;
+    box-shadow: 0 6px 14px rgba(73, 137, 219, 0.28);
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.quickDateOptions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0 0;
+    padding: 18px 0;
+    border: 0;
+    border-top: 1px solid #e1e8ec;
+    border-bottom: 1px solid #e1e8ec;
+}
+
+.quickDateOptions label,
+.setTimeToggle label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #3e4e57;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.quickDateOptions input,
+.setTimeToggle input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: #168df0;
+}
+
+.setTimeSection {
+    padding: 18px 4px 0;
+    transition: opacity 0.2s ease;
+}
+
+.setTimeSection.is-disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+}
+
+.setTimeSection.is-disabled .setTimeHeader,
+.setTimeSection.is-disabled .timePicker {
+    pointer-events: none;
+}
+
+.setTimeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.setTimeHeader h3 {
+    margin: 0;
+    color: #263842;
+    font-size: 18px;
+}
+
+.setTimeToggle {
+    display: flex;
+    gap: 14px;
+}
+
+.timePicker {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.timePicker label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #5a6971;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.timePicker select {
+    min-width: 86px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.timePicker select:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.timePicker select:disabled {
+    cursor: not-allowed;
+}
+
+.timeSeparator {
+    padding-bottom: 10px;
+    color: #52636d;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.dateTimeModalMessage {
+    min-height: 18px;
+    margin: 12px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.dateTimeModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.cancelDateTimeButton,
+.applyDateTimeButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelDateTimeButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyDateTimeButton {
+    background: linear-gradient(180deg, #168df0, #0784e9);
+    box-shadow: 0 6px 14px rgba(7, 132, 233, 0.22);
+    color: #ffffff;
+}
+
+.cancelDateTimeButton:hover,
+.cancelDateTimeButton:focus-visible,
+.applyDateTimeButton:hover,
+.applyDateTimeButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
 }
 
 @media (max-width: 1050px) {
@@ -985,14 +1278,47 @@ span.created-at {
         font-size: 13px;
     }
 
-    .taskDateTimePanel {
-        align-items: stretch;
-        flex-direction: column;
-        gap: 6px;
+    .dateTimeModalBackdrop {
+        padding: 12px;
     }
 
-    .taskDateTimePanel input {
-        min-width: 0;
+    .dateTimeModal {
+        max-height: calc(100vh - 24px);
+        padding: 24px 16px;
+        border-radius: 22px;
+    }
+
+    .calendarHeader {
+        margin-bottom: 16px;
+    }
+
+    .calendarHeader h2 {
+        font-size: 21px;
+    }
+
+    .calendarDay {
+        font-size: 14px;
+    }
+
+    .quickDateOptions {
+        flex-wrap: wrap;
+        gap: 10px 16px;
+    }
+
+    .setTimeHeader {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .timePicker {
+        justify-content: flex-start;
+        gap: 7px;
+    }
+
+    .timePicker select {
+        min-width: 74px;
+        padding: 0 8px;
     }
 }
 
@@ -1050,6 +1376,8 @@ html.dark-mode .profileDropdown button:focus-visible,
 html.dark-mode .profileDropdown .profileDropdownLink:hover,
 html.dark-mode .profileDropdown .profileDropdownLink:focus-visible {
     background-color: #24333f;
+    outline: none;
+    border-radius: 9px;
 }
 
 html.dark-mode .profileDropdown button i {
@@ -1203,13 +1531,69 @@ html.dark-mode #taskModalText::placeholder {
     color: #bac7cf;
 }
 
-html.dark-mode .taskDateTimePanel {
-    color: #d1dce3;
+html.dark-mode .taskDateSummary {
+    color: #b7c7d0;
 }
 
-html.dark-mode .taskDateTimePanel input {
+html.dark-mode .dateTimeModalBackdrop {
+    background-color: rgba(2, 10, 18, 0.78);
+}
+
+html.dark-mode .dateTimeModal {
+    border-color: #3b5262;
+    background-color: #18242e;
+    color: #dce6ec;
+}
+
+html.dark-mode .dateTimeModalClose,
+html.dark-mode .calendarNavButton {
+    background-color: #263642;
+    color: #d4e0e7;
+}
+
+html.dark-mode .calendarHeader h2,
+html.dark-mode .calendarWeekdays span,
+html.dark-mode .setTimeHeader h3 {
+    color: #e8eff3;
+}
+
+html.dark-mode .calendarDay {
+    color: #cbd7de;
+}
+
+html.dark-mode .calendarDay.outsideMonth {
+    color: #61727d;
+}
+
+html.dark-mode .calendarDay:hover,
+html.dark-mode .calendarDay:focus-visible {
+    background-color: #253c4c;
+    color: #83c6ff;
+}
+
+html.dark-mode .calendarDay.selected {
+    background-color: #378edb;
+    color: #ffffff;
+}
+
+html.dark-mode .quickDateOptions {
+    border-color: #374957;
+}
+
+html.dark-mode .quickDateOptions label,
+html.dark-mode .setTimeToggle label,
+html.dark-mode .timePicker label {
+    color: #c9d5dc;
+}
+
+html.dark-mode .timePicker select {
     border-color: #455664;
     background-color: #1d2a35;
     color: #e4ebf0;
     color-scheme: dark;
+}
+
+html.dark-mode .cancelDateTimeButton {
+    background-color: #2a3a46;
+    color: #d5e0e6;
 }
