@@ -448,7 +448,7 @@ span.created-at {
         0 0 18px rgba(84, 185, 205, 0.55);
     filter: brightness(1.08);
     outline: none;
-    transform: translateY(-2px) scale(1.03);
+    transform: translateY(-2px);
 }
 
 .main .view .viewHeader .functions .completedButton:hover,
@@ -458,7 +458,7 @@ span.created-at {
         0 0 18px rgba(90, 229, 86, 0.55);
     filter: brightness(1.06);
     outline: none;
-    transform: translateY(-2px) scale(1.03);
+    transform: translateY(-2px);
 }
 
 .main .view .viewHeader .functions .completedCount {
@@ -886,12 +886,22 @@ span.created-at {
     transform: translateY(-1px);
 }
 
-.taskDateSummary {
+.taskOptionButton.has-reminders {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.28);
+}
+
+.taskDateSummary,
+.taskReminderSummary {
     min-height: 18px;
     margin: 11px 12px 0;
     color: #4f6572;
     font-size: 13px;
     font-weight: 600;
+}
+
+.taskReminderSummary {
+    margin-top: 3px;
 }
 
 .taskModalMessage {
@@ -1240,6 +1250,251 @@ span.created-at {
     outline: 2px solid rgba(22, 141, 240, 0.24);
 }
 
+.reminderModalBackdrop {
+    position: fixed;
+    z-index: 1120;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.68);
+    box-sizing: border-box;
+}
+
+.reminderModalBackdrop[hidden] {
+    display: none;
+}
+
+.reminderModal {
+    position: relative;
+    width: min(620px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 30px 34px 28px;
+    overflow-y: auto;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.38);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.reminderModalClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.reminderModalClose:hover,
+.reminderModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.reminderModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding-right: 36px;
+    color: #263842;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.reminderModalHeader h2 {
+    margin: 0;
+    font-size: inherit;
+}
+
+.reminderCountField {
+    display: inline-flex;
+}
+
+.reminderCountField select {
+    width: 66px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #b9cbd5;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.reminderCountField select:focus,
+.reminderPresetField select:focus,
+.customReminderFields input:focus,
+.customReminderFields select:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.reminderModalHint {
+    margin: 12px 0 20px;
+    color: #61737d;
+    font-size: 13px;
+    text-align: center;
+}
+
+.reminderList {
+    display: grid;
+    gap: 14px;
+}
+
+.reminderItem {
+    padding: 18px;
+    border: 1px solid #dce6eb;
+    border-radius: 18px;
+    background-color: #f5f9fb;
+}
+
+.reminderItem h3 {
+    margin: 0 0 13px;
+    color: #324751;
+    font-size: 15px;
+}
+
+.reminderPresetField {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    color: #455861;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.reminderPresetField select,
+.customReminderFields input,
+.customReminderFields select {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.customReminderFields {
+    display: grid;
+    grid-template-columns: minmax(100px, 0.7fr) minmax(130px, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+    margin-top: 13px;
+    padding: 13px;
+    border-radius: 12px;
+    background-color: #eaf2f6;
+}
+
+.customReminderFields[hidden] {
+    display: none;
+}
+
+.customReminderFields label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #61737d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.beforeDueText {
+    padding-bottom: 12px;
+    color: #52636d;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.reminderPreview {
+    min-height: 18px;
+    margin: 13px 2px 0;
+    color: #21864a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.reminderPreview.is-loading {
+    color: #5a7482;
+}
+
+.reminderPreview.is-error {
+    color: #b42318;
+}
+
+.reminderModalMessage {
+    min-height: 18px;
+    margin: 14px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.reminderModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.cancelReminderButton,
+.applyReminderButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelReminderButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyReminderButton {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+    color: #ffffff;
+}
+
+.cancelReminderButton:hover,
+.cancelReminderButton:focus-visible,
+.applyReminderButton:hover,
+.applyReminderButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+.applyReminderButton:disabled {
+    cursor: wait;
+    opacity: 0.68;
+}
+
 @media (max-width: 1050px) {
     .profileOverview {
         grid-template-columns: 160px minmax(0, 1fr);
@@ -1286,6 +1541,35 @@ span.created-at {
         max-height: calc(100vh - 24px);
         padding: 24px 16px;
         border-radius: 22px;
+    }
+
+    .reminderModalBackdrop {
+        padding: 12px;
+    }
+
+    .reminderModal {
+        max-height: calc(100vh - 24px);
+        padding: 26px 16px 22px;
+        border-radius: 22px;
+    }
+
+    .reminderModalHeader {
+        justify-content: flex-start;
+        font-size: 20px;
+    }
+
+    .reminderPresetField {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
+    .customReminderFields {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .beforeDueText {
+        grid-column: 1 / -1;
+        padding: 0;
     }
 
     .calendarHeader {
@@ -1531,7 +1815,8 @@ html.dark-mode #taskModalText::placeholder {
     color: #bac7cf;
 }
 
-html.dark-mode .taskDateSummary {
+html.dark-mode .taskDateSummary,
+html.dark-mode .taskReminderSummary {
     color: #b7c7d0;
 }
 
@@ -1594,6 +1879,57 @@ html.dark-mode .timePicker select {
 }
 
 html.dark-mode .cancelDateTimeButton {
+    background-color: #2a3a46;
+    color: #d5e0e6;
+}
+
+html.dark-mode .reminderModalBackdrop {
+    background-color: rgba(2, 10, 18, 0.8);
+}
+
+html.dark-mode .reminderModal {
+    border-color: #3b5262;
+    background-color: #18242e;
+    color: #dce6ec;
+}
+
+html.dark-mode .reminderModalClose {
+    background-color: #263642;
+    color: #d4e0e7;
+}
+
+html.dark-mode .reminderModalHeader,
+html.dark-mode .reminderItem h3 {
+    color: #e8eff3;
+}
+
+html.dark-mode .reminderModalHint,
+html.dark-mode .reminderPresetField,
+html.dark-mode .customReminderFields label,
+html.dark-mode .beforeDueText {
+    color: #c5d2d9;
+}
+
+html.dark-mode .reminderItem {
+    border-color: #374957;
+    background-color: #202f3a;
+}
+
+html.dark-mode .customReminderFields {
+    background-color: #263642;
+}
+
+html.dark-mode .reminderCountField select,
+html.dark-mode .reminderPresetField select,
+html.dark-mode .customReminderFields input,
+html.dark-mode .customReminderFields select {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+    color-scheme: dark;
+}
+
+html.dark-mode .cancelReminderButton {
     background-color: #2a3a46;
     color: #d5e0e6;
 }

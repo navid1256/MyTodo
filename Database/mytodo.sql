@@ -19,7 +19,6 @@ SET time_zone = "+00:00";
 
 --
 -- Database: `mytodo`
---
 
 -- --------------------------------------------------------
 
@@ -34,6 +33,26 @@ CREATE TABLE `tasks` (
   `is_done` tinyint(1) NOT NULL DEFAULT 0,
   `due_at` datetime DEFAULT NULL,
   `has_time` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `task_reminders`
+--
+
+CREATE TABLE `task_reminders` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `task_id` int(10) UNSIGNED NOT NULL,
+  `offset_value` int(10) UNSIGNED NOT NULL,
+  `offset_unit` enum('minute','hour','day') NOT NULL,
+  `remind_at` datetime NOT NULL,
+  `status` enum('pending','sent','failed','cancelled') NOT NULL DEFAULT 'pending',
+  `attempt_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `last_attempt_at` datetime DEFAULT NULL,
+  `sent_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -82,6 +101,14 @@ ALTER TABLE `tasks`
   ADD KEY `idx_tasks_user_due_at` (`user_id`, `due_at`);
 
 --
+-- Indexes for table `task_reminders`
+--
+ALTER TABLE `task_reminders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `task_reminders_task_time_unique` (`task_id`, `remind_at`),
+  ADD KEY `idx_task_reminders_delivery` (`status`, `remind_at`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -107,6 +134,12 @@ ALTER TABLE `tasks`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `task_reminders`
+--
+ALTER TABLE `task_reminders`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
@@ -121,6 +154,12 @@ ALTER TABLE `users_info`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `task_reminders`
+--
+ALTER TABLE `task_reminders`
+  ADD CONSTRAINT `task_reminders_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `users_info`
