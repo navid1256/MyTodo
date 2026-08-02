@@ -2,7 +2,7 @@ export function initNavigation() {
   const navigationItems = document.querySelectorAll('.navigation-list li');
 
   function activateNavigationItem(activeItem) {
-    navigationItems.forEach(function(item) {
+    navigationItems.forEach(function (item) {
       const control = item.querySelector('a, button');
       const isActive = item === activeItem;
 
@@ -43,14 +43,14 @@ export function initNavigation() {
     }
   }
 
-  navigationItems.forEach(function(item) {
+  navigationItems.forEach(function (item) {
     const control = item.querySelector('a, button');
 
     if (!control) {
       return;
     }
 
-    control.addEventListener('click', function() {
+    control.addEventListener('click', function () {
       activateNavigationItem(item);
 
       try {

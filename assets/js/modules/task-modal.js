@@ -1,18 +1,17 @@
 import { createTask } from '../services/task-service.js';
 
-export function initTaskModal(dateTimePicker) {
+export function initTaskModal(dateTimePicker, reminderPicker) {
     // متغیرهای Task Modal
     var taskModal = document.getElementById('taskModal');
     var openTaskModalButton = document.getElementById('openTaskModal');
     var closeTaskModalButton = document.getElementById('closeTaskModal');
     var newTaskForm = document.getElementById('newTaskForm');
     var taskModalText = document.getElementById('taskModalText');
-    var setTaskReminderButton = document.getElementById('setTaskReminderButton');
     var setTaskRepeatButton = document.getElementById('setTaskRepeatButton');
     var taskModalMessage = document.getElementById('taskModalMessage');
     var saveTaskButton = document.getElementById('saveTaskButton');
     var lastTaskModalTrigger = null;
-    
+
     // توابع و Event Listenerها
 
     function setTaskModalMessage(message) {
@@ -54,6 +53,10 @@ export function initTaskModal(dateTimePicker) {
             dateTimePicker.close(false);
         }
 
+        if (reminderPicker && reminderPicker.isOpen()) {
+            reminderPicker.close(false);
+        }
+
         taskModal.hidden = true;
         document.body.classList.remove('task-modal-open');
         setTaskModalMessage('');
@@ -78,12 +81,6 @@ export function initTaskModal(dateTimePicker) {
             if (event.target === taskModal) {
                 closeTaskModal();
             }
-        });
-    }
-
-    if (setTaskReminderButton) {
-        setTaskReminderButton.addEventListener('click', function () {
-            setToggleButtonState(setTaskReminderButton);
         });
     }
 
@@ -130,7 +127,9 @@ export function initTaskModal(dateTimePicker) {
             return;
         }
 
-        if (dateTimePicker && dateTimePicker.isOpen()) {
+        if (reminderPicker && reminderPicker.isOpen()) {
+            reminderPicker.close();
+        } else if (dateTimePicker && dateTimePicker.isOpen()) {
             dateTimePicker.close();
         } else if (taskModal && !taskModal.hidden) {
             closeTaskModal();

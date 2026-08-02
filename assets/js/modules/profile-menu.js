@@ -12,18 +12,18 @@ export function initProfileMenu() {
     profileDropdown.hidden = !isOpen;
   }
 
-  userMenuToggle.addEventListener('click', function() {
+  userMenuToggle.addEventListener('click', function () {
     const isOpen = userMenuToggle.getAttribute('aria-expanded') === 'true';
     setProfileMenuState(!isOpen);
   });
 
-  document.addEventListener('click', function(event) {
+  document.addEventListener('click', function (event) {
     if (!profileMenu.contains(event.target)) {
       setProfileMenuState(false);
     }
   });
 
-  document.addEventListener('keydown', function(event) {
+  document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape' && userMenuToggle.getAttribute('aria-expanded') === 'true') {
       setProfileMenuState(false);
       userMenuToggle.focus();
