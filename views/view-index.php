@@ -16,14 +16,11 @@ $hasFullName = $profileFirstName !== '' && $profileLastName !== '';
 $currentDisplayName = $hasFullName
   ? $profileFirstName . ' ' . $profileLastName
   : $currentUsername;
-$avatarInitials = $hasFullName
-  ? mb_strtoupper(mb_substr($profileFirstName, 0, 1) . mb_substr($profileLastName, 0, 1))
-  : mb_strtoupper(mb_substr($currentUsername, 0, 2));
-$avatarSvg = sprintf(
-  "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect fill='#667eea' width='40' height='40'/><text x='50%%' y='50%%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='16' font-family='Arial'>%s</text></svg>",
-  htmlspecialchars($avatarInitials, ENT_QUOTES | ENT_XML1, 'UTF-8')
-);
-$avatarUrl = 'data:image/svg+xml,' . rawurlencode($avatarSvg);
+$defaultAvatarUrl = 'https://assets.codepen.io/t-1/user-default-avatar.jpg?format=auto&version=0&width=80&height=80';
+$savedAvatarUrl = trim((string) ($profileData->avatar_url ?? ''));
+$avatarUrl = $savedAvatarUrl !== ''
+  ? (preg_match('#^(?:https?://|data:)#i', $savedAvatarUrl) ? $savedAvatarUrl : BASE_URL . ltrim($savedAvatarUrl, '/'))
+  : $defaultAvatarUrl;
 $csrfToken = getCsrfToken();
 $profileErrors = isset($profileErrors) && is_array($profileErrors) ? $profileErrors : [];
 $profileSuccess = isset($profileSuccess) && is_string($profileSuccess) ? $profileSuccess : null;
@@ -126,7 +123,7 @@ $renderTaskItems = static function (
             type="button"
             aria-expanded="false"
             aria-controls="profileDropdown">
-            <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" width="40" height="40" alt="<?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?>">
+            <img data-user-avatar src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" width="40" height="40" alt="<?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?>">
             <span class="username"><?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?></span>
             <i class="profileChevron fa-solid fa-chevron-down" aria-hidden="true"></i>
           </button>
@@ -212,9 +209,21 @@ $renderTaskItems = static function (
             <form class="profileOverview" action="<?= htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8') ?>index.php?view=profile" method="POST">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
               <input type="hidden" name="profile_action" value="save">
+              <input id="avatarAction" type="hidden" name="avatar_action" value="unchanged">
+              <input id="avatarChoice" type="hidden" name="avatar_choice" value="">
+              <input id="avatarData" type="hidden" name="avatar_data" value="">
               <div class="profilePicture">
-                <img src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?> profile picture">
+                <button
+                  class="profilePictureButton"
+                  id="openAvatarPicker"
+                  type="button"
+                  data-avatar-seed-base="user-<?= getCurrentUserId() ?>"
+                  aria-haspopup="dialog">
+                  <img data-user-avatar src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($currentDisplayName, ENT_QUOTES, 'UTF-8') ?> profile picture">
+                  <span class="profilePictureOverlay">Change</span>
+                </button>
                 <span>Profile picture</span>
+                <small id="avatarSelectionStatus">Click the picture to change it</small>
               </div>
 
               <div class="profileFields">
@@ -261,6 +270,49 @@ $renderTaskItems = static function (
                 <button class="saveProfileButton" type="submit">Save</button>
               </div>
             </form>
+
+            <div class="avatarPickerBackdrop" id="avatarPickerModal" hidden>
+              <section
+                class="avatarPickerModal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="avatarPickerTitle">
+                <button class="avatarPickerClose" id="closeAvatarPicker" type="button" aria-label="Close avatar picker">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+
+                <h2 id="avatarPickerTitle">Choose a profile picture</h2>
+                <p class="avatarPickerHint">Select a Boring Avatar or choose a picture from your device.</p>
+
+                <div class="avatarGalleryPanel" id="avatarGalleryPanel">
+                  <div class="boringAvatarGrid" id="boringAvatarGrid" role="radiogroup" aria-label="Boring Avatar options"></div>
+                  <button class="chooseDeviceButton" id="chooseAvatarFromDevice" type="button">Choose from your device</button>
+                  <input id="avatarFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+                </div>
+
+                <div class="avatarCropPanel" id="avatarCropPanel" hidden>
+                  <button class="backToAvatarGallery" id="backToAvatarGallery" type="button">Back to avatars</button>
+                  <div class="avatarCropViewport" id="avatarCropViewport">
+                    <img id="avatarCropImage" alt="Profile picture crop preview" draggable="false">
+                    <span class="avatarCropRing" aria-hidden="true"></span>
+                  </div>
+                  <p class="avatarCropHint">Drag the picture to reposition it.</p>
+                  <div class="avatarZoomControl">
+                    <button id="avatarZoomOut" type="button" aria-label="Zoom out">−</button>
+                    <label class="srOnly" for="avatarZoom">Zoom profile picture</label>
+                    <input id="avatarZoom" type="range" min="0.5" max="3" step="0.01" value="1">
+                    <button id="avatarZoomIn" type="button" aria-label="Zoom in">+</button>
+                  </div>
+                </div>
+
+                <p class="avatarPickerMessage" id="avatarPickerMessage" role="alert" aria-live="polite"></p>
+
+                <div class="avatarPickerActions">
+                  <button class="cancelAvatarButton" id="cancelAvatarPicker" type="button">Cancel</button>
+                  <button class="applyAvatarButton" id="applyAvatarSelection" type="button" disabled>Use Picture</button>
+                </div>
+              </section>
+            </div>
 
             <div class="profileSecurity">
               <h2>Security</h2>
