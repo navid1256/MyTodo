@@ -1,3 +1,5 @@
 /vendor/
 /docs/
-/storage/
+/storage/*
+!/storage/avatars/
+!/storage/avatars/.gitkeep
