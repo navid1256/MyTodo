@@ -1,13 +1,12 @@
 import { createTask } from '../services/task-service.js';
 
-export function initTaskModal(dateTimePicker, reminderPicker) {
+export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     // متغیرهای Task Modal
     var taskModal = document.getElementById('taskModal');
     var openTaskModalButton = document.getElementById('openTaskModal');
     var closeTaskModalButton = document.getElementById('closeTaskModal');
     var newTaskForm = document.getElementById('newTaskForm');
     var taskModalText = document.getElementById('taskModalText');
-    var setTaskRepeatButton = document.getElementById('setTaskRepeatButton');
     var taskModalMessage = document.getElementById('taskModalMessage');
     var saveTaskButton = document.getElementById('saveTaskButton');
     var lastTaskModalTrigger = null;
@@ -18,15 +17,6 @@ export function initTaskModal(dateTimePicker, reminderPicker) {
         if (taskModalMessage) {
             taskModalMessage.textContent = message;
         }
-    }
-
-    function setToggleButtonState(button) {
-        if (!button) {
-            return;
-        }
-
-        var isPressed = button.getAttribute('aria-pressed') === 'true';
-        button.setAttribute('aria-pressed', String(!isPressed));
     }
 
     function openTaskModal(trigger) {
@@ -57,6 +47,10 @@ export function initTaskModal(dateTimePicker, reminderPicker) {
             reminderPicker.close(false);
         }
 
+        if (repeatPicker && repeatPicker.isOpen()) {
+            repeatPicker.close(false);
+        }
+
         taskModal.hidden = true;
         document.body.classList.remove('task-modal-open');
         setTaskModalMessage('');
@@ -84,12 +78,6 @@ export function initTaskModal(dateTimePicker, reminderPicker) {
         });
     }
 
-    if (setTaskRepeatButton) {
-        setTaskRepeatButton.addEventListener('click', function () {
-            setToggleButtonState(setTaskRepeatButton);
-        });
-    }
-
     if (newTaskForm) {
         newTaskForm.addEventListener('submit', function (event) {
             event.preventDefault();
@@ -99,6 +87,13 @@ export function initTaskModal(dateTimePicker, reminderPicker) {
             if (taskTitle.length < 3) {
                 setTaskModalMessage('Task text must be at least 3 characters long.');
                 taskModalText.focus();
+                return;
+            }
+
+            var repeatValidationMessage = repeatPicker ? repeatPicker.validate() : '';
+
+            if (repeatValidationMessage) {
+                setTaskModalMessage(repeatValidationMessage);
                 return;
             }
 
@@ -127,7 +122,9 @@ export function initTaskModal(dateTimePicker, reminderPicker) {
             return;
         }
 
-        if (reminderPicker && reminderPicker.isOpen()) {
+        if (repeatPicker && repeatPicker.isOpen()) {
+            repeatPicker.close();
+        } else if (reminderPicker && reminderPicker.isOpen()) {
             reminderPicker.close();
         } else if (dateTimePicker && dateTimePicker.isOpen()) {
             dateTimePicker.close();
