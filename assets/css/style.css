@@ -543,7 +543,7 @@ span.created-at {
     height: 50px;
     line-height: 50px;
     margin-left: 10px;
-    font-size: 1.3em;
+    font-size: 1.4em;
 }
 
 .main .view .content .list ul li span {
@@ -577,6 +577,247 @@ span.created-at {
 
 .main .view .content .list ul li .info .button.green {
     background-color: #85C157;
+}
+
+.main .view .manageTasksContent {
+    padding: 0 0 10px 10px;
+    overflow-y: auto;
+}
+
+.main .manageTasksView {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.manageTasksLayout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    align-items: start;
+    gap: 20px;
+}
+
+.manageTaskList {
+    min-width: 0;
+    padding-top: 10px;
+}
+
+.main .view .content .manageTaskListTitle {
+    display: flex;
+    width: auto;
+    min-height: 40px;
+    align-items: center;
+    gap: 8px;
+}
+
+.allTasksFilter {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #54b9cd;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.allTasksFilter:hover,
+.allTasksFilter:focus-visible {
+    color: #329caf;
+    outline: none;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.allTasksFilter.is-active {
+    color: #329caf;
+}
+
+.selectedTaskDateLabel {
+    color: #667982;
+    font-size: 12px;
+    text-transform: none;
+}
+
+.main .view .content .manageTaskList ul {
+    width: auto;
+    margin: 0;
+    padding-left: 10px;
+}
+
+.main .view .content .manageTaskList ul li.taskItem {
+    display: flex;
+    width: 100%;
+    min-height: 50px;
+    height: auto;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+.main .view .content .manageTaskList ul li.taskItem[hidden] {
+    display: none;
+}
+
+.main .view .content .manageTaskList ul li.taskItem > i {
+    flex: 0 0 30px;
+    float: none;
+    margin-left: 10px;
+    line-height: 50px;
+}
+
+.main .view .content .manageTaskList ul li.taskItem > span {
+    min-width: 0;
+    flex: 1 1 auto;
+    float: none;
+    padding: 9px 0;
+    overflow-wrap: anywhere;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info {
+    display: flex;
+    flex: 0 0 auto;
+    float: none;
+    align-items: center;
+    gap: 4px;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info span,
+.main .view .content .manageTaskList ul li.taskItem .info i {
+    float: none;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info .created-at {
+    white-space: nowrap;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.taskCalendar {
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid #b8c9d1;
+    border-radius: 6px;
+    background-color: #f7fafb;
+    box-shadow: 0 8px 22px rgba(33, 73, 91, 0.12);
+}
+
+.taskCalendarHeader {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
+    height: 46px;
+    align-items: center;
+    background-color: #54b9cd;
+    color: #ffffff;
+}
+
+.taskCalendarHeader h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.taskCalendarNav {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    justify-self: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #ffffff;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.taskCalendarNav:hover,
+.taskCalendarNav:focus-visible {
+    background-color: rgba(255, 255, 255, 0.2);
+    outline: none;
+}
+
+.taskCalendarWeekdays,
+.taskCalendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.taskCalendarWeekdays {
+    padding: 12px 10px 6px;
+}
+
+.taskCalendarWeekdays span {
+    color: #6c7b83;
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.taskCalendarDays {
+    padding: 4px 10px 14px;
+}
+
+.taskCalendarDay {
+    position: relative;
+    display: grid;
+    width: 100%;
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #57666e;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        box-shadow 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.taskCalendarDay:hover,
+.taskCalendarDay:focus-visible {
+    background-color: #dff3f6;
+    color: #248da1;
+    outline: none;
+    transform: scale(1.08);
+}
+
+.taskCalendarDay.outside-month {
+    color: #bcc5ca;
+}
+
+.taskCalendarDay.today:not(.selected) {
+    background-color: #e4eaed;
+    color: #44555e;
+    font-weight: 800;
+}
+
+.taskCalendarDay.has-tasks:not(.selected) {
+    box-shadow: inset 0 0 0 2px #69bd34;
+    color: #3f7721;
+    font-weight: 800;
+}
+
+.taskCalendarDay.selected {
+    background-color: #28c8c2;
+    box-shadow: 0 5px 12px rgba(40, 200, 194, 0.35);
+    color: #ffffff;
+    font-weight: 800;
 }
 
 .clear {
@@ -1496,6 +1737,15 @@ span.created-at {
 }
 
 @media (max-width: 1050px) {
+    .manageTasksLayout {
+        grid-template-columns: 1fr;
+    }
+
+    .taskCalendar {
+        width: min(100%, 340px);
+        justify-self: end;
+    }
+
     .profileOverview {
         grid-template-columns: 160px minmax(0, 1fr);
         column-gap: 28px;
@@ -1509,6 +1759,26 @@ span.created-at {
 }
 
 @media (max-width: 620px) {
+    .taskCalendar {
+        width: 100%;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 8px 0;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem > i {
+        line-height: 32px;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem .info {
+        width: 100%;
+        padding-left: 48px;
+        justify-content: space-between;
+    }
+
     .taskModalBackdrop {
         padding: 14px;
     }
@@ -1742,6 +2012,53 @@ html.dark-mode .main .view .content .list ul li.checked {
 
 html.dark-mode .main .view .content .list ul li.emptyTask {
     color: #91a2ae;
+}
+
+html.dark-mode .selectedTaskDateLabel {
+    color: #9babb4;
+}
+
+html.dark-mode .taskCalendar {
+    border-color: #40525f;
+    background-color: #18242e;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+html.dark-mode .taskCalendarHeader {
+    background-color: #287f91;
+}
+
+html.dark-mode .taskCalendarWeekdays span {
+    color: #9dabb4;
+}
+
+html.dark-mode .taskCalendarDay {
+    color: #c6d1d8;
+}
+
+html.dark-mode .taskCalendarDay.outside-month {
+    color: #596b76;
+}
+
+html.dark-mode .taskCalendarDay:hover,
+html.dark-mode .taskCalendarDay:focus-visible {
+    background-color: #263d49;
+    color: #8bdce4;
+}
+
+html.dark-mode .taskCalendarDay.today:not(.selected) {
+    background-color: #2a3a46;
+    color: #e3edf2;
+}
+
+html.dark-mode .taskCalendarDay.has-tasks:not(.selected) {
+    box-shadow: inset 0 0 0 2px #69bd34;
+    color: #9ddd76;
+}
+
+html.dark-mode .taskCalendarDay.selected {
+    background-color: #28aaa6;
+    color: #ffffff;
 }
 
 html.dark-mode .profilePage,

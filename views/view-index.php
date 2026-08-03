@@ -38,18 +38,39 @@ $profileFields = [
   'country' => (string) ($profileData->country ?? ''),
 ];
 
-$renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showDueTime = false) {
+$renderTaskItems = static function (
+  $taskItems,
+  $viewName,
+  $emptyMessage,
+  $showDueTime = false,
+  $showDueDate = false
+) {
   if (!sizeof($taskItems)) {
-    echo '<li class="emptyTask">' . htmlspecialchars($emptyMessage, ENT_QUOTES, 'UTF-8') . '</li>';
+    $emptyClass = $showDueDate ? 'emptyTask allTasksEmpty' : 'emptyTask';
+    $emptyId = $showDueDate ? ' id="allTasksEmpty"' : '';
+    echo '<li class="' . $emptyClass . '"' . $emptyId . '>'
+      . htmlspecialchars($emptyMessage, ENT_QUOTES, 'UTF-8') . '</li>';
     return;
   }
 
   foreach ($taskItems as $task): ?>
-    <li class="<?= $task->is_done ? 'checked' : ''; ?>">
+    <?php $taskDate = !empty($task->due_at) ? substr((string) $task->due_at, 0, 10) : ''; ?>
+    <li
+      class="taskItem<?= $task->is_done ? ' checked' : ''; ?>"
+      data-task-date="<?= htmlspecialchars($taskDate, ENT_QUOTES, 'UTF-8') ?>">
       <i class="<?= $task->is_done ? 'fa-regular fa-square-check' : 'fa-regular fa-square'; ?>"></i>
       <span><?= htmlspecialchars($task->title, ENT_QUOTES, 'UTF-8') ?></span>
       <div class="info">
-        <?php if ($showDueTime && !empty($task->due_at)): ?>
+        <?php if ($showDueDate): ?>
+          <?php if (!empty($task->due_at)): ?>
+            <span class="created-at">
+              Due <?= date('M j, Y', strtotime($task->due_at)) ?>
+              <?= !empty($task->has_time) ? 'at ' . date('h:i A', strtotime($task->due_at)) : '· No time' ?>
+            </span>
+          <?php else: ?>
+            <span class="created-at">No due date</span>
+          <?php endif; ?>
+        <?php elseif ($showDueTime && !empty($task->due_at)): ?>
           <?php if (!empty($task->has_time)): ?>
             <span class="created-at">Due at <?= date('h:i A', strtotime($task->due_at)) ?></span>
           <?php else: ?>
@@ -171,7 +192,7 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
           </ul>
         </div>
       </div>
-      <div class="view<?= $activeView === 'profile' ? ' profileView' : '' ?>" id="tasks">
+      <div class="view<?= $activeView === 'profile' ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?>" id="tasks">
         <?php if ($activeView === 'profile'): ?>
           <section class="profilePage" aria-labelledby="profilePageTitle">
             <h1 class="srOnly" id="profilePageTitle">My Profile</h1>
@@ -257,7 +278,7 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
               <div class="button inverz"><i class="fa-regular fa-trash-can"></i></div>
             </div>
           </div>
-          <div class="content">
+          <div class="content<?= $activeView === 'manage-tasks' ? ' manageTasksContent' : '' ?>">
             <?php if ($activeView === 'home'): ?>
               <div class="list">
                 <div class="title">Today</div>
@@ -272,11 +293,45 @@ $renderTaskItems = static function ($taskItems, $viewName, $emptyMessage, $showD
                 </ul>
               </div>
             <?php else: ?>
-              <div class="list">
-                <div class="title">All Tasks</div>
-                <ul>
-                  <?php $renderTaskItems($tasks, 'manage-tasks', 'No tasks found.'); ?>
-                </ul>
+              <div class="manageTasksLayout">
+                <section class="list manageTaskList" aria-labelledby="manageTaskListTitle">
+                  <div class="title manageTaskListTitle" id="manageTaskListTitle">
+                    <button class="allTasksFilter is-active" id="showAllTasksButton" type="button" aria-pressed="true">
+                      All Tasks
+                    </button>
+                    <span class="selectedTaskDateLabel" id="selectedTaskDateLabel" hidden></span>
+                  </div>
+                  <ul id="manageTaskItems">
+                    <?php $renderTaskItems($tasks, 'manage-tasks', 'No tasks found.', false, true); ?>
+                    <li class="emptyTask filteredTasksEmpty" id="filteredTasksEmpty" hidden>
+                      No tasks due on this date.
+                    </li>
+                  </ul>
+                </section>
+
+                <aside class="taskCalendar" id="taskCalendar" aria-labelledby="taskCalendarMonth">
+                  <div class="taskCalendarHeader">
+                    <button class="taskCalendarNav" id="previousTaskCalendarMonth" type="button" aria-label="Previous month">
+                      <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <h2 id="taskCalendarMonth"></h2>
+                    <button class="taskCalendarNav" id="nextTaskCalendarMonth" type="button" aria-label="Next month">
+                      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  <div class="taskCalendarWeekdays" aria-hidden="true">
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                    <span>Sun</span>
+                  </div>
+                  <div class="taskCalendarDays" id="taskCalendarDays" role="grid" aria-labelledby="taskCalendarMonth"></div>
+                  <p class="srOnly" id="taskCalendarStatus" aria-live="polite"></p>
+                </aside>
               </div>
             <?php endif; ?>
           </div>
