@@ -550,8 +550,9 @@ $renderTaskItems = static function (
                 <i class="fa-solid fa-xmark" aria-hidden="true"></i>
               </button>
 
-              <h2 id="repeatModalTitle">Repeat</h2>
-              <p class="repeatModalHint">Choose how often this task should repeat.</p>
+              <div class="repeatModalScroll">
+                <h2 id="repeatModalTitle">Repeat</h2>
+                <p class="repeatModalHint">Choose how often this task should repeat.</p>
 
               <fieldset class="repeatFrequencyOptions">
                 <legend class="srOnly">Repeat frequency</legend>
@@ -656,9 +657,10 @@ $renderTaskItems = static function (
 
               <p class="repeatModalMessage" id="repeatModalMessage" role="alert" aria-live="polite"></p>
 
-              <div class="repeatModalActions">
-                <button class="cancelRepeatButton" id="cancelRepeatButton" type="button">Cancel</button>
-                <button class="applyRepeatButton" id="applyRepeatButton" type="button">Apply</button>
+                <div class="repeatModalActions">
+                  <button class="cancelRepeatButton" id="cancelRepeatButton" type="button">Cancel</button>
+                  <button class="applyRepeatButton" id="applyRepeatButton" type="button">Apply</button>
+                </div>
               </div>
             </section>
           </div>
