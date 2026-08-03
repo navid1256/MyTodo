@@ -44,7 +44,13 @@ if ($activeView === 'profile' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST
         'date_of_birth' => $readProfileValue('date_of_birth'),
         'gender' => $readProfileValue('gender'),
         'country' => $readProfileValue('country'),
+        'avatar_url' => trim((string) ($userProfile->avatar_url ?? '')),
     ];
+    $avatarAction = $readProfileValue('avatar_action');
+    $avatarChoiceValue = $readProfileValue('avatar_choice');
+    $avatarData = isset($_POST['avatar_data']) && is_string($_POST['avatar_data'])
+        ? $_POST['avatar_data']
+        : '';
 
     if ($profileAction !== 'save') {
         $profileErrors[] = 'Invalid profile request.';
@@ -67,6 +73,14 @@ if ($activeView === 'profile' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST
         $profileErrors[] = 'Please select a valid gender.';
     }
 
+    if (!in_array($avatarAction, ['unchanged', 'boring', 'upload'], true)) {
+        $profileErrors[] = 'Please choose a valid profile picture option.';
+    }
+
+    if ($avatarAction === 'boring' && (!ctype_digit($avatarChoiceValue) || (int) $avatarChoiceValue < 1 || (int) $avatarChoiceValue > 12)) {
+        $profileErrors[] = 'Please choose a valid avatar.';
+    }
+
     if ($profileInput['date_of_birth'] !== '') {
         $birthDate = DateTimeImmutable::createFromFormat(
             '!Y-m-d',
@@ -87,14 +101,35 @@ if ($activeView === 'profile' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST
     }
 
     if (!$profileErrors) {
+        $newAvatarPath = '';
+
         try {
+            if ($avatarAction !== 'unchanged') {
+                $newAvatarPath = storeCurrentUserProfileAvatar(
+                    $avatarAction,
+                    (int) $avatarChoiceValue,
+                    $avatarData
+                );
+                $profileInput['avatar_url'] = $newAvatarPath;
+            }
+
             updateCurrentUserProfile($profileInput);
             $_SESSION['profile_success'] = 'Your profile has been saved successfully.';
 
             header('Location: ' . BASE_URL . 'index.php?view=profile');
             exit();
         } catch (PDOException $exception) {
+            if ($newAvatarPath !== '') {
+                deleteStoredProfileAvatar($newAvatarPath);
+            }
+
             $profileErrors[] = 'Your profile could not be saved. Please try again.';
+        } catch (InvalidArgumentException | RuntimeException $exception) {
+            if ($newAvatarPath !== '') {
+                deleteStoredProfileAvatar($newAvatarPath);
+            }
+
+            $profileErrors[] = $exception->getMessage();
         }
     }
 
