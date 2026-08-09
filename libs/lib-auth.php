@@ -355,6 +355,16 @@ function setAuthenticatedUser(object $user): void
     ];
 }
 
+function verifyStoredPassword(string $password, string $storedPassword): bool
+{
+    $passwordInfo = password_get_info($storedPassword);
+    $isHashedPassword = $passwordInfo['algoName'] !== 'unknown';
+
+    return $isHashedPassword
+        ? password_verify($password, $storedPassword)
+        : hash_equals($storedPassword, $password);
+}
+
 function loginUser(string $username, string $password): bool
 {
     global $pdo;
@@ -367,9 +377,7 @@ function loginUser(string $username, string $password): bool
 
     $passwordInfo = password_get_info($user->password);
     $isHashedPassword = $passwordInfo['algoName'] !== 'unknown';
-    $passwordIsValid = $isHashedPassword
-        ? password_verify($password, $user->password)
-        : hash_equals($user->password, $password);
+    $passwordIsValid = verifyStoredPassword($password, $user->password);
 
     if (!$passwordIsValid) {
         return false;
@@ -390,6 +398,73 @@ function loginUser(string $username, string $password): bool
     setAuthenticatedUser($user);
 
     return true;
+}
+
+function changeCurrentUserPassword(string $currentPassword, string $newPassword): bool
+{
+    global $pdo;
+
+    $userId = getCurrentUserId();
+
+    if ($userId === 0) {
+        return false;
+    }
+
+    $statement = $pdo->prepare(
+        'SELECT password
+         FROM users
+         WHERE id = :id
+         LIMIT 1'
+    );
+    $statement->execute(['id' => $userId]);
+    $storedPassword = $statement->fetchColumn();
+
+    if (!is_string($storedPassword) || !verifyStoredPassword($currentPassword, $storedPassword)) {
+        return false;
+    }
+
+    $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+
+    if (!is_string($passwordHash)) {
+        throw new RuntimeException('The new password could not be secured.');
+    }
+
+    $updateStatement = $pdo->prepare(
+        'UPDATE users
+         SET password = :password
+         WHERE id = :id'
+    );
+    $updateStatement->execute([
+        'password' => $passwordHash,
+        'id' => $userId,
+    ]);
+
+    session_regenerate_id(true);
+
+    return true;
+}
+
+function validateNewPassword(string $newPassword, string $confirmation): void
+{
+    if (mb_strlen($newPassword) < 8) {
+        throw new InvalidArgumentException('New password must contain at least 8 characters.');
+    }
+
+    if (strlen($newPassword) > 72) {
+        throw new InvalidArgumentException('New password must not exceed 72 bytes.');
+    }
+
+    if (!preg_match('/\p{N}/u', $newPassword)) {
+        throw new InvalidArgumentException('New password must include at least one number.');
+    }
+
+    if (!preg_match('/[^\p{L}\p{N}\s]/u', $newPassword)) {
+        throw new InvalidArgumentException('New password must include at least one special character.');
+    }
+
+    if (!hash_equals($newPassword, $confirmation)) {
+        throw new InvalidArgumentException('New password confirmation does not match.');
+    }
 }
 
 function registerUser(string $email, string $username, string $password): int

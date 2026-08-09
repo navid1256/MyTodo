@@ -71,6 +71,49 @@ function readHasTimeValue(): string
 }
 
 switch ($_POST['action']) {
+    case 'changePassword':
+        header('Content-Type: application/json; charset=utf-8');
+
+        $currentPassword = isset($_POST['current_password']) && is_string($_POST['current_password'])
+            ? $_POST['current_password']
+            : '';
+        $newPassword = isset($_POST['new_password']) && is_string($_POST['new_password'])
+            ? $_POST['new_password']
+            : '';
+        $newPasswordConfirmation = isset($_POST['new_password_confirmation'])
+            && is_string($_POST['new_password_confirmation'])
+            ? $_POST['new_password_confirmation']
+            : '';
+
+        try {
+            if ($currentPassword === '') {
+                throw new InvalidArgumentException('Current password is required.');
+            }
+
+            validateNewPassword($newPassword, $newPasswordConfirmation);
+
+            if (!changeCurrentUserPassword($currentPassword, $newPassword)) {
+                throw new InvalidArgumentException('Current password is incorrect.');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Your password has been changed successfully.',
+            ], JSON_THROW_ON_ERROR);
+        } catch (InvalidArgumentException $exception) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JSON_THROW_ON_ERROR);
+        } catch (Throwable $exception) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Your password could not be changed. Please try again.',
+            ], JSON_THROW_ON_ERROR);
+        }
+        break;
     case 'previewReminders':
         header('Content-Type: application/json; charset=utf-8');
 
