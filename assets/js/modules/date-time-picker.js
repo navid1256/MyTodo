@@ -309,6 +309,16 @@ export function initDateTimePicker() {
         }
 
         if (draftHasTime) {
+            var invalidTimeControl = [taskTimeHour, taskTimeMinute].find(function (control) {
+                return control && !control.checkValidity();
+            });
+
+            if (invalidTimeControl) {
+                setDateTimeModalMessage('Enter an hour from 1 to 12 and minutes from 0 to 59.');
+                invalidTimeControl.focus();
+                return;
+            }
+
             var selectedTime = readPickerTime();
             taskDueAt.value = formatDateKey(draftSelectedDate)
                 + 'T'
