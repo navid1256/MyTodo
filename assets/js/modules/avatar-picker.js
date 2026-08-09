@@ -1,9 +1,14 @@
 import { createBoringBeamAvatarDataUrl } from '../vendor/boring-avatar.js';
 
-const AVATAR_OPTION_COUNT = 12;
+const AVATAR_OPTION_COUNT = 24;
 const MAX_SOURCE_FILE_SIZE = 10 * 1024 * 1024;
 const OUTPUT_SIZE = 512;
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const CANVAS_QUALITY = 0.9;
+const MAXIMUM_ZOOM = 3;
+const ZOOM_BUTTON_STEP = 0.1;
+const ZOOM_WHEEL_STEP = 0.08;
+const ZOOM_SLIDER_LIMIT = 100;
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp','image/jpg'];
 
 function clamp(value, minimum, maximum) {
     return Math.min(Math.max(value, minimum), maximum);
@@ -201,15 +206,15 @@ export function initAvatarPicker() {
         zoom = 1;
         offsetX = 0;
         offsetY = 0;
-        zoomInput.min = String(minimumZoom);
-        zoomInput.value = '1';
+        zoomInput.value = '0';
+        zoomInput.setAttribute('aria-valuetext', '100%');
         renderCropImage();
         setApplyEnabled(true);
     }
 
     function showCropPanel(file) {
         if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-            setMessage('Choose a JPEG, PNG, or WebP picture.');
+            setMessage('Choose a JPEG, PNG, JPG or WebP picture.');
             return;
         }
 
@@ -273,7 +278,7 @@ export function initAvatarPicker() {
             OUTPUT_SIZE
         );
 
-        return canvas.toDataURL('image/jpeg', 0.9);
+        return canvas.toDataURL('image/jpeg', CANVAS_QUALITY);
     }
 
     function captureOpenSnapshot() {
@@ -368,25 +373,50 @@ export function initAvatarPicker() {
         });
     }
 
+    function zoomFromSliderPosition(position) {
+        const safePosition = clamp(position, -ZOOM_SLIDER_LIMIT, ZOOM_SLIDER_LIMIT);
+
+        if (safePosition < 0) {
+            return 1 + (1 - minimumZoom) * (safePosition / ZOOM_SLIDER_LIMIT);
+        }
+
+        return 1 + (MAXIMUM_ZOOM - 1) * (safePosition / ZOOM_SLIDER_LIMIT);
+    }
+
+    function sliderPositionFromZoom(nextZoom) {
+        if (nextZoom < 1 && minimumZoom < 1) {
+            return -ZOOM_SLIDER_LIMIT * ((1 - nextZoom) / (1 - minimumZoom));
+        }
+
+        return ZOOM_SLIDER_LIMIT * ((nextZoom - 1) / (MAXIMUM_ZOOM - 1));
+    }
+
+    function updateZoomControl() {
+        zoomInput.value = String(sliderPositionFromZoom(zoom));
+        zoomInput.setAttribute('aria-valuetext', `${Math.round(zoom * 100)}%`);
+    }
+
     function setZoom(nextZoom) {
-        zoom = clamp(nextZoom, minimumZoom, 3);
-        zoomInput.value = String(zoom);
+        zoom = clamp(nextZoom, minimumZoom, MAXIMUM_ZOOM);
+        updateZoomControl();
         renderCropImage();
     }
 
     zoomInput.addEventListener('input', function () {
-        setZoom(Number(zoomInput.value));
+        zoom = zoomFromSliderPosition(Number(zoomInput.value));
+        zoomInput.setAttribute('aria-valuetext', `${Math.round(zoom * 100)}%`);
+        renderCropImage();
     });
 
     if (zoomOutButton) {
         zoomOutButton.addEventListener('click', function () {
-            setZoom(zoom - 0.15);
+            setZoom(zoom - ZOOM_BUTTON_STEP);
         });
     }
 
     if (zoomInButton) {
         zoomInButton.addEventListener('click', function () {
-            setZoom(zoom + 0.1);
+            setZoom(zoom + ZOOM_BUTTON_STEP);
         });
     }
 
@@ -396,7 +426,7 @@ export function initAvatarPicker() {
         }
 
         event.preventDefault();
-        setZoom(zoom + (event.deltaY < 0 ? 0.08 : -0.08));
+        setZoom(zoom + (event.deltaY < 0 ? ZOOM_WHEEL_STEP : -ZOOM_WHEEL_STEP));
     }, { passive: false });
 
     cropViewport.addEventListener('pointerdown', function (event) {
