@@ -300,7 +300,7 @@ $renderTaskItems = static function (
                   <div class="avatarZoomControl">
                     <button id="avatarZoomOut" type="button" aria-label="Zoom out">−</button>
                     <label class="srOnly" for="avatarZoom">Zoom profile picture</label>
-                    <input id="avatarZoom" type="range" min="0.5" max="3" step="0.01" value="1">
+                    <input id="avatarZoom" type="range" min="-100" max="100" step="1" value="0" aria-valuetext="100%">
                     <button id="avatarZoomIn" type="button" aria-label="Zoom in">+</button>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { previewTaskReminders } from '../services/task-service.js';
 
 const PRESET_VALUES = {
+    'on-due-time': { value: 0, unit: 'minutes' },
     '30-minutes': { value: 30, unit: 'minutes' },
     '1-hour': { value: 1, unit: 'hours' },
     '12-hours': { value: 12, unit: 'hours' },
@@ -151,13 +152,13 @@ export function initReminderPicker() {
 
         var payload = getDraftPayload();
         var invalidReminderIndex = payload.findIndex(function (reminder) {
-            return !Number.isInteger(reminder.value) || reminder.value < 1;
+            return !Number.isInteger(reminder.value) || reminder.value < 0;
         });
 
         if (invalidReminderIndex !== -1) {
-            setPreviewState('Enter a positive whole number to calculate this notification.', 'error');
+            setPreviewState('Choose a valid reminder time to calculate this notification.', 'error');
             setReminderModalMessage(
-                'Reminder ' + (invalidReminderIndex + 1) + ' must have a positive whole number.'
+                'Reminder ' + (invalidReminderIndex + 1) + ' has an invalid reminder time.'
             );
             return false;
         }
@@ -263,6 +264,7 @@ export function initReminderPicker() {
                 + '<label class="reminderPresetField" for="' + presetId + '">'
                 + '<span>Remind me at</span>'
                 + '<select id="' + presetId + '" class="reminderPreset">'
+                + '<option value="on-due-time">On due time</option>'
                 + '<option value="30-minutes">30 minutes before due time</option>'
                 + '<option value="1-hour">1 hour before due time</option>'
                 + '<option value="12-hours">12 hours before due time</option>'

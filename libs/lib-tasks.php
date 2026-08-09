@@ -62,8 +62,8 @@ function prepareTaskReminders(
             $value = (int) $value;
         }
 
-        if (!is_int($value) || $value < 1) {
-            throw new InvalidArgumentException("Reminder {$reminderNumber} must have a positive whole number.");
+        if (!is_int($value) || $value < 0) {
+            throw new InvalidArgumentException("Reminder {$reminderNumber} has an invalid reminder time.");
         }
 
         $unit = isset($reminder['unit']) && is_string($reminder['unit'])
@@ -75,6 +75,10 @@ function prepareTaskReminders(
             throw new InvalidArgumentException("Reminder {$reminderNumber} has an invalid time unit.");
         }
 
+        if ($value === 0 && $unit !== 'minute') {
+            throw new InvalidArgumentException("Reminder {$reminderNumber} must use minutes for On due time.");
+        }
+
         $maximumValue = intdiv(525600, $unitMinutes[$unit]);
 
         if ($value > $maximumValue) {
@@ -84,7 +88,7 @@ function prepareTaskReminders(
         $offsetMinutes = $value * $unitMinutes[$unit];
 
         if (isset($usedOffsets[$offsetMinutes])) {
-            throw new InvalidArgumentException('Each reminder must use a different time before the due time.');
+            throw new InvalidArgumentException('Each reminder must use a different notification time.');
         }
 
         $remindAt = $dueDate->sub(new DateInterval('PT' . $offsetMinutes . 'M'));
