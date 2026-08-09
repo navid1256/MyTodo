@@ -70,6 +70,14 @@ function readHasTimeValue(): string
     return $hasTimeValue;
 }
 
+function formatNotificationDate(string $dateTime): string
+{
+    $timezone = new DateTimeZone('Asia/Tehran');
+    $date = new DateTimeImmutable($dateTime, $timezone);
+
+    return $date->format('M j, Y \a\t h:i A');
+}
+
 switch ($_POST['action']) {
     case 'changePassword':
         header('Content-Type: application/json; charset=utf-8');
@@ -111,6 +119,90 @@ switch ($_POST['action']) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Your password could not be changed. Please try again.',
+            ], JSON_THROW_ON_ERROR);
+        }
+        break;
+    case 'updateNotification':
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $notificationId = filter_var($_POST['notification_id'] ?? null, FILTER_VALIDATE_INT);
+            $offsetValueInput = isset($_POST['offset_value']) && is_string($_POST['offset_value'])
+                ? trim($_POST['offset_value'])
+                : '';
+            $offsetUnit = isset($_POST['offset_unit']) && is_string($_POST['offset_unit'])
+                ? trim($_POST['offset_unit'])
+                : '';
+
+            if (!$notificationId || !ctype_digit($offsetValueInput)) {
+                throw new InvalidArgumentException('Enter a valid notification time.');
+            }
+
+            $notification = updateCurrentUserNotification(
+                (int) $notificationId,
+                (int) $offsetValueInput,
+                $offsetUnit
+            );
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Notification updated successfully.',
+                'notification' => [
+                    'id' => $notification->id,
+                    'offset_value' => $notification->offset_value,
+                    'offset_unit' => $notification->offset_unit,
+                    'remind_at' => $notification->remind_at,
+                    'formatted_remind_at' => formatNotificationDate($notification->remind_at),
+                    'status' => $notification->status,
+                ],
+            ], JSON_THROW_ON_ERROR);
+        } catch (InvalidArgumentException $exception) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JSON_THROW_ON_ERROR);
+        } catch (Throwable $exception) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'The notification could not be updated. Please try again.',
+            ], JSON_THROW_ON_ERROR);
+        }
+        break;
+    case 'cancelNotification':
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $notificationId = filter_var($_POST['notification_id'] ?? null, FILTER_VALIDATE_INT);
+
+            if (!$notificationId) {
+                throw new InvalidArgumentException('Invalid notification.');
+            }
+
+            if (!cancelCurrentUserNotification((int) $notificationId)) {
+                throw new InvalidArgumentException('Only pending or failed notifications can be cancelled.');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Notification cancelled successfully.',
+                'notification' => [
+                    'id' => (int) $notificationId,
+                    'status' => 'cancelled',
+                ],
+            ], JSON_THROW_ON_ERROR);
+        } catch (InvalidArgumentException $exception) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JSON_THROW_ON_ERROR);
+        } catch (Throwable $exception) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'The notification could not be cancelled. Please try again.',
             ], JSON_THROW_ON_ERROR);
         }
         break;

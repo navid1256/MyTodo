@@ -13,7 +13,7 @@ if (isset($_GET['delete_task'])&& is_numeric($_GET['delete_task'])) {
     echo "$deletedCount Tasks Succesfully Deleted";
 }
 
-$allowedViews = ['home', 'manage-tasks', 'profile', 'change-password'];
+$allowedViews = ['home', 'manage-tasks', 'messages', 'profile', 'change-password'];
 $activeView = $_GET['view'] ?? 'manage-tasks';
 
 if (!in_array($activeView, $allowedViews, true)) {
@@ -137,6 +137,7 @@ if ($activeView === 'profile' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST
 }
 
 $tasks = $activeView === 'manage-tasks' ? getTasks() : [];
+$notifications = $activeView === 'messages' ? getCurrentUserNotifications() : [];
 $todayTasks = [];
 $tomorrowTasks = [];
 $today = new DateTimeImmutable('today', $userTimezone);

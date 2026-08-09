@@ -7,7 +7,9 @@
 /** @var array $currentUser */
 /** @var int $completedTasksToday */
 /** @var object|null $userProfile */
+/** @var array $notifications */
 $unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotifications) : 3;
+$notifications = isset($notifications) && is_array($notifications) ? $notifications : [];
 $profileData = $userProfile ?? (object) [];
 $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
 $profileFirstName = trim((string) ($profileData->firstname ?? ''));
@@ -34,6 +36,26 @@ $profileFields = [
   'gender' => (string) ($profileData->gender ?? ''),
   'country' => (string) ($profileData->country ?? ''),
 ];
+$notificationStatusLabels = [
+  'pending' => 'Pending',
+  'sent' => 'Sent',
+  'failed' => 'Failed',
+  'cancelled' => 'Cancelled',
+];
+$formatNotificationDate = static function (?string $dateTime) use ($userTimezone): string {
+  if ($dateTime === null || trim($dateTime) === '') {
+    return 'Not available';
+  }
+
+  return (new DateTimeImmutable($dateTime, $userTimezone))->format('M j, Y \a\t h:i A');
+};
+$formatNotificationOffset = static function (int $value, string $unit): string {
+  if ($value === 0) {
+    return 'On due time';
+  }
+
+  return $value . ' ' . $unit . ($value === 1 ? '' : 's') . ' before due time';
+};
 
 $renderTaskItems = static function (
   $taskItems,
@@ -180,16 +202,16 @@ $renderTaskItems = static function (
                 <span>Manage Tasks</span>
               </a>
             </li>
-            <li data-nav-id="messages">
-              <button type="button">
+            <li class="<?= $activeView === 'messages' ? 'active' : '' ?>" data-nav-id="messages">
+              <a href="?view=messages" <?= $activeView === 'messages' ? 'aria-current="page"' : '' ?>>
                 <i class="fa-solid fa-envelope"></i>
                 <span>Messages</span>
-              </button>
+              </a>
             </li>
           </ul>
         </div>
       </div>
-      <div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?>" id="tasks">
+      <div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= $activeView === 'messages' ? ' messagesView' : '' ?>" id="tasks">
         <?php if ($activeView === 'profile'): ?>
           <section class="profilePage" aria-labelledby="profilePageTitle">
             <h1 class="srOnly" id="profilePageTitle">My Profile</h1>
@@ -428,6 +450,127 @@ $renderTaskItems = static function (
                 </div>
             </form>
           </section>
+        <?php elseif ($activeView === 'messages'): ?>
+          <div class="notificationsPage">
+            <div class="viewHeader">
+              <div class="functions">
+                <button class="button active" id="openTaskModal" type="button">Add New Task</button>
+                <div class="button completedButton" aria-label="<?= $completedTasksToday ?> tasks completed today">
+                  <span class="completedCount"><?= $completedTasksToday ?></span>
+                  <span>Completed</span>
+                </div>
+              </div>
+            </div>
+            <div class="content notificationsContent">
+              <section class="list notificationsPanel" aria-labelledby="notificationsPageTitle">
+                <div class="title notificationsTitle" id="notificationsPageTitle">
+                  <span>Notifications</span>
+                </div>
+                <p class="notificationsPageMessage" id="notificationsPageMessage" role="status" aria-live="polite"></p>
+                <ul class="notificationsList" id="notificationsList">
+                <?php if (!$notifications): ?>
+                  <li class="emptyTask notificationsEmpty">No notifications found.</li>
+                <?php else: ?>
+                <?php foreach ($notifications as $notification): ?>
+                  <?php
+                  $status = array_key_exists((string) $notification->status, $notificationStatusLabels)
+                    ? (string) $notification->status
+                    : 'failed';
+                  $canManageNotification = in_array($status, ['pending', 'failed'], true);
+                  $offsetValue = (int) $notification->offset_value;
+                  $offsetUnit = (string) $notification->offset_unit;
+                  ?>
+                  <li class="notificationItem" data-notification-id="<?= (int) $notification->id ?>">
+                    <div class="notificationItemIcon" aria-hidden="true">
+                      <i class="fa-regular fa-bell"></i>
+                    </div>
+                    <div class="notificationItemContent">
+                      <div class="notificationItemHeading">
+                        <h2><?= htmlspecialchars((string) $notification->task_title, ENT_QUOTES, 'UTF-8') ?></h2>
+                        <span class="notificationStatus notificationStatus--<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>" data-notification-status>
+                          <?= htmlspecialchars($notificationStatusLabels[$status], ENT_QUOTES, 'UTF-8') ?>
+                        </span>
+                      </div>
+                      <div class="notificationDetails">
+                        <p>
+                          <span>Notification time</span>
+                          <strong data-notification-schedule><?= htmlspecialchars($formatNotificationDate((string) $notification->remind_at), ENT_QUOTES, 'UTF-8') ?></strong>
+                        </p>
+                        <p>
+                          <span>Task due time</span>
+                          <strong><?= htmlspecialchars($formatNotificationDate((string) $notification->task_due_at), ENT_QUOTES, 'UTF-8') ?></strong>
+                        </p>
+                        <p>
+                          <span>Reminder</span>
+                          <strong data-notification-offset><?= htmlspecialchars($formatNotificationOffset($offsetValue, $offsetUnit), ENT_QUOTES, 'UTF-8') ?></strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div class="notificationActions">
+                      <button
+                        class="notificationAction notificationEditButton"
+                        type="button"
+                        aria-label="Edit notification for <?= htmlspecialchars((string) $notification->task_title, ENT_QUOTES, 'UTF-8') ?>"
+                        data-notification-edit
+                        data-offset-value="<?= $offsetValue ?>"
+                        data-offset-unit="<?= htmlspecialchars($offsetUnit, ENT_QUOTES, 'UTF-8') ?>"
+                        data-task-title="<?= htmlspecialchars((string) $notification->task_title, ENT_QUOTES, 'UTF-8') ?>"
+                        data-task-due="<?= htmlspecialchars($formatNotificationDate((string) $notification->task_due_at), ENT_QUOTES, 'UTF-8') ?>"
+                        <?= $canManageNotification ? '' : 'disabled' ?>>
+                        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        class="notificationAction notificationCancelButton"
+                        type="button"
+                        aria-label="Cancel notification for <?= htmlspecialchars((string) $notification->task_title, ENT_QUOTES, 'UTF-8') ?>"
+                        data-notification-cancel
+                        <?= $canManageNotification ? '' : 'disabled' ?>>
+                        <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </li>
+                <?php endforeach; ?>
+                <?php endif; ?>
+                </ul>
+              </section>
+            </div>
+
+            <div class="notificationEditBackdrop" id="notificationEditModal" hidden>
+              <section class="notificationEditModal" role="dialog" aria-modal="true" aria-labelledby="notificationEditTitle">
+                <button class="notificationEditClose" id="closeNotificationEdit" type="button" aria-label="Close notification editor">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+                <header>
+                  <h2 id="notificationEditTitle">Edit Notification</h2>
+                  <p id="notificationEditTask"></p>
+                </header>
+                <form id="notificationEditForm">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                  <input id="notificationEditId" name="notification_id" type="hidden">
+                  <div class="notificationOffsetFields">
+                    <label for="notificationOffsetValue">
+                      <span>Remind me</span>
+                      <input id="notificationOffsetValue" name="offset_value" type="number" min="0" step="1" required inputmode="numeric">
+                    </label>
+                    <label for="notificationOffsetUnit">
+                      <span>Time unit</span>
+                      <select id="notificationOffsetUnit" name="offset_unit">
+                        <option value="minute">Minutes</option>
+                        <option value="hour">Hours</option>
+                        <option value="day">Days</option>
+                      </select>
+                    </label>
+                  </div>
+                  <p class="notificationDueSummary">Before due time: <strong id="notificationEditDue"></strong></p>
+                  <p class="notificationEditMessage" id="notificationEditMessage" role="alert" aria-live="polite"></p>
+                  <div class="notificationEditActions">
+                    <button class="notificationEditDismiss" id="dismissNotificationEdit" type="button">Close</button>
+                    <button class="notificationEditSave" id="saveNotificationEdit" type="submit">Save Changes</button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          </div>
         <?php else: ?>
           <div class="viewHeader">
             <div class="functions">
@@ -436,7 +579,6 @@ $renderTaskItems = static function (
                 <span class="completedCount"><?= $completedTasksToday ?></span>
                 <span>Completed</span>
               </div>
-              <div class="button inverz"><i class="fa-regular fa-trash-can"></i></div>
             </div>
           </div>
           <div class="content<?= $activeView === 'manage-tasks' ? ' manageTasksContent' : '' ?>">
@@ -496,6 +638,10 @@ $renderTaskItems = static function (
               </div>
             <?php endif; ?>
           </div>
+
+        <?php endif; ?>
+
+        <?php if (in_array($activeView, ['home', 'manage-tasks', 'messages'], true)): ?>
 
           <div class="taskModalBackdrop" id="taskModal" hidden>
             <section
@@ -630,24 +776,16 @@ $renderTaskItems = static function (
 
                 <div class="timePicker" id="timePicker">
                   <label>
-                    <span>Hour</span>
-                    <select id="taskTimeHour" aria-label="Hour">
-                      <?php for ($hour = 1; $hour <= 12; $hour++): ?>
-                        <option value="<?= $hour ?>"><?= str_pad((string) $hour, 2, '0', STR_PAD_LEFT) ?></option>
-                      <?php endfor; ?>
-                    </select>
+                    <span class="timeFieldLabel">Hour</span>
+                    <input id="taskTimeHour" type="number" min="1" max="12" step="1" value="12" inputmode="numeric" aria-label="Hour" required>
                   </label>
                   <span class="timeSeparator" aria-hidden="true">:</span>
                   <label>
-                    <span>Minute</span>
-                    <select id="taskTimeMinute" aria-label="Minute">
-                      <?php for ($minute = 0; $minute < 60; $minute++): ?>
-                        <option value="<?= $minute ?>"><?= str_pad((string) $minute, 2, '0', STR_PAD_LEFT) ?></option>
-                      <?php endfor; ?>
-                    </select>
+                    <span class="timeFieldLabel">Minute</span>
+                    <input id="taskTimeMinute" type="number" min="0" max="59" step="1" value="0" inputmode="numeric" aria-label="Minute" required>
                   </label>
                   <label>
-                    <span>Period</span>
+                    <span class="timeFieldLabel">Period</span>
                     <select id="taskTimePeriod" aria-label="AM or PM">
                       <option value="AM">AM</option>
                       <option value="PM">PM</option>

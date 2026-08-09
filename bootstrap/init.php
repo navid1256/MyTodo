@@ -42,3 +42,4 @@ try {
 }
 include BASE_PATH."libs/lib-auth.php";
 include BASE_PATH."libs/lib-tasks.php";
+include BASE_PATH."libs/lib-notifications.php";
