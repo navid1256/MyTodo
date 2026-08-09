@@ -7,12 +7,14 @@ import { initDateTimePicker } from './modules/date-time-picker.js';
 import { initReminderPicker } from './modules/reminder-picker.js';
 import { initRepeatPicker } from './modules/repeat-picker.js';
 import { initTaskCalendar } from './modules/task-calendar.js';
+import { initPasswordChange } from './modules/password-change.js';
 
 initTheme();
 initNavigation();
 initProfileMenu();
 initAvatarPicker();
 initTaskCalendar();
+initPasswordChange();
 
 const dateTimePicker = initDateTimePicker();
 const reminderPicker = initReminderPicker();

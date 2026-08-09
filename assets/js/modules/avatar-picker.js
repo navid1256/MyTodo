@@ -1,6 +1,6 @@
 import { createBoringBeamAvatarDataUrl } from '../vendor/boring-avatar.js';
 
-const AVATAR_OPTION_COUNT = 24;
+const AVATAR_OPTION_COUNT = 12;
 const MAX_SOURCE_FILE_SIZE = 10 * 1024 * 1024;
 const OUTPUT_SIZE = 512;
 const CANVAS_QUALITY = 0.9;
@@ -8,7 +8,7 @@ const MAXIMUM_ZOOM = 3;
 const ZOOM_BUTTON_STEP = 0.1;
 const ZOOM_WHEEL_STEP = 0.08;
 const ZOOM_SLIDER_LIMIT = 100;
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp','image/jpg'];
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
 function clamp(value, minimum, maximum) {
     return Math.min(Math.max(value, minimum), maximum);

@@ -1007,7 +1007,7 @@ span.created-at {
     outline: 2px solid rgba(22, 141, 240, 0.28);
 }
 
-.avatarPickerModal > h2 {
+.avatarPickerModal>h2 {
     margin: 0;
     padding: 0 42px;
     color: #263842;
@@ -1392,6 +1392,295 @@ span.created-at {
 .saveProfileButton:focus-visible {
     background-color: #59a52b;
     outline: none;
+}
+
+.changePasswordNavigation {
+    margin: 0;
+}
+
+.changePasswordPage {
+    position: relative;
+    width: 100%;
+    min-height: 100%;
+    padding: 34px 46px 50px;
+    box-sizing: border-box;
+    color: #1f2933;
+}
+
+.backToProfileLink {
+    position: absolute;
+    top: 34px;
+    left: 46px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #438a9c;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.backToProfileLink:hover,
+.backToProfileLink:focus-visible {
+    color: #217188;
+    outline: none;
+}
+
+.changePasswordHeader {
+    width: min(100%, 868px);
+    margin: 58px auto 30px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #d7e0e5;
+}
+
+.changePasswordHeader h1 {
+    margin: 0 0 8px;
+    color: #1f2c36;
+    font-size: 26px;
+}
+
+.changePasswordHeader p {
+    margin: 0;
+    color: #6f7e87;
+    font-size: 14px;
+}
+
+.changePasswordForm {
+    display: grid;
+    width: min(100%, 728px);
+    margin: 0 auto;
+    gap: 22px;
+}
+
+.changePasswordField {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 520px);
+    align-items: center;
+    gap: 18px;
+    color: #2b3740;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.changePasswordField>label {
+    text-align: right;
+}
+
+.changePasswordInput {
+    position: relative;
+    width: 100%;
+}
+
+.changePasswordField input {
+    width: 100%;
+    height: 48px;
+    padding: 10px 50px 10px 14px;
+    box-sizing: border-box;
+    border: 1px solid #b9c6cd;
+    border-radius: 10px;
+    outline: none;
+    background-color: #f7f9fa;
+    color: #263342;
+    font: inherit;
+    font-weight: 400;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.passwordIconDefinitions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.changePasswordToggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: inline-flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    outline: none;
+    background-color: transparent;
+    color: #6f7e87;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.changePasswordToggle:hover,
+.changePasswordToggle:focus-visible {
+    background-color: rgba(84, 185, 205, 0.12);
+    color: #438a9c;
+}
+
+.changePasswordIcon {
+    width: 20px;
+    height: 20px;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.changePasswordIconOpen {
+    display: none;
+}
+
+.changePasswordToggle[aria-pressed="true"] .changePasswordIconClosed {
+    display: none;
+}
+
+.changePasswordToggle[aria-pressed="true"] .changePasswordIconOpen {
+    display: block;
+}
+
+.changePasswordField input:focus {
+    border-color: #54b9cd;
+    box-shadow: 0 0 0 3px rgba(84, 185, 205, 0.16);
+}
+
+.changePasswordField input.is-invalid {
+    border-color: #df626b;
+    box-shadow: 0 0 0 3px rgba(223, 98, 107, 0.12);
+}
+
+.passwordRequirements {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-left: 208px;
+}
+
+.passwordRequirement {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #7a878f;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.passwordRequirement input {
+    width: 18px;
+    height: 23px;
+    margin: 0;
+    border: 2px solid #9daab2;
+    border-radius: 50%;
+    appearance: none;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 12px 13px;
+    opacity: 1;
+    transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.passwordRequirement input:checked {
+    border-color: #69bd34;
+    background-color: #69bd34;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.2 4.7 9 10 3' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.passwordRequirement.is-met {
+    color: #4d9728;
+}
+
+.passwordConfirmationMessage,
+.changePasswordMessage {
+    min-height: 18px;
+    margin: -10px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.passwordConfirmationMessage {
+    color: #c94852;
+}
+
+.changePasswordMessage.is-error {
+    color: #c94852;
+}
+
+.changePasswordMessage.is-success {
+    color: #4d9728;
+}
+
+.changePasswordActions {
+    position: absolute;
+    right: 50px;
+    bottom: 50px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.confirmPasswordButton {
+    min-width: 112px;
+    min-height: 44px;
+    padding: 10px 24px;
+    border: 0;
+    border-radius: 24px;
+    background-color: #69bd34;
+    box-shadow: 0 8px 18px rgba(105, 189, 52, 0.25);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.confirmPasswordButton:hover,
+.confirmPasswordButton:focus-visible {
+    background-color: #59a52b;
+    box-shadow: 0 10px 24px rgba(105, 189, 52, 0.32);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.confirmPasswordButton:disabled {
+    cursor: wait;
+    opacity: 0.68;
+    transform: none;
+}
+
+@media (max-width: 620px) {
+    .changePasswordPage {
+        padding: 24px 16px 36px;
+    }
+
+    .changePasswordField {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .changePasswordField>label {
+        text-align: left;
+    }
+
+    .passwordRequirements {
+        margin-left: 0;
+    }
+
+    .backToProfileLink,
+    .changePasswordActions {
+        position: static;
+    }
+
+    .changePasswordHeader {
+        margin-top: 26px;
+    }
+
+    .changePasswordActions {
+        justify-content: flex-end;
+        padding-top: 4px;
+    }
 }
 
 .task-modal-open {
@@ -2235,7 +2524,7 @@ span.created-at {
     outline: 2px solid rgba(22, 141, 240, 0.28);
 }
 
-.repeatModalScroll > h2 {
+.repeatModalScroll>h2 {
     margin: 0;
     padding-right: 42px;
     color: #263842;
@@ -2607,7 +2896,7 @@ span.created-at {
         border-radius: 22px;
     }
 
-    .avatarPickerModal > h2 {
+    .avatarPickerModal>h2 {
         font-size: 20px;
     }
 
@@ -3031,7 +3320,7 @@ html.dark-mode .backToAvatarGallery {
     color: #d4e0e7;
 }
 
-html.dark-mode .avatarPickerModal > h2 {
+html.dark-mode .avatarPickerModal>h2 {
     color: #e8eff3;
 }
 
@@ -3096,6 +3385,65 @@ html.dark-mode .profileField input[readonly] {
 
 html.dark-mode .profileSecurity h2 {
     color: #e4ebf0;
+}
+
+html.dark-mode .changePasswordPage {
+    color: #d7e0e6;
+}
+
+html.dark-mode .backToProfileLink {
+    color: #79c8dd;
+}
+
+html.dark-mode .backToProfileLink:hover,
+html.dark-mode .backToProfileLink:focus-visible {
+    color: #a2dfef;
+}
+
+html.dark-mode .changePasswordHeader {
+    border-bottom-color: #364956;
+}
+
+html.dark-mode .changePasswordHeader h1,
+html.dark-mode .changePasswordField {
+    color: #e4ebf0;
+}
+
+html.dark-mode .changePasswordHeader p {
+    color: #98a8b2;
+}
+
+html.dark-mode .changePasswordField input {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+}
+
+html.dark-mode .changePasswordToggle {
+    color: #98a8b2;
+}
+
+html.dark-mode .changePasswordToggle:hover,
+html.dark-mode .changePasswordToggle:focus-visible {
+    background-color: rgba(121, 200, 221, 0.12);
+    color: #a2dfef;
+}
+
+html.dark-mode .passwordRequirement input {
+    border-color: #687985;
+}
+
+html.dark-mode .passwordRequirement input:checked {
+    border-color: #69bd34;
+    background-color: #69bd34;
+}
+
+html.dark-mode .passwordRequirement {
+    color: #94a5af;
+}
+
+html.dark-mode .passwordRequirement.is-met {
+    color: #91d66b;
 }
 
 html.dark-mode .taskModalBackdrop {
@@ -3275,9 +3623,9 @@ html.dark-mode .repeatCalendarHeader button {
     color: #d4e0e7;
 }
 
-html.dark-mode .repeatModalScroll > h2,
-html.dark-mode .customRepeatSection > h3,
-html.dark-mode .repeatEndsSection > h3,
+html.dark-mode .repeatModalScroll>h2,
+html.dark-mode .customRepeatSection>h3,
+html.dark-mode .repeatEndsSection>h3,
 html.dark-mode .repeatCalendarHeader h4 {
     color: #e8eff3;
 }
