@@ -1,6 +1,6 @@
 import { changePassword } from '../services/account-service.js';
 
-const PASSWORD_CHECK_DELAY = 180;
+const PASSWORD_CHECK_DELAY = 100;
 
 function getPasswordChecks(password) {
     return {
