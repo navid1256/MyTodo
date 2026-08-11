@@ -9,10 +9,15 @@ export function addDays(date, numberOfDays) {
 }
 
 export function datesAreEqual(firstDate, secondDate) {
-    return Boolean(firstDate && secondDate)
+    if (firstDate && secondDate
         && firstDate.getFullYear() === secondDate.getFullYear()
         && firstDate.getMonth() === secondDate.getMonth()
-        && firstDate.getDate() === secondDate.getDate();
+        && firstDate.getDate() === secondDate.getDate()
+    ) {
+        return true;
+    }
+
+    return false;
 }
 
 export function formatDateKey(date) {
@@ -32,3 +37,4 @@ export function parseDateKey(dateKey) {
     var parsedDate = new Date(parts[0], parts[1] - 1, parts[2]);
     return formatDateKey(parsedDate) === dateKey ? parsedDate : null;
 }
+

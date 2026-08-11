@@ -6,6 +6,16 @@ import {
     parseDateKey
 } from '../utils/date-utils.js';
 
+import {
+    convertTo12Hour,
+    convertTo24Hour,
+} from '../utils/time-utils.js';
+
+import {
+    renderDateTimeCalendar,
+    changeCalendarMonth
+} from './date-time-calendar.js';
+
 export function initDateTimePicker() {
     var setTaskDateButton = document.getElementById('setTaskDateButton');
     var taskDueAt = document.getElementById('taskDueAt');
@@ -53,29 +63,19 @@ export function initDateTimePicker() {
             return;
         }
 
-        var period = hour24 >= 12 ? 'PM' : 'AM';
-        var hour12 = hour24 % 12 || 12;
-        taskTimeHour.value = String(hour12);
-        taskTimeMinute.value = String(minute);
-        taskTimePeriod.value = period;
+        var time = convertTo12Hour(hour24, minute);
+
+        taskTimeHour.value = String(time.hour12);
+        taskTimeMinute.value = String(time.minute);
+        taskTimePeriod.value = time.period;
     }
 
     function readPickerTime() {
-        var hour12 = Number(taskTimeHour ? taskTimeHour.value : 12);
-        var minute = Number(taskTimeMinute ? taskTimeMinute.value : 0);
-        var period = taskTimePeriod ? taskTimePeriod.value : 'AM';
-        var hour24 = hour12 % 12;
-
-        if (period === 'PM') {
-            hour24 += 12;
-        }
-
-        return {
-            hour24: hour24,
-            hour12: hour12,
-            minute: minute,
-            period: period
-        };
+        return convertTo24Hour(
+            taskTimeHour ? taskTimeHour.value : 12,
+            taskTimeMinute ? taskTimeMinute.value : 0,
+            taskTimePeriod ? taskTimePeriod.value : 'AM'
+        );
     }
 
     function updateQuickDateSelection() {
@@ -138,69 +138,23 @@ export function initDateTimePicker() {
     }
 
     function renderCalendar() {
-        if (!calendarDays || !calendarMonthLabel) {
-            return;
-        }
+        var today = new Date();
 
         if (!calendarViewDate) {
-            var today = new Date();
-            calendarViewDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        }
-
-        var viewYear = calendarViewDate.getFullYear();
-        var viewMonth = calendarViewDate.getMonth();
-        var firstDayOfMonth = new Date(viewYear, viewMonth, 1);
-        var firstGridDate = addDays(firstDayOfMonth, -firstDayOfMonth.getDay());
-        var todayDate = startOfDay(new Date());
-
-        calendarMonthLabel.textContent = new Intl.DateTimeFormat('en-US', {
-            month: 'long',
-            year: 'numeric'
-        }).format(firstDayOfMonth);
-        calendarDays.textContent = '';
-
-        for (var dayIndex = 0; dayIndex < 42; dayIndex += 1) {
-            var calendarDate = addDays(firstGridDate, dayIndex);
-            var dayButton = document.createElement('button');
-            var isSelected = datesAreEqual(calendarDate, draftSelectedDate);
-
-            dayButton.type = 'button';
-            dayButton.className = 'calendarDay';
-            dayButton.textContent = String(calendarDate.getDate());
-            dayButton.dataset.date = formatDateKey(calendarDate);
-            dayButton.setAttribute('role', 'gridcell');
-            dayButton.setAttribute('aria-selected', String(isSelected));
-            dayButton.setAttribute(
-                'aria-label',
-                new Intl.DateTimeFormat('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                }).format(calendarDate)
+            calendarViewDate = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                1
             );
-
-            if (calendarDate.getMonth() !== viewMonth) {
-                dayButton.classList.add('outsideMonth');
-            }
-
-            if (datesAreEqual(calendarDate, todayDate)) {
-                dayButton.classList.add('today');
-            }
-
-            if (isSelected) {
-                dayButton.classList.add('selected');
-            }
-
-            dayButton.addEventListener('click', function (event) {
-                var selectedDate = parseDateKey(event.currentTarget.dataset.date);
-
-                if (selectedDate) {
-                    selectCalendarDate(selectedDate);
-                }
-            });
-            calendarDays.appendChild(dayButton);
         }
+
+        renderDateTimeCalendar({
+            calendarDays: calendarDays,
+            calendarMonthLabel: calendarMonthLabel,
+            viewDate: calendarViewDate,
+            selectedDate: draftSelectedDate,
+            onSelect: selectCalendarDate
+        });
     }
 
     function closeDateTimeModal(shouldRestoreFocus) {
@@ -376,22 +330,14 @@ export function initDateTimePicker() {
 
     if (previousCalendarMonthButton) {
         previousCalendarMonthButton.addEventListener('click', function () {
-            calendarViewDate = new Date(
-                calendarViewDate.getFullYear(),
-                calendarViewDate.getMonth() - 1,
-                1
-            );
+            calendarViewDate = changeCalendarMonth(calendarViewDate, -1);
             renderCalendar();
         });
     }
 
     if (nextCalendarMonthButton) {
         nextCalendarMonthButton.addEventListener('click', function () {
-            calendarViewDate = new Date(
-                calendarViewDate.getFullYear(),
-                calendarViewDate.getMonth() + 1,
-                1
-            );
+            calendarViewDate = changeCalendarMonth(calendarViewDate, 1);
             renderCalendar();
         });
     }
