@@ -38,3 +38,14 @@ export function parseDateKey(dateKey) {
     return formatDateKey(parsedDate) === dateKey ? parsedDate : null;
 }
 
+export function normaliseDate(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+}
+
+export function formatDate(date) {
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
