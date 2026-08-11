@@ -24,8 +24,8 @@ function keyToDate(value) {
         return null;
     }
 
-    var parts = value.split('-').map(Number);
-    var date = new Date(parts[0], parts[1] - 1, parts[2], 12);
+    const parts = value.split('-').map(Number);
+    const date = new Date(parts[0], parts[1] - 1, parts[2], 12);
 
     if (
         date.getFullYear() !== parts[0]
@@ -47,39 +47,39 @@ function formatDate(date) {
 }
 
 export function initRepeatPicker() {
-    var repeatModal = document.getElementById('repeatModal');
-    var setTaskRepeatButton = document.getElementById('setTaskRepeatButton');
-    var closeRepeatModalButton = document.getElementById('closeRepeatModal');
-    var cancelRepeatButton = document.getElementById('cancelRepeatButton');
-    var applyRepeatButton = document.getElementById('applyRepeatButton');
-    var taskRepeat = document.getElementById('taskRepeat');
-    var taskRepeatSummary = document.getElementById('taskRepeatSummary');
-    var taskDueAt = document.getElementById('taskDueAt');
-    var customRepeatSection = document.getElementById('customRepeatSection');
-    var repeatInterval = document.getElementById('repeatInterval');
-    var repeatUnit = document.getElementById('repeatUnit');
-    var repeatOnWeek = document.getElementById('repeatOnWeek');
-    var repeatOnMonth = document.getElementById('repeatOnMonth');
-    var repeatEndDateSection = document.getElementById('repeatEndDateSection');
-    var repeatCountField = document.getElementById('repeatCountField');
-    var repeatCount = document.getElementById('repeatCount');
-    var repeatCalendarMonth = document.getElementById('repeatCalendarMonth');
-    var repeatCalendarDays = document.getElementById('repeatCalendarDays');
-    var previousRepeatMonth = document.getElementById('previousRepeatMonth');
-    var nextRepeatMonth = document.getElementById('nextRepeatMonth');
-    var repeatEndDateSummary = document.getElementById('repeatEndDateSummary');
-    var repeatModalMessage = document.getElementById('repeatModalMessage');
-    var frequencyInputs = Array.from(document.querySelectorAll('input[name="task_repeat_frequency"]'));
-    var endInputs = Array.from(document.querySelectorAll('input[name="task_repeat_end"]'));
-    var weekDayInputs = Array.from(document.querySelectorAll('#repeatOnWeek input[type="checkbox"]'));
-    var monthDayInputs = Array.from(document.querySelectorAll('input[name="repeat_month_day"]'));
-    var appliedRule = null;
-    var draftEndDate = '';
-    var calendarDate = normaliseDate(new Date());
-    var lastTrigger = null;
+    const repeatModal = document.getElementById('repeatModal');
+    const setTaskRepeatButton = document.getElementById('setTaskRepeatButton');
+    const closeRepeatModalButton = document.getElementById('closeRepeatModal');
+    const cancelRepeatButton = document.getElementById('cancelRepeatButton');
+    const applyRepeatButton = document.getElementById('applyRepeatButton');
+    const taskRepeat = document.getElementById('taskRepeat');
+    const taskRepeatSummary = document.getElementById('taskRepeatSummary');
+    const taskDueAt = document.getElementById('taskDueAt');
+    const customRepeatSection = document.getElementById('customRepeatSection');
+    const repeatInterval = document.getElementById('repeatInterval');
+    const repeatUnit = document.getElementById('repeatUnit');
+    const repeatOnWeek = document.getElementById('repeatOnWeek');
+    const repeatOnMonth = document.getElementById('repeatOnMonth');
+    const repeatEndDateSection = document.getElementById('repeatEndDateSection');
+    const repeatCountField = document.getElementById('repeatCountField');
+    const repeatCount = document.getElementById('repeatCount');
+    const repeatCalendarMonth = document.getElementById('repeatCalendarMonth');
+    const repeatCalendarDays = document.getElementById('repeatCalendarDays');
+    const previousRepeatMonth = document.getElementById('previousRepeatMonth');
+    const nextRepeatMonth = document.getElementById('nextRepeatMonth');
+    const repeatEndDateSummary = document.getElementById('repeatEndDateSummary');
+    const repeatModalMessage = document.getElementById('repeatModalMessage');
+    const frequencyInputs = Array.from(document.querySelectorAll('input[name="task_repeat_frequency"]'));
+    const endInputs = Array.from(document.querySelectorAll('input[name="task_repeat_end"]'));
+    const weekDayInputs = Array.from(document.querySelectorAll('#repeatOnWeek input[type="checkbox"]'));
+    const monthDayInputs = Array.from(document.querySelectorAll('input[name="repeat_month_day"]'));
+    let appliedRule = null;
+    let draftEndDate = '';
+    let calendarDate = normaliseDate(new Date());
+    let lastTrigger = null;
 
     function selectedValue(inputs) {
-        var selected = inputs.find(function (input) {
+        const selected = inputs.find(function (input) {
             return input.checked;
         });
 
@@ -111,7 +111,7 @@ export function initRepeatPicker() {
     }
 
     function createDefaultRule() {
-        var baseDate = getBaseDate();
+        const baseDate = getBaseDate();
 
         return {
             frequency: 'daily',
@@ -129,10 +129,10 @@ export function initRepeatPicker() {
     }
 
     function ensureRepeatOnSelection() {
-        var baseDate = getBaseDate();
+        const baseDate = getBaseDate();
 
         if (repeatUnit && repeatUnit.value === 'week' && !weekDayInputs.some(function (input) { return input.checked; })) {
-            var baseWeekDay = weekDayInputs.find(function (input) {
+            const baseWeekDay = weekDayInputs.find(function (input) {
                 return Number(input.value) === baseDate.getDay();
             });
 
@@ -147,10 +147,10 @@ export function initRepeatPicker() {
     }
 
     function updateConditionalSections() {
-        var frequency = selectedValue(frequencyInputs);
-        var endType = selectedValue(endInputs);
-        var isCustom = frequency === 'custom';
-        var customUnit = repeatUnit ? repeatUnit.value : 'day';
+        const frequency = selectedValue(frequencyInputs);
+        const endType = selectedValue(endInputs);
+        const isCustom = frequency === 'custom';
+        const customUnit = repeatUnit ? repeatUnit.value : 'day';
 
         if (customRepeatSection) {
             customRepeatSection.hidden = !isCustom;
@@ -188,13 +188,13 @@ export function initRepeatPicker() {
             return;
         }
 
-        var year = calendarDate.getFullYear();
-        var month = calendarDate.getMonth();
-        var firstOfMonth = new Date(year, month, 1, 12);
-        var firstVisibleDate = new Date(year, month, 1 - firstOfMonth.getDay(), 12);
-        var minimumEndDate = getMinimumEndDate();
-        var selectedEndDate = keyToDate(draftEndDate);
-        var minimumMonth = new Date(minimumEndDate.getFullYear(), minimumEndDate.getMonth(), 1, 12);
+        const year = calendarDate.getFullYear();
+        const month = calendarDate.getMonth();
+        const firstOfMonth = new Date(year, month, 1, 12);
+        const firstVisibleDate = new Date(year, month, 1 - firstOfMonth.getDay(), 12);
+        const minimumEndDate = getMinimumEndDate();
+        const selectedEndDate = keyToDate(draftEndDate);
+        const minimumMonth = new Date(minimumEndDate.getFullYear(), minimumEndDate.getMonth(), 1, 12);
 
         repeatCalendarMonth.textContent = MONTH_NAMES[month] + ' ' + year;
         repeatCalendarDays.textContent = '';
@@ -203,16 +203,16 @@ export function initRepeatPicker() {
             previousRepeatMonth.disabled = firstOfMonth <= minimumMonth;
         }
 
-        for (var index = 0; index < 42; index++) {
-            var day = new Date(
+        for (let index = 0; index < 42; index++) {
+            const day = new Date(
                 firstVisibleDate.getFullYear(),
                 firstVisibleDate.getMonth(),
                 firstVisibleDate.getDate() + index,
                 12
             );
-            var dayKey = dateToKey(day);
-            var button = document.createElement('button');
-            var isDisabled = day <= minimumEndDate;
+            const dayKey = dateToKey(day);
+            const button = document.createElement('button');
+            const isDisabled = day <= minimumEndDate;
 
             button.type = 'button';
             button.className = 'repeatCalendarDay';
@@ -277,28 +277,28 @@ export function initRepeatPicker() {
             repeatCount.value = String(rule.ends.count || 10);
         }
 
-        var calendarBase = keyToDate(draftEndDate) || getBaseDate();
+        const calendarBase = keyToDate(draftEndDate) || getBaseDate();
         calendarDate = new Date(calendarBase.getFullYear(), calendarBase.getMonth(), 1, 12);
         updateConditionalSections();
     }
 
     function collectRule() {
-        var frequency = selectedValue(frequencyInputs);
-        var baseDate = getBaseDate();
-        var unitByFrequency = {
+        const frequency = selectedValue(frequencyInputs);
+        const baseDate = getBaseDate();
+        const unitByFrequency = {
             daily: 'day',
             weekly: 'week',
             monthly: 'month'
         };
-        var unit = frequency === 'custom' && repeatUnit ? repeatUnit.value : unitByFrequency[frequency];
-        var interval = frequency === 'custom' && repeatInterval ? Number(repeatInterval.value) : 1;
-        var weekDays = weekDayInputs
+        const unit = frequency === 'custom' && repeatUnit ? repeatUnit.value : unitByFrequency[frequency];
+        const interval = frequency === 'custom' && repeatInterval ? Number(repeatInterval.value) : 1;
+        let weekDays = weekDayInputs
             .filter(function (input) { return input.checked; })
             .map(function (input) { return Number(input.value); })
             .sort(function (first, second) { return first - second; });
-        var selectedMonthDay = monthDayInputs.find(function (input) { return input.checked; });
-        var monthDay = selectedMonthDay ? Number(selectedMonthDay.value) : baseDate.getDate();
-        var endType = selectedValue(endInputs);
+        const selectedMonthDay = monthDayInputs.find(function (input) { return input.checked; });
+        let monthDay = selectedMonthDay ? Number(selectedMonthDay.value) : baseDate.getDate();
+        const endType = selectedValue(endInputs);
 
         if (frequency === 'weekly') {
             weekDays = [baseDate.getDay()];
@@ -324,7 +324,7 @@ export function initRepeatPicker() {
     }
 
     function validateRule(rule) {
-        var startDate = getTaskStartDate();
+        const startDate = getTaskStartDate();
 
         if (!startDate) {
             return 'Please set a task date before adding repeat settings.';
@@ -345,7 +345,7 @@ export function initRepeatPicker() {
         }
 
         if (rule.ends.type === 'date') {
-            var endDate = keyToDate(rule.ends.date);
+            const endDate = keyToDate(rule.ends.date);
 
             if (!endDate) {
                 return 'Please select an end date from the calendar.';
@@ -367,7 +367,7 @@ export function initRepeatPicker() {
     }
 
     function formatRuleSummary(rule) {
-        var scheduleText;
+        let scheduleText;
 
         if (rule.frequency === 'daily') {
             scheduleText = 'Repeats daily';
@@ -428,7 +428,7 @@ export function initRepeatPicker() {
         }
 
         window.requestAnimationFrame(function () {
-            var selectedFrequency = frequencyInputs.find(function (input) { return input.checked; });
+            const selectedFrequency = frequencyInputs.find(function (input) { return input.checked; });
 
             if (selectedFrequency) {
                 selectedFrequency.focus();
@@ -499,8 +499,8 @@ export function initRepeatPicker() {
 
     if (applyRepeatButton) {
         applyRepeatButton.addEventListener('click', function () {
-            var rule = collectRule();
-            var validationMessage = validateRule(rule);
+            const rule = collectRule();
+            const validationMessage = validateRule(rule);
 
             if (validationMessage) {
                 setMessage(validationMessage);

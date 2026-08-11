@@ -3,27 +3,27 @@ import {
     datesAreEqual,
     formatDateKey,
     parseDateKey
-} from '../utils/date-utils.js';
+} from '../../utils/date-utils.js';
 
 export function renderDateTimeCalendar(options) {
-    var calendarDays = options.calendarDays;
-    var calendarMonthLabel = options.calendarMonthLabel;
-    var viewDate = options.viewDate;
-    var selectedDate = options.selectedDate;
-    var onSelect = options.onSelect;
+    const calendarDays = options.calendarDays;
+    const calendarMonthLabel = options.calendarMonthLabel;
+    const viewDate = options.viewDate;
+    const selectedDate = options.selectedDate;
+    const onSelect = options.onSelect;
 
     if (!calendarDays || !calendarMonthLabel || !viewDate) {
         return;
     }
 
-    var viewYear = viewDate.getFullYear();
-    var viewMonth = viewDate.getMonth();
-    var firstDayOfMonth = new Date(viewYear, viewMonth, 1);
-    var firstGridDate = addDays(
+    const viewYear = viewDate.getFullYear();
+    const viewMonth = viewDate.getMonth();
+    const firstDayOfMonth = new Date(viewYear, viewMonth, 1);
+    const firstGridDate = addDays(
         firstDayOfMonth,
         -firstDayOfMonth.getDay()
     );
-    var todayDate = new Date();
+    let todayDate = new Date();
     todayDate = new Date(
         todayDate.getFullYear(),
         todayDate.getMonth(),
@@ -37,10 +37,10 @@ export function renderDateTimeCalendar(options) {
 
     calendarDays.textContent = '';
 
-    for (var dayIndex = 0; dayIndex < 42; dayIndex += 1) {
-        var calendarDate = addDays(firstGridDate, dayIndex);
-        var dayButton = document.createElement('button');
-        var isSelected = datesAreEqual(calendarDate, selectedDate);
+    for (let dayIndex = 0; dayIndex < 42; dayIndex += 1) {
+        const calendarDate = addDays(firstGridDate, dayIndex);
+        const dayButton = document.createElement('button');
+        const isSelected = datesAreEqual(calendarDate, selectedDate);
 
         dayButton.type = 'button';
         dayButton.className = 'calendarDay';
@@ -72,7 +72,7 @@ export function renderDateTimeCalendar(options) {
         }
 
         dayButton.addEventListener('click', function (event) {
-            var selected = parseDateKey(event.currentTarget.dataset.date);
+            const selected = parseDateKey(event.currentTarget.dataset.date);
 
             if (selected && typeof onSelect === 'function') {
                 onSelect(selected);

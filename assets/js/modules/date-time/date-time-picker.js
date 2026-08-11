@@ -4,12 +4,12 @@ import {
     datesAreEqual,
     formatDateKey,
     parseDateKey
-} from '../utils/date-utils.js';
+} from '../../utils/date-utils.js';
 
 import {
     convertTo12Hour,
     convertTo24Hour,
-} from '../utils/time-utils.js';
+} from '../../utils/time-utils.js';
 
 import {
     renderDateTimeCalendar,
@@ -17,31 +17,31 @@ import {
 } from './date-time-calendar.js';
 
 export function initDateTimePicker() {
-    var setTaskDateButton = document.getElementById('setTaskDateButton');
-    var taskDueAt = document.getElementById('taskDueAt');
-    var taskHasTime = document.getElementById('taskHasTime');
-    var taskDateSummary = document.getElementById('taskDateSummary');
-    var dateTimeModal = document.getElementById('dateTimeModal');
-    var closeDateTimeModalButton = document.getElementById('closeDateTimeModal');
-    var previousCalendarMonthButton = document.getElementById('previousCalendarMonth');
-    var nextCalendarMonthButton = document.getElementById('nextCalendarMonth');
-    var calendarMonthLabel = document.getElementById('dateTimeModalTitle');
-    var calendarDays = document.getElementById('calendarDays');
-    var quickDateRadios = document.querySelectorAll('input[name="quick_task_date"]');
-    var setTimeSection = document.getElementById('setTimeSection');
-    var setTimeYes = document.getElementById('setTimeYes');
-    var setTimeNo = document.getElementById('setTimeNo');
-    var taskTimeHour = document.getElementById('taskTimeHour');
-    var taskTimeMinute = document.getElementById('taskTimeMinute');
-    var taskTimePeriod = document.getElementById('taskTimePeriod');
-    var dateTimeModalMessage = document.getElementById('dateTimeModalMessage');
-    var cancelDateTimeButton = document.getElementById('cancelDateTimeButton');
-    var applyDateTimeButton = document.getElementById('applyDateTimeButton');
-    var lastDateTimeModalTrigger = null;
-    var calendarViewDate = null;
-    var draftSelectedDate = null;
-    var draftHasTime = true;
-    var committedDateMode = 'unset';
+    const setTaskDateButton = document.getElementById('setTaskDateButton');
+    const taskDueAt = document.getElementById('taskDueAt');
+    const taskHasTime = document.getElementById('taskHasTime');
+    const taskDateSummary = document.getElementById('taskDateSummary');
+    const dateTimeModal = document.getElementById('dateTimeModal');
+    const closeDateTimeModalButton = document.getElementById('closeDateTimeModal');
+    const previousCalendarMonthButton = document.getElementById('previousCalendarMonth');
+    const nextCalendarMonthButton = document.getElementById('nextCalendarMonth');
+    const calendarMonthLabel = document.getElementById('dateTimeModalTitle');
+    const calendarDays = document.getElementById('calendarDays');
+    const quickDateRadios = document.querySelectorAll('input[name="quick_task_date"]');
+    const setTimeSection = document.getElementById('setTimeSection');
+    const setTimeYes = document.getElementById('setTimeYes');
+    const setTimeNo = document.getElementById('setTimeNo');
+    const taskTimeHour = document.getElementById('taskTimeHour');
+    const taskTimeMinute = document.getElementById('taskTimeMinute');
+    const taskTimePeriod = document.getElementById('taskTimePeriod');
+    const dateTimeModalMessage = document.getElementById('dateTimeModalMessage');
+    const cancelDateTimeButton = document.getElementById('cancelDateTimeButton');
+    const applyDateTimeButton = document.getElementById('applyDateTimeButton');
+    let lastDateTimeModalTrigger = null;
+    let calendarViewDate = null;
+    let draftSelectedDate = null;
+    let draftHasTime = true;
+    let committedDateMode = 'unset';
 
     function setDateTimeModalMessage(message) {
         if (dateTimeModalMessage) {
@@ -63,7 +63,7 @@ export function initDateTimePicker() {
             return;
         }
 
-        var time = convertTo12Hour(hour24, minute);
+        const time = convertTo12Hour(hour24, minute);
 
         taskTimeHour.value = String(time.hour12);
         taskTimeMinute.value = String(time.minute);
@@ -79,9 +79,9 @@ export function initDateTimePicker() {
     }
 
     function updateQuickDateSelection() {
-        var today = startOfDay(new Date());
-        var tomorrow = addDays(today, 1);
-        var quickValue = null;
+        const today = startOfDay(new Date());
+        const tomorrow = addDays(today, 1);
+        let quickValue = null;
 
         if (!draftSelectedDate) {
             quickValue = 'no-date';
@@ -97,8 +97,8 @@ export function initDateTimePicker() {
     }
 
     function updateTimeControls() {
-        var hasDate = Boolean(draftSelectedDate);
-        var timeIsEnabled = hasDate && draftHasTime;
+        const hasDate = Boolean(draftSelectedDate);
+        const timeIsEnabled = hasDate && draftHasTime;
 
         if (setTimeSection) {
             setTimeSection.classList.toggle('is-disabled', !hasDate);
@@ -123,7 +123,7 @@ export function initDateTimePicker() {
     }
 
     function selectCalendarDate(date) {
-        var dateWasEmpty = !draftSelectedDate;
+        const dateWasEmpty = !draftSelectedDate;
         draftSelectedDate = startOfDay(date);
         calendarViewDate = new Date(date.getFullYear(), date.getMonth(), 1);
 
@@ -138,7 +138,7 @@ export function initDateTimePicker() {
     }
 
     function renderCalendar() {
-        var today = new Date();
+        const today = new Date();
 
         if (!calendarViewDate) {
             calendarViewDate = new Date(
@@ -181,8 +181,8 @@ export function initDateTimePicker() {
             return;
         }
 
-        var today = startOfDay(new Date());
-        var storedDate = taskDueAt && taskDueAt.value
+        const today = startOfDay(new Date());
+        const storedDate = taskDueAt && taskDueAt.value
             ? parseDateKey(taskDueAt.value.slice(0, 10))
             : null;
 
@@ -246,9 +246,9 @@ export function initDateTimePicker() {
             return;
         }
 
-        var today = startOfDay(new Date());
-        var tomorrow = addDays(today, 1);
-        var dateLabel;
+        const today = startOfDay(new Date());
+        const tomorrow = addDays(today, 1);
+        let dateLabel;
 
         if (datesAreEqual(draftSelectedDate, today)) {
             dateLabel = 'Today';
@@ -263,7 +263,7 @@ export function initDateTimePicker() {
         }
 
         if (draftHasTime) {
-            var invalidTimeControl = [taskTimeHour, taskTimeMinute].find(function (control) {
+            const invalidTimeControl = [taskTimeHour, taskTimeMinute].find(function (control) {
                 return control && !control.checkValidity();
             });
 
@@ -273,7 +273,7 @@ export function initDateTimePicker() {
                 return;
             }
 
-            var selectedTime = readPickerTime();
+            const selectedTime = readPickerTime();
             taskDueAt.value = formatDateKey(draftSelectedDate)
                 + 'T'
                 + String(selectedTime.hour24).padStart(2, '0')
@@ -344,7 +344,7 @@ export function initDateTimePicker() {
 
     quickDateRadios.forEach(function (radio) {
         radio.addEventListener('change', function () {
-            var today = startOfDay(new Date());
+            const today = startOfDay(new Date());
 
             if (radio.value === 'today') {
                 selectCalendarDate(today);
