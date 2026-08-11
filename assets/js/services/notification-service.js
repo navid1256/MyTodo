@@ -1,30 +1,10 @@
-async function sendNotificationRequest(formData) {
-    const response = await fetch('bootstrap/ajaxHandler.php', {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    });
-    const responseText = await response.text();
-    let responseData;
-
-    try {
-        responseData = JSON.parse(responseText);
-    } catch (error) {
-        throw new Error(responseText || 'The notification request failed.');
-    }
-
-    if (!response.ok || !responseData.success) {
-        throw new Error(responseData.message || 'The notification request failed.');
-    }
-
-    return responseData;
-}
+import { sendJsonFormRequest } from './api-client.js';
 
 export function updateNotification(formData) {
     formData.set('action', 'updateNotification');
-    return sendNotificationRequest(formData);
+    return sendJsonFormRequest(formData, {
+        errorMessage: 'The notification request failed.'
+    });
 }
 
 export function cancelNotification(notificationId, csrfToken) {
@@ -33,5 +13,7 @@ export function cancelNotification(notificationId, csrfToken) {
     formData.set('csrf_token', csrfToken);
     formData.set('notification_id', String(notificationId));
 
-    return sendNotificationRequest(formData);
+    return sendJsonFormRequest(formData, {
+        errorMessage: 'The notification request failed.'
+    });
 }
