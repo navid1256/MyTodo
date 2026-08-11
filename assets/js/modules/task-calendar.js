@@ -6,27 +6,27 @@ import {
 } from '../utils/date-utils.js';
 
 export function initTaskCalendar() {
-    var taskCalendar = document.getElementById('taskCalendar');
-    var calendarMonthLabel = document.getElementById('taskCalendarMonth');
-    var calendarDays = document.getElementById('taskCalendarDays');
-    var previousMonthButton = document.getElementById('previousTaskCalendarMonth');
-    var nextMonthButton = document.getElementById('nextTaskCalendarMonth');
-    var showAllTasksButton = document.getElementById('showAllTasksButton');
-    var selectedDateLabel = document.getElementById('selectedTaskDateLabel');
-    var filteredTasksEmpty = document.getElementById('filteredTasksEmpty');
-    var allTasksEmpty = document.getElementById('allTasksEmpty');
-    var calendarStatus = document.getElementById('taskCalendarStatus');
-    var taskItems = Array.from(document.querySelectorAll('#manageTaskItems .taskItem'));
+    const taskCalendar = document.getElementById('taskCalendar');
+    const calendarMonthLabel = document.getElementById('taskCalendarMonth');
+    const calendarDays = document.getElementById('taskCalendarDays');
+    const previousMonthButton = document.getElementById('previousTaskCalendarMonth');
+    const nextMonthButton = document.getElementById('nextTaskCalendarMonth');
+    const showAllTasksButton = document.getElementById('showAllTasksButton');
+    const selectedDateLabel = document.getElementById('selectedTaskDateLabel');
+    const filteredTasksEmpty = document.getElementById('filteredTasksEmpty');
+    const allTasksEmpty = document.getElementById('allTasksEmpty');
+    const calendarStatus = document.getElementById('taskCalendarStatus');
+    const taskItems = Array.from(document.querySelectorAll('#manageTaskItems .taskItem'));
 
     if (!taskCalendar || !calendarMonthLabel || !calendarDays) {
         return;
     }
 
-    var today = startOfDay(new Date());
-    var calendarViewDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    var selectedDate = null;
-    var taskCountsByDate = taskItems.reduce(function (counts, taskItem) {
-        var taskDate = taskItem.dataset.taskDate;
+    const today = startOfDay(new Date());
+    let calendarViewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    let selectedDate = null;
+    const taskCountsByDate = taskItems.reduce(function (counts, taskItem) {
+        const taskDate = taskItem.dataset.taskDate;
 
         if (taskDate) {
             counts[taskDate] = (counts[taskDate] || 0) + 1;
@@ -45,7 +45,7 @@ export function initTaskCalendar() {
     }
 
     function updateListHeader(date) {
-        var isShowingAllTasks = !date;
+        const isShowingAllTasks = !date;
 
         if (showAllTasksButton) {
             showAllTasksButton.classList.toggle('is-active', isShowingAllTasks);
@@ -91,11 +91,11 @@ export function initTaskCalendar() {
 
     function filterTasksByDate(date) {
         selectedDate = startOfDay(date);
-        var selectedDateKey = formatDateKey(selectedDate);
-        var visibleTaskCount = 0;
+        const selectedDateKey = formatDateKey(selectedDate);
+        let visibleTaskCount = 0;
 
         taskItems.forEach(function (taskItem) {
-            var shouldShow = taskItem.dataset.taskDate === selectedDateKey;
+            const shouldShow = taskItem.dataset.taskDate === selectedDateKey;
             taskItem.hidden = !shouldShow;
 
             if (shouldShow) {
@@ -127,11 +127,11 @@ export function initTaskCalendar() {
     }
 
     function renderCalendar() {
-        var viewYear = calendarViewDate.getFullYear();
-        var viewMonth = calendarViewDate.getMonth();
-        var firstDayOfMonth = new Date(viewYear, viewMonth, 1);
-        var daysFromMonday = (firstDayOfMonth.getDay() + 6) % 7;
-        var firstGridDate = addDays(firstDayOfMonth, -daysFromMonday);
+        const viewYear = calendarViewDate.getFullYear();
+        const viewMonth = calendarViewDate.getMonth();
+        const firstDayOfMonth = new Date(viewYear, viewMonth, 1);
+        const daysFromMonday = (firstDayOfMonth.getDay() + 6) % 7;
+        const firstGridDate = addDays(firstDayOfMonth, -daysFromMonday);
 
         calendarMonthLabel.textContent = new Intl.DateTimeFormat('en-US', {
             month: 'long',
@@ -139,12 +139,12 @@ export function initTaskCalendar() {
         }).format(firstDayOfMonth);
         calendarDays.textContent = '';
 
-        for (var dayIndex = 0; dayIndex < 42; dayIndex += 1) {
-            var calendarDate = addDays(firstGridDate, dayIndex);
-            var dateKey = formatDateKey(calendarDate);
-            var taskCount = taskCountsByDate[dateKey] || 0;
-            var dayButton = document.createElement('button');
-            var accessibleDate = formatAccessibleDate(calendarDate);
+        for (let dayIndex = 0; dayIndex < 42; dayIndex += 1) {
+            const calendarDate = addDays(firstGridDate, dayIndex);
+            const dateKey = formatDateKey(calendarDate);
+            const taskCount = taskCountsByDate[dateKey] || 0;
+            const dayButton = document.createElement('button');
+            const accessibleDate = formatAccessibleDate(calendarDate);
 
             dayButton.type = 'button';
             dayButton.className = 'taskCalendarDay';
@@ -176,7 +176,7 @@ export function initTaskCalendar() {
             }
 
             dayButton.addEventListener('click', function (event) {
-                var parts = event.currentTarget.dataset.date.split('-').map(Number);
+                const parts = event.currentTarget.dataset.date.split('-').map(Number);
                 selectCalendarDate(new Date(parts[0], parts[1] - 1, parts[2]));
             });
             calendarDays.appendChild(dayButton);

@@ -2,14 +2,14 @@ import { createTask } from '../services/task-service.js';
 
 export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     // متغیرهای Task Modal
-    var taskModal = document.getElementById('taskModal');
-    var openTaskModalButton = document.getElementById('openTaskModal');
-    var closeTaskModalButton = document.getElementById('closeTaskModal');
-    var newTaskForm = document.getElementById('newTaskForm');
-    var taskModalText = document.getElementById('taskModalText');
-    var taskModalMessage = document.getElementById('taskModalMessage');
-    var saveTaskButton = document.getElementById('saveTaskButton');
-    var lastTaskModalTrigger = null;
+    const taskModal = document.getElementById('taskModal');
+    const openTaskModalButton = document.getElementById('openTaskModal');
+    const closeTaskModalButton = document.getElementById('closeTaskModal');
+    const newTaskForm = document.getElementById('newTaskForm');
+    const taskModalText = document.getElementById('taskModalText');
+    const taskModalMessage = document.getElementById('taskModalMessage');
+    const saveTaskButton = document.getElementById('saveTaskButton');
+    let lastTaskModalTrigger = null;
 
     // توابع و Event Listenerها
 
@@ -82,7 +82,7 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         newTaskForm.addEventListener('submit', function (event) {
             event.preventDefault();
 
-            var taskTitle = taskModalText ? taskModalText.value.trim() : '';
+            const taskTitle = taskModalText ? taskModalText.value.trim() : '';
 
             if (taskTitle.length < 3) {
                 setTaskModalMessage('Task text must be at least 3 characters long.');
@@ -90,14 +90,14 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
                 return;
             }
 
-            var repeatValidationMessage = repeatPicker ? repeatPicker.validate() : '';
+            const repeatValidationMessage = repeatPicker ? repeatPicker.validate() : '';
 
             if (repeatValidationMessage) {
                 setTaskModalMessage(repeatValidationMessage);
                 return;
             }
 
-            var formData = new FormData(newTaskForm);
+            const formData = new FormData(newTaskForm);
             formData.set('action', 'newTask');
             formData.set('task_title', taskTitle);
 
