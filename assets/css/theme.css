@@ -742,3 +742,19 @@ html.dark-mode .main .view .content .notificationItemHeading h2 {
 html.dark-mode .main .view .content .notificationDetails strong {
     color: #aebcc4;
 }
+
+html.dark-mode .activityPageTitle,
+html.dark-mode .activityTaskItem,
+html.dark-mode .activityEmpty {
+    border-color: #3b4a57;
+}
+
+html.dark-mode .activityDateGroup h2,
+html.dark-mode .activityTaskTitle {
+    color: #c7d2da;
+}
+
+html.dark-mode .activityTaskItem time,
+html.dark-mode .activityEmpty {
+    color: #91a2ae;
+}

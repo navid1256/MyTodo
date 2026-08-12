@@ -79,11 +79,10 @@
     display: none;
 }
 
-.main .view .content .manageTaskList ul li.taskItem>i {
+.main .view .content .manageTaskList ul li.taskItem>.taskToggleButton {
     flex: 0 0 30px;
     float: none;
     margin-left: 10px;
-    line-height: 50px;
 }
 
 .main .view .content .manageTaskList ul li.taskItem>span {
@@ -261,8 +260,8 @@
         padding: 8px 0;
     }
 
-    .main .view .content .manageTaskList ul li.taskItem>i {
-        line-height: 32px;
+    .main .view .content .manageTaskList ul li.taskItem>.taskToggleButton {
+        height: 32px;
     }
 
     .main .view .content .manageTaskList ul li.taskItem .info {

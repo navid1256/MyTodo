@@ -201,6 +201,99 @@ function getTasksForDate(DateTimeInterface $date)
     return $stmt->fetchAll(PDO::FETCH_OBJ);
 }
 
+function getTasksWithoutDueDate(): array
+{
+    global $pdo;
+
+    $sql = "SELECT *
+            FROM tasks
+            WHERE user_id = :user_id
+              AND due_at IS NULL
+            ORDER BY created_at DESC, id DESC";
+    $statement = $pdo->prepare($sql);
+    $statement->execute([':user_id' => getCurrentUserId()]);
+
+    return $statement->fetchAll(PDO::FETCH_OBJ);
+}
+
+function getCurrentUserCompletedTasks(): array
+{
+    global $pdo;
+
+    $statement = $pdo->prepare(
+        "SELECT id, title, due_at, has_time, completed_at
+         FROM tasks
+         WHERE user_id = :user_id
+           AND is_done = 1
+           AND completed_at IS NOT NULL
+         ORDER BY completed_at DESC, id DESC"
+    );
+    $statement->execute([':user_id' => getCurrentUserId()]);
+
+    return $statement->fetchAll(PDO::FETCH_OBJ);
+}
+
+function toggleCurrentUserTaskCompletion(int $taskId): object
+{
+    global $pdo;
+
+    if ($taskId < 1) {
+        throw new InvalidArgumentException('Invalid task.');
+    }
+
+    $pdo->beginTransaction();
+
+    try {
+        $statement = $pdo->prepare(
+            "SELECT id, is_done
+             FROM tasks
+             WHERE id = :task_id
+               AND user_id = :user_id
+             FOR UPDATE"
+        );
+        $statement->execute([
+            ':task_id' => $taskId,
+            ':user_id' => getCurrentUserId(),
+        ]);
+        $task = $statement->fetch(PDO::FETCH_OBJ);
+
+        if (!$task) {
+            throw new InvalidArgumentException('Task not found.');
+        }
+
+        $isDone = !(bool) $task->is_done;
+        $completedAt = $isDone
+            ? new DateTimeImmutable('now', new DateTimeZone('Asia/Tehran'))
+            : null;
+        $updateStatement = $pdo->prepare(
+            "UPDATE tasks
+             SET is_done = :is_done,
+                 completed_at = :completed_at
+             WHERE id = :task_id
+               AND user_id = :user_id"
+        );
+        $updateStatement->execute([
+            ':is_done' => $isDone ? 1 : 0,
+            ':completed_at' => $completedAt?->format('Y-m-d H:i:s'),
+            ':task_id' => $taskId,
+            ':user_id' => getCurrentUserId(),
+        ]);
+        $pdo->commit();
+
+        return (object) [
+            'id' => $taskId,
+            'is_done' => $isDone,
+            'completed_at' => $completedAt?->format('Y-m-d H:i:s'),
+        ];
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        throw $exception;
+    }
+}
+
 function countCompletedTasksForDate(DateTimeInterface $date): int
 {
     global $pdo;
@@ -212,8 +305,8 @@ function countCompletedTasksForDate(DateTimeInterface $date): int
             FROM tasks
             WHERE user_id = :user_id
               AND is_done = 1
-              AND due_at >= :start_at
-              AND due_at < :end_at";
+              AND completed_at >= :start_at
+              AND completed_at < :end_at";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':user_id' => $current_user_id,

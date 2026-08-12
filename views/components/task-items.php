@@ -19,7 +19,15 @@ $renderTaskItems = static function (
         <li
             class="taskItem<?= $task->is_done ? ' checked' : ''; ?>"
             data-task-date="<?= htmlspecialchars($taskDate, ENT_QUOTES, 'UTF-8') ?>">
-            <i class="<?= $task->is_done ? 'fa-regular fa-square-check' : 'fa-regular fa-square'; ?>"></i>
+            <button
+                class="taskToggleButton"
+                type="button"
+                data-task-toggle
+                data-task-id="<?= (int) $task->id ?>"
+                aria-pressed="<?= $task->is_done ? 'true' : 'false' ?>"
+                aria-label="<?= $task->is_done ? 'Mark task as incomplete' : 'Mark task as completed' ?>">
+                <i class="<?= $task->is_done ? 'fa-regular fa-square-check' : 'fa-regular fa-square'; ?>" aria-hidden="true"></i>
+            </button>
             <span><?= htmlspecialchars($task->title, ENT_QUOTES, 'UTF-8') ?></span>
             <div class="info">
                 <?php if ($showDueDate): ?>

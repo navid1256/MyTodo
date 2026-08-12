@@ -31,6 +31,7 @@ CREATE TABLE `tasks` (
   `title` varchar(512) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
   `is_done` tinyint(1) NOT NULL DEFAULT 0,
+  `completed_at` datetime DEFAULT NULL,
   `due_at` datetime DEFAULT NULL,
   `has_time` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -99,7 +100,8 @@ CREATE TABLE `users_info` (
 --
 ALTER TABLE `tasks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_tasks_user_due_at` (`user_id`, `due_at`);
+  ADD KEY `idx_tasks_user_due_at` (`user_id`, `due_at`),
+  ADD KEY `idx_tasks_user_completed_at` (`user_id`, `is_done`, `completed_at`);
 
 --
 -- Indexes for table `task_reminders`

@@ -124,6 +124,7 @@ span.created-at {
     background: transparent;
     color: white;
     font-size: 22px;
+    text-decoration: none;
     cursor: pointer;
 }
 
@@ -431,7 +432,7 @@ span.created-at {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 0px 20px;
+    padding: 0px 18px;
     margin-right: 22px;
 }
 
@@ -546,6 +547,37 @@ span.created-at {
     line-height: 50px;
     margin-left: 10px;
     font-size: 1.4em;
+}
+
+.main .view .content .list ul li .taskToggleButton {
+    float: left;
+    width: 30px;
+    height: 50px;
+    margin-left: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.main .view .content .list ul li .taskToggleButton i {
+    float: none;
+    width: auto;
+    height: auto;
+    margin: 0;
+    line-height: 1;
+}
+
+.main .view .content .list ul li .taskToggleButton:hover,
+.main .view .content .list ul li .taskToggleButton:focus-visible {
+    color: #69bd34;
+    outline: none;
+}
+
+.main .view .content .list ul li .taskToggleButton[data-processing="true"] {
+    cursor: wait;
+    opacity: 0.55;
 }
 
 .main .view .content .list ul li span {

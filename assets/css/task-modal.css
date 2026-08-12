@@ -125,6 +125,7 @@
     transform: translateY(-1px);
 }
 
+.taskOptionButton.has-date,
 .taskOptionButton.has-reminders {
     background: linear-gradient(180deg, #2fca66, #20b955);
     box-shadow: 0 6px 14px rgba(32, 185, 85, 0.28);

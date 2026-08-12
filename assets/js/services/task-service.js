@@ -13,6 +13,17 @@ export async function createTask(formData) {
     return response.text;
 }
 
+export async function toggleTaskCompletion(taskId, csrfToken) {
+    const formData = new FormData();
+    formData.set('action', 'toggleTaskCompletion');
+    formData.set('csrf_token', csrfToken);
+    formData.set('task_id', String(taskId));
+
+    return sendJsonFormRequest(formData, {
+        errorMessage: 'The task status could not be updated.'
+    });
+}
+
 export async function previewTaskReminders(data, signal) {
     const formData = new FormData();
     formData.set('action', 'previewReminders');
