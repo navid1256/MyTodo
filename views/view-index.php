@@ -59,6 +59,15 @@ $formatNotificationOffset = static function (int $value, string $unit): string {
 
 require_once __DIR__ . '/components/task-items.php';
 
+$pageStylesheets = [
+  'manage-tasks' => 'assets/css/pages/manage-tasks.css',
+  'messages' => 'assets/css/pages/messages.css',
+  'profile' => 'assets/css/pages/profile.css',
+  'change-password' => 'assets/css/pages/change-password.css',
+];
+$activePageStylesheet = $pageStylesheets[$activeView] ?? null;
+$usesTaskModals = in_array($activeView, ['home', 'manage-tasks', 'messages'], true);
+
 $renderTaskToolbar = static function () use ($completedTasksToday): void {
   $completedCount = max(0, (int) $completedTasksToday);
 
@@ -93,7 +102,14 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
       // The dashboard still works when browser storage is unavailable.
     }
   </script>
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/core.css">
+  <?php if ($usesTaskModals): ?>
+    <link rel="stylesheet" href="assets/css/task-modal.css">
+  <?php endif; ?>
+  <?php if ($activePageStylesheet !== null): ?>
+    <link rel="stylesheet" href="<?= htmlspecialchars($activePageStylesheet, ENT_QUOTES, 'UTF-8') ?>">
+  <?php endif; ?>
+  <link rel="stylesheet" href="assets/css/theme.css">
 </head>
 
 <body>

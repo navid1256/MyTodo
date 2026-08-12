@@ -18,7 +18,7 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : getCsrfTo
 <head>
     <meta charset="UTF-8">
     <title>MyTodo Authentication</title>
-    <link rel="stylesheet" href="<?= htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') ?>assets/css/auth.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') ?>assets/css/pages/auth.css">
 
 </head>
 
