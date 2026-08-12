@@ -1,5 +1,12 @@
 .main .view .activityContent {
     overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.main .view .activityContent::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 .activityPage {

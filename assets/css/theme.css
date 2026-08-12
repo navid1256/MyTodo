@@ -65,16 +65,6 @@ html.dark-mode .main .nav {
     background-color: #18242e;
 }
 
-html.dark-mode .main .nav .searchbox,
-html.dark-mode .main .nav .searchbox input {
-    background-color: #24333f;
-    color: #e3ebf0;
-}
-
-html.dark-mode .main .nav .searchbox i {
-    color: #93a4b0;
-}
-
 html.dark-mode .main .nav .menu,
 html.dark-mode .main .nav .menu ul li a,
 html.dark-mode .main .nav .menu ul li button {

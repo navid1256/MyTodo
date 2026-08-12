@@ -278,37 +278,9 @@ span.created-at {
     background-color: #e9eef0;
 }
 
-.main .nav .searchbox {
-    width: 170px;
-    height: 30px;
-    line-height: 30px;
-    margin: 15px 15px 17px;
-    background-color: white;
-    border-radius: 5px;
-}
-
-.main .nav .searchbox i {
-    display: inline-block;
-    color: #bbb;
-    margin-left: 5px;
-    margin-right: 5px;
-    font-size: 16px;
-}
-
-.main .nav .searchbox input {
-    display: inline-block;
-    width: 120px;
-    padding: 0;
-    background-color: white;
-    color: #4f5659;
-    font-family: inherit;
-    border: 0;
-    outline: 0;
-}
-
 .main .nav .menu {
     width: auto;
-    margin: 0 15px;
+    margin: 15px 15px;
     color: #4f5659;
 }
 
@@ -504,6 +476,7 @@ span.created-at {
 .main .view .content .list .title {
     width: 100%;
     padding: 10px;
+    gap: 5px;
     text-transform: uppercase;
     font-weight: 700;
     color: #54b9cd;
@@ -553,7 +526,7 @@ span.created-at {
     float: left;
     width: 30px;
     height: 50px;
-    margin-left: 10px;
+    margin: 0px 10px;
     padding: 0;
     border: 0;
     background: transparent;
@@ -568,7 +541,7 @@ span.created-at {
     margin: 0;
     line-height: 1;
     color: #74858d;
-    font-size: 16px;
+    font-size: 18px;
     transition: color 0.2s ease;
 }
 
@@ -642,8 +615,6 @@ body,
 .pageHeader,
 .main,
 .main .nav,
-.main .nav .searchbox,
-.main .nav .searchbox input,
 .profileDropdown,
 .profileDropdown button,
 .main .view .content .list ul li {
