@@ -566,6 +566,42 @@ span.created-at {
     font-weight: 600;
 }
 
+.main .view .content .list ul li.taskItem > span {
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.main .view .content .list ul li.taskItem > span::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 999px;
+    background-color: currentColor;
+    pointer-events: none;
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.4s ease;
+}
+
+.main .view .content .list ul li.taskItem.checked > span {
+    color: #7c898f;
+}
+
+.main .view .content .list ul li.taskItem.checked > span::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .main .view .content .list ul li.taskItem > span,
+    .main .view .content .list ul li.taskItem > span::after {
+        transition: none;
+    }
+}
+
 .main .view .content .list ul li .info {
     float: right;
 }
