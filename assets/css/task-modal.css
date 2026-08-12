@@ -1,0 +1,1324 @@
+.task-modal-open {
+    overflow: hidden;
+}
+
+.taskModalBackdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(20, 32, 40, 0.48);
+    box-sizing: border-box;
+}
+
+.taskModalBackdrop[hidden] {
+    display: none;
+}
+
+.taskModal {
+    position: relative;
+    width: min(572px, 100%);
+    min-height: 408px;
+    padding: 12px 16px 30px;
+    border: 1px solid #168df0;
+    border-radius: 28px;
+    background-color: #f2f2f2;
+    box-shadow: 0 22px 60px rgba(17, 41, 58, 0.3);
+    box-sizing: border-box;
+}
+
+.taskModalClose {
+    position: absolute;
+    z-index: 1;
+    top: 13px;
+    right: 19px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.78);
+    color: #5c6870;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.taskModalClose:hover,
+.taskModalClose:focus-visible {
+    background-color: #ffffff;
+    color: #1d2f3a;
+    outline: 2px solid rgba(22, 141, 240, 0.35);
+}
+
+#newTaskForm {
+    display: flex;
+    min-height: 364px;
+    flex-direction: column;
+}
+
+#taskModalText {
+    width: 100%;
+    height: 176px;
+    min-height: 130px;
+    margin: 0 0 10px;
+    padding: 28px 30px;
+    resize: vertical;
+    border: 0;
+    border-radius: 24px;
+    background-color: #ffffff;
+    color: #172027;
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1.45;
+    box-sizing: border-box;
+}
+
+#taskModalText::placeholder {
+    color: #172027;
+    opacity: 1;
+}
+
+#taskModalText:focus {
+    outline: 3px solid rgba(22, 141, 240, 0.3);
+}
+
+.taskModalOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 6px;
+}
+
+.taskOptionButton,
+.saveTaskButton {
+    min-height: 42px;
+    padding: 0 19px;
+    border: 0;
+    border-radius: 999px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.taskOptionButton {
+    background: linear-gradient(180deg, #168df0, #0784e9);
+    box-shadow: 0 5px 10px rgba(7, 132, 233, 0.2);
+}
+
+.taskOptionButton:hover,
+.taskOptionButton:focus-visible,
+.taskOptionButton[aria-pressed="true"] {
+    background: linear-gradient(180deg, #0878d3, #006ec4);
+    box-shadow: 0 7px 15px rgba(7, 132, 233, 0.3);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.taskOptionButton.has-reminders {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.28);
+}
+
+.taskDateSummary,
+.taskReminderSummary,
+.taskRepeatSummary {
+    min-height: 18px;
+    margin: 11px 12px 0;
+    color: #4f6572;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.taskReminderSummary,
+.taskRepeatSummary {
+    margin-top: 3px;
+}
+
+.taskOptionButton.has-repeat {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.28);
+}
+
+.taskModalMessage {
+    min-height: 18px;
+    margin: 8px 8px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.taskModalActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding: 0 6px;
+}
+
+.saveTaskButton {
+    min-width: 74px;
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+}
+
+.saveTaskButton:hover,
+.saveTaskButton:focus-visible {
+    background: linear-gradient(180deg, #24b95a, #169c44);
+    box-shadow: 0 8px 18px rgba(32, 185, 85, 0.3);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.saveTaskButton:disabled {
+    cursor: wait;
+    opacity: 0.7;
+    transform: none;
+}
+
+.dateTimeModalBackdrop {
+    position: fixed;
+    z-index: 1100;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.64);
+    box-sizing: border-box;
+}
+
+.dateTimeModalBackdrop[hidden] {
+    display: none;
+}
+
+.dateTimeModal {
+    position: relative;
+    width: min(560px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 26px 34px 28px;
+    overflow-y: auto;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.36);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.dateTimeModalClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dateTimeModalClose:hover,
+.dateTimeModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.calendarHeader {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
+    max-width: 320px;
+    margin: 4px auto 24px;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendarHeader h2 {
+    margin: 0;
+    color: #303f48;
+    font-size: 25px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.calendarNavButton {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #4e5e66;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.calendarNavButton:hover,
+.calendarNavButton:focus-visible {
+    background-color: #eaf2f6;
+    color: #168df0;
+    outline: none;
+}
+
+.calendarWeekdays,
+.calendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.calendarWeekdays {
+    margin-bottom: 8px;
+}
+
+.calendarWeekdays span {
+    padding: 7px 0;
+    color: #26333b;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.calendarDay {
+    display: grid;
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #44535c;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.calendarDay:hover,
+.calendarDay:focus-visible {
+    background-color: #e8f2ff;
+    color: #087edc;
+    outline: none;
+    transform: scale(1.06);
+}
+
+.calendarDay.outsideMonth {
+    color: #b6bec3;
+}
+
+.calendarDay.today:not(.selected) {
+    box-shadow: inset 0 0 0 2px #77aef0;
+    color: #237dd1;
+    font-weight: 800;
+}
+
+.calendarDay.selected {
+    background-color: #72a8ee;
+    box-shadow: 0 6px 14px rgba(73, 137, 219, 0.28);
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.quickDateOptions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0 0;
+    padding: 18px 0;
+    border: 0;
+    border-top: 1px solid #e1e8ec;
+    border-bottom: 1px solid #e1e8ec;
+}
+
+.quickDateOptions label,
+.setTimeToggle label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #3e4e57;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.quickDateOptions input,
+.setTimeToggle input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: #168df0;
+}
+
+.setTimeSection {
+    padding: 18px 4px 0;
+    transition: opacity 0.2s ease;
+}
+
+.timeFieldLabel {
+    margin-left: 10px;
+}
+
+.setTimeSection.is-disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+}
+
+.setTimeSection.is-disabled .setTimeHeader,
+.setTimeSection.is-disabled .timePicker {
+    pointer-events: none;
+}
+
+.setTimeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.setTimeHeader h3 {
+    margin: 0;
+    color: #263842;
+    font-size: 18px;
+}
+
+.setTimeToggle {
+    display: flex;
+    gap: 14px;
+}
+
+.timePicker {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.timePicker label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #5a6971;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.timePicker input,
+.timePicker select {
+    min-width: 86px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.timePicker input:focus,
+.timePicker select:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.timePicker input:disabled,
+.timePicker select:disabled {
+    cursor: not-allowed;
+}
+
+.timeSeparator {
+    padding-bottom: 10px;
+    color: #52636d;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.dateTimeModalMessage {
+    min-height: 18px;
+    margin: 12px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.dateTimeModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.cancelDateTimeButton,
+.applyDateTimeButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelDateTimeButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyDateTimeButton {
+    background: linear-gradient(180deg, #168df0, #0784e9);
+    box-shadow: 0 6px 14px rgba(7, 132, 233, 0.22);
+    color: #ffffff;
+}
+
+.cancelDateTimeButton:hover,
+.cancelDateTimeButton:focus-visible,
+.applyDateTimeButton:hover,
+.applyDateTimeButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+.reminderModalBackdrop {
+    position: fixed;
+    z-index: 1120;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.68);
+    box-sizing: border-box;
+}
+
+.reminderModalBackdrop[hidden] {
+    display: none;
+}
+
+.reminderModal {
+    position: relative;
+    width: min(620px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 30px 34px 28px;
+    overflow-y: auto;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.38);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.reminderModalClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.reminderModalClose:hover,
+.reminderModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.reminderModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding-right: 36px;
+    color: #263842;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.reminderModalHeader h2 {
+    margin: 0;
+    font-size: inherit;
+}
+
+.reminderCountField {
+    display: inline-flex;
+}
+
+.reminderCountField select {
+    width: 66px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #b9cbd5;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.reminderCountField select:focus,
+.reminderPresetField select:focus,
+.customReminderFields input:focus,
+.customReminderFields select:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.reminderModalHint {
+    margin: 12px 0 20px;
+    color: #61737d;
+    font-size: 13px;
+    text-align: center;
+}
+
+.reminderList {
+    display: grid;
+    gap: 14px;
+}
+
+.reminderItem {
+    padding: 18px;
+    border: 1px solid #dce6eb;
+    border-radius: 18px;
+    background-color: #f5f9fb;
+}
+
+.reminderItem h3 {
+    margin: 0 0 13px;
+    color: #324751;
+    font-size: 15px;
+}
+
+.reminderPresetField {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    color: #455861;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.reminderPresetField select,
+.customReminderFields input,
+.customReminderFields select {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.customReminderFields {
+    display: grid;
+    grid-template-columns: minmax(100px, 0.7fr) minmax(130px, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+    margin-top: 13px;
+    padding: 13px;
+    border-radius: 12px;
+    background-color: #eaf2f6;
+}
+
+.customReminderFields[hidden] {
+    display: none;
+}
+
+.customReminderFields label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #61737d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.beforeDueText {
+    padding-bottom: 12px;
+    color: #52636d;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.reminderPreview {
+    min-height: 18px;
+    margin: 13px 2px 0;
+    color: #21864a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.reminderPreview.is-loading {
+    color: #5a7482;
+}
+
+.reminderPreview.is-error {
+    color: #b42318;
+}
+
+.reminderModalMessage {
+    min-height: 18px;
+    margin: 14px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.reminderModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.cancelReminderButton,
+.applyReminderButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelReminderButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyReminderButton {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+    color: #ffffff;
+}
+
+.cancelReminderButton:hover,
+.cancelReminderButton:focus-visible,
+.applyReminderButton:hover,
+.applyReminderButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+.applyReminderButton:disabled {
+    cursor: wait;
+    opacity: 0.68;
+}
+
+.repeatModalBackdrop {
+    position: fixed;
+    z-index: 1140;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.7);
+    box-sizing: border-box;
+}
+
+.repeatModalBackdrop[hidden],
+.customRepeatSection[hidden],
+.repeatOnWeek[hidden],
+.repeatOnMonth[hidden],
+.repeatEndDateSection[hidden],
+.repeatCountField[hidden] {
+    display: none;
+}
+
+.repeatModal {
+    position: relative;
+    width: min(680px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.4);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.repeatModalScroll {
+    max-height: calc(100vh - 50px);
+    padding: 30px 34px 28px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #168df0 #e7eff3;
+}
+
+.repeatModalScroll::-webkit-scrollbar {
+    width: 10px;
+}
+
+.repeatModalScroll::-webkit-scrollbar-track {
+    margin: 18px 0;
+    border-radius: 999px;
+    background-color: #e7eff3;
+}
+
+.repeatModalScroll::-webkit-scrollbar-thumb {
+    border: 2px solid #e7eff3;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #49aef1, #168df0);
+}
+
+.repeatModalScroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #69bd34, #54a82c);
+}
+
+.repeatModalScroll::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.repeatModalClose {
+    position: absolute;
+    z-index: 2;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.repeatModalClose:hover,
+.repeatModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.repeatModalScroll>h2 {
+    margin: 0;
+    padding-right: 42px;
+    color: #263842;
+    font-size: 25px;
+    text-align: center;
+}
+
+.repeatModalHint {
+    margin: 8px 0 20px;
+    color: #61737d;
+    font-size: 13px;
+    text-align: center;
+}
+
+.repeatFrequencyOptions,
+.repeatEndOptions,
+.repeatOnWeek,
+.repeatOnMonth {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.repeatFrequencyOptions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.repeatFrequencyOptions label,
+.repeatEndOptions label,
+.repeatWeekDays label,
+.repeatMonthDays label {
+    position: relative;
+    cursor: pointer;
+}
+
+.repeatFrequencyOptions input,
+.repeatEndOptions input,
+.repeatWeekDays input,
+.repeatMonthDays input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.repeatFrequencyOptions span,
+.repeatEndOptions span {
+    display: grid;
+    min-height: 42px;
+    padding: 0 10px;
+    place-items: center;
+    border: 1px solid #c8d6de;
+    border-radius: 12px;
+    background-color: #f1f6f8;
+    color: #4c606b;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    box-sizing: border-box;
+    transition: 0.18s ease;
+}
+
+.repeatFrequencyOptions input:checked+span,
+.repeatEndOptions input:checked+span,
+.repeatWeekDays input:checked+span,
+.repeatMonthDays input:checked+span {
+    border-color: #168df0;
+    background-color: #168df0;
+    color: #ffffff;
+    box-shadow: 0 5px 12px rgba(22, 141, 240, 0.22);
+}
+
+.repeatFrequencyOptions input:focus-visible+span,
+.repeatEndOptions input:focus-visible+span,
+.repeatWeekDays input:focus-visible+span,
+.repeatMonthDays input:focus-visible+span {
+    outline: 3px solid rgba(22, 141, 240, 0.2);
+    outline-offset: 2px;
+}
+
+.customRepeatSection,
+.repeatEndsSection {
+    margin-top: 18px;
+    padding: 17px;
+    border: 1px solid #dce6eb;
+    border-radius: 18px;
+    background-color: #f5f9fb;
+}
+
+.customRepeatSection>h3,
+.repeatEndsSection>h3 {
+    margin: 0 0 12px;
+    color: #324751;
+    font-size: 15px;
+}
+
+.repeatEveryFields {
+    display: grid;
+    grid-template-columns: minmax(100px, 0.65fr) minmax(140px, 1fr);
+    gap: 10px;
+}
+
+.repeatEveryFields input,
+.repeatEveryFields select,
+.repeatCountField input {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.repeatEveryFields input:focus,
+.repeatEveryFields select:focus,
+.repeatCountField input:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.repeatOnWeek,
+.repeatOnMonth {
+    margin-top: 16px;
+}
+
+.repeatOnWeek legend,
+.repeatOnMonth legend {
+    margin-bottom: 10px;
+    color: #4c606b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.repeatWeekDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.repeatWeekDays span,
+.repeatMonthDays span {
+    display: grid;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #c8d6de;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: #52636d;
+    font-size: 12px;
+    font-weight: 700;
+    transition: 0.18s ease;
+}
+
+.repeatWeekDays span {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+    aspect-ratio: auto;
+}
+
+.repeatMonthDays {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.repeatEndOptions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.repeatEndDateSection {
+    width: min(100%, 380px);
+    margin: 16px auto 0;
+    padding: 12px;
+    border-radius: 15px;
+    background-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.repeatCalendarHeader {
+    display: grid;
+    grid-template-columns: 32px 1fr 32px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.repeatCalendarHeader h4 {
+    margin: 0;
+    color: #324751;
+    font-size: 15px;
+    text-align: center;
+}
+
+.repeatCalendarHeader button {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    cursor: pointer;
+}
+
+.repeatCalendarHeader button:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+}
+
+.repeatCalendarWeekdays,
+.repeatCalendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+}
+
+.repeatCalendarWeekdays span {
+    padding: 3px 0;
+    color: #71838d;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.repeatCalendarDay {
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: transparent;
+    color: #3f535e;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.repeatCalendarDay:hover:not(:disabled),
+.repeatCalendarDay:focus-visible {
+    background-color: #e7f3fd;
+    color: #0b78d0;
+    outline: none;
+}
+
+.repeatCalendarDay.outsideMonth {
+    color: #a9b5bb;
+}
+
+.repeatCalendarDay.selected {
+    background-color: #168df0;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.repeatCalendarDay:disabled {
+    color: #c6cfd4;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.repeatEndDateSummary {
+    min-height: 17px;
+    margin: 10px 0 0;
+    color: #21864a;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.repeatCountField {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 130px;
+    align-items: center;
+    gap: 12px;
+    margin-top: 15px;
+    color: #4c606b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.repeatModalMessage {
+    min-height: 18px;
+    margin: 13px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.repeatModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.cancelRepeatButton,
+.applyRepeatButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelRepeatButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyRepeatButton {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+    color: #ffffff;
+}
+
+.cancelRepeatButton:hover,
+.cancelRepeatButton:focus-visible,
+.applyRepeatButton:hover,
+.applyRepeatButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+@media (max-width: 620px) {
+    .taskModalBackdrop {
+        padding: 14px;
+    }
+
+    .taskModal {
+        min-height: 390px;
+        padding: 12px 12px 24px;
+    }
+
+    #taskModalText {
+        height: 160px;
+        padding: 24px 20px;
+    }
+
+    .taskModalOptions {
+        gap: 8px;
+    }
+
+    .taskOptionButton {
+        min-height: 38px;
+        padding: 0 13px;
+        font-size: 13px;
+    }
+
+    .dateTimeModalBackdrop {
+        padding: 12px;
+    }
+
+    .dateTimeModal {
+        max-height: calc(100vh - 24px);
+        padding: 24px 16px;
+        border-radius: 22px;
+    }
+
+    .reminderModalBackdrop {
+        padding: 12px;
+    }
+
+    .reminderModal {
+        max-height: calc(100vh - 24px);
+        padding: 26px 16px 22px;
+        border-radius: 22px;
+    }
+
+    .reminderModalHeader {
+        justify-content: flex-start;
+        font-size: 20px;
+    }
+
+    .repeatModalBackdrop {
+        padding: 12px;
+    }
+
+    .repeatModal {
+        max-height: calc(100vh - 24px);
+        padding: 0;
+        border-radius: 22px;
+    }
+
+    .repeatModalScroll {
+        max-height: calc(100vh - 26px);
+        padding: 26px 16px 22px;
+    }
+
+    .repeatFrequencyOptions,
+    .repeatEndOptions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .repeatWeekDays {
+        gap: 4px;
+    }
+
+    .repeatWeekDays span,
+    .repeatMonthDays span {
+        font-size: 10px;
+    }
+
+    .repeatMonthDays {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .repeatCountField {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
+    .reminderPresetField {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
+    .customReminderFields {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .beforeDueText {
+        grid-column: 1 / -1;
+        padding: 0;
+    }
+
+    .calendarHeader {
+        margin-bottom: 16px;
+    }
+
+    .calendarHeader h2 {
+        font-size: 21px;
+    }
+
+    .calendarDay {
+        font-size: 14px;
+    }
+
+    .quickDateOptions {
+        flex-wrap: wrap;
+        gap: 10px 16px;
+    }
+
+    .setTimeHeader {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .timePicker {
+        justify-content: flex-start;
+        gap: 7px;
+    }
+
+    .timePicker input,
+    .timePicker select {
+        min-width: 74px;
+        padding: 0 8px;
+    }
+}
