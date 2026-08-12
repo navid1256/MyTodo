@@ -1,0 +1,84 @@
+.main .view .activityContent {
+    overflow-y: auto;
+}
+
+.activityPage {
+    padding: 0 10px 30px;
+}
+
+.activityPageTitle {
+    margin: 0;
+    padding: 10px 0 16px;
+    border-bottom: 1px solid #cbd5da;
+    color: #54b9cd;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.activityDateGroup {
+    margin-top: 22px;
+}
+
+.activityDateGroup h2 {
+    margin: 0 0 8px;
+    color: #52636c;
+    font-size: 13px;
+}
+
+.activityDateGroup ul {
+    margin: 0;
+    padding: 0;
+}
+
+.activityTaskItem {
+    display: grid;
+    min-height: 52px;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #d6dde1;
+    list-style: none;
+}
+
+.activityTaskItem:last-child {
+    border-bottom: 1px solid #d6dde1;
+}
+
+.activityTaskItem > i {
+    color: #69bd34;
+    font-size: 18px;
+    text-align: center;
+}
+
+.activityTaskTitle {
+    min-width: 0;
+    color: #48575f;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.activityTaskItem time {
+    color: #87949b;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.activityEmpty {
+    margin: 0;
+    padding: 18px 0;
+    border-bottom: 1px solid #d6dde1;
+    color: #929b9f;
+    font-style: italic;
+}
+
+@media (max-width: 620px) {
+    .activityTaskItem {
+        grid-template-columns: 28px minmax(0, 1fr);
+        padding: 10px 0;
+    }
+
+    .activityTaskItem time {
+        grid-column: 2;
+        white-space: normal;
+    }
+}

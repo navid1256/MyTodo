@@ -240,6 +240,9 @@ export function initDateTimePicker() {
             taskDueAt.value = '';
             taskHasTime.value = '0';
             taskDateSummary.textContent = 'No date';
+            if (setTaskDateButton) {
+                setTaskDateButton.classList.remove('has-date');
+            }
             committedDateMode = 'no-date';
             announceDueDateChange();
             closeDateTimeModal();
@@ -291,6 +294,10 @@ export function initDateTimePicker() {
             taskDueAt.value = formatDateKey(draftSelectedDate) + 'T00:00';
             taskHasTime.value = '0';
             taskDateSummary.textContent = dateLabel + ' · No time';
+        }
+
+        if (setTaskDateButton) {
+            setTaskDateButton.classList.add('has-date');
         }
 
         committedDateMode = 'date';

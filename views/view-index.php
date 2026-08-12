@@ -1,6 +1,8 @@
 <?php
 
 /** @var array $tasks */
+/** @var array $completedTasks */
+/** @var array $noDateTasks */
 /** @var array $todayTasks */
 /** @var array $tomorrowTasks */
 /** @var string $activeView */
@@ -8,8 +10,11 @@
 /** @var int $completedTasksToday */
 /** @var object|null $userProfile */
 /** @var array $notifications */
-$unreadNotifications = isset($unreadNotifications) ? max(0, (int) $unreadNotifications) : 3;
+/** @var array $sentNotifications */
+/** @var int $sentNotificationCount */
+$sentNotificationCount = isset($sentNotificationCount) ? max(0, (int) $sentNotificationCount) : 0;
 $notifications = isset($notifications) && is_array($notifications) ? $notifications : [];
+$sentNotifications = isset($sentNotifications) && is_array($sentNotifications) ? $sentNotifications : [];
 $profileData = $userProfile ?? (object) [];
 $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
 $profileFirstName = trim((string) ($profileData->firstname ?? ''));
@@ -61,7 +66,9 @@ require_once __DIR__ . '/components/task-items.php';
 
 $pageStylesheets = [
   'manage-tasks' => 'assets/css/pages/manage-tasks.css',
+  'activity' => 'assets/css/pages/activity.css',
   'messages' => 'assets/css/pages/messages.css',
+  'notifications' => 'assets/css/pages/messages.css',
   'profile' => 'assets/css/pages/profile.css',
   'change-password' => 'assets/css/pages/change-password.css',
 ];
@@ -92,6 +99,7 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
   <title><?= Site_Title ?></title>
   <script>
     try {
@@ -117,12 +125,16 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
     <div class="pageHeader">
       <div class="title">Dashboard</div>
       <div class="userArea">
-        <button class="notificationButton" type="button" aria-label="<?= $unreadNotifications ?> unread notifications">
+        <a
+          class="notificationButton"
+          href="?view=notifications"
+          aria-label="<?= $sentNotificationCount ?> sent notifications"
+          <?= $activeView === 'notifications' ? 'aria-current="page"' : '' ?>>
           <i class="fa-regular fa-bell" aria-hidden="true"></i>
-          <?php if ($unreadNotifications > 0): ?>
-            <span class="notificationBadge"><?= $unreadNotifications > 99 ? '99+' : $unreadNotifications ?></span>
+          <?php if ($sentNotificationCount > 0): ?>
+            <span class="notificationBadge"><?= $sentNotificationCount > 99 ? '99+' : $sentNotificationCount ?></span>
           <?php endif; ?>
-        </button>
+        </a>
 
         <div class="profileMenu">
           <button
@@ -176,11 +188,11 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
                 <span>Home</span>
               </a>
             </li>
-            <li data-nav-id="activity">
-              <button type="button">
+            <li class="<?= $activeView === 'activity' ? 'active' : '' ?>" data-nav-id="activity">
+              <a href="?view=activity" <?= $activeView === 'activity' ? 'aria-current="page"' : '' ?>>
                 <i class="fa-solid fa-chart-simple"></i>
                 <span>Activity</span>
-              </button>
+              </a>
             </li>
             <li class="<?= $activeView === 'manage-tasks' ? 'active' : '' ?>" data-nav-id="manage-tasks">
               <a href="?view=manage-tasks#tasks" <?= $activeView === 'manage-tasks' ? 'aria-current="page"' : '' ?>>
@@ -197,7 +209,7 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
           </ul>
         </div>
       </div>
-      <div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= $activeView === 'messages' ? ' messagesView' : '' ?>" id="tasks">
+      <div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= in_array($activeView, ['messages', 'notifications'], true) ? ' messagesView' : '' ?>" id="tasks">
         <?php if ($activeView === 'profile'): ?>
 
           <?php require __DIR__ . '/pages/profile.php'; ?>
@@ -209,6 +221,14 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
         <?php elseif ($activeView === 'messages'): ?>
 
           <?php require __DIR__ . '/pages/messages.php'; ?>
+
+        <?php elseif ($activeView === 'notifications'): ?>
+
+          <?php require __DIR__ . '/pages/notifications.php'; ?>
+
+        <?php elseif ($activeView === 'activity'): ?>
+
+          <?php require __DIR__ . '/pages/activity.php'; ?>
 
         <?php else: ?>
 

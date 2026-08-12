@@ -9,6 +9,7 @@ import { initRepeatPicker } from './modules/repeat/repeat-picker.js';
 import { initTaskCalendar } from './modules/task-calendar.js';
 import { initPasswordChange } from './modules/password-change.js';
 import { initNotificationCenter } from './modules/notification-center.js';
+import { initTaskCompletion } from './modules/task-completion.js';
 
 initTheme();
 initNavigation();
@@ -17,6 +18,7 @@ initAvatarPicker();
 initTaskCalendar();
 initPasswordChange();
 initNotificationCenter();
+initTaskCompletion();
 
 const dateTimePicker = initDateTimePicker();
 const reminderPicker = initReminderPicker();

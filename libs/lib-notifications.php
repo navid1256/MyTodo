@@ -2,9 +2,18 @@
 
 defined('BASE_PATH') or die('Permission Denied !');
 
-function getCurrentUserNotifications(): array
+function getCurrentUserNotifications(?string $status = null): array
 {
     global $pdo;
+
+    $allowedStatuses = ['pending', 'failed', 'sent', 'cancelled'];
+    if ($status !== null && !in_array($status, $allowedStatuses, true)) {
+        throw new InvalidArgumentException('Invalid notification status.');
+    }
+
+    $statusCondition = $status === null
+        ? ''
+        : ' AND reminder.status = :status';
 
     $sql = "SELECT
                 reminder.id,
@@ -22,7 +31,7 @@ function getCurrentUserNotifications(): array
                 task.due_at AS task_due_at
             FROM task_reminders AS reminder
             INNER JOIN tasks AS task ON task.id = reminder.task_id
-            WHERE task.user_id = :user_id
+            WHERE task.user_id = :user_id{$statusCondition}
             ORDER BY
                 CASE reminder.status
                     WHEN 'pending' THEN 1
@@ -35,9 +44,34 @@ function getCurrentUserNotifications(): array
                 reminder.updated_at DESC,
                 reminder.id DESC";
     $statement = $pdo->prepare($sql);
-    $statement->execute([':user_id' => getCurrentUserId()]);
+    $parameters = [':user_id' => getCurrentUserId()];
+    if ($status !== null) {
+        $parameters[':status'] = $status;
+    }
+    $statement->execute($parameters);
 
     return $statement->fetchAll(PDO::FETCH_OBJ);
+}
+
+function getCurrentUserSentNotifications(): array
+{
+    return getCurrentUserNotifications('sent');
+}
+
+function countCurrentUserSentNotifications(): int
+{
+    global $pdo;
+
+    $statement = $pdo->prepare(
+        "SELECT COUNT(*)
+         FROM task_reminders AS reminder
+         INNER JOIN tasks AS task ON task.id = reminder.task_id
+         WHERE task.user_id = :user_id
+           AND reminder.status = 'sent'"
+    );
+    $statement->execute([':user_id' => getCurrentUserId()]);
+
+    return (int) $statement->fetchColumn();
 }
 
 function updateCurrentUserNotification(int $notificationId, int $offsetValue, string $offsetUnit): object

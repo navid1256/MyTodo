@@ -79,6 +79,40 @@ function formatNotificationDate(string $dateTime): string
 }
 
 switch ($_POST['action']) {
+    case 'toggleTaskCompletion':
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $taskId = filter_var($_POST['task_id'] ?? null, FILTER_VALIDATE_INT);
+
+            if (!$taskId) {
+                throw new InvalidArgumentException('Invalid task.');
+            }
+
+            $task = toggleCurrentUserTaskCompletion((int) $taskId);
+
+            echo json_encode([
+                'success' => true,
+                'task' => [
+                    'id' => $task->id,
+                    'is_done' => $task->is_done,
+                    'completed_at' => $task->completed_at,
+                ],
+            ], JSON_THROW_ON_ERROR);
+        } catch (InvalidArgumentException $exception) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], JSON_THROW_ON_ERROR);
+        } catch (Throwable $exception) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'The task status could not be updated. Please try again.',
+            ], JSON_THROW_ON_ERROR);
+        }
+        break;
     case 'changePassword':
         header('Content-Type: application/json; charset=utf-8');
 
