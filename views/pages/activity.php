@@ -1,14 +1,17 @@
 <?php
 
 /** @var array $completedTasks */
-/** @var DateTimeZone $userTimezone */
+/** @var DateTimeZone $activityTimezone */
 
-$todayKey = (new DateTimeImmutable('today', $userTimezone))->format('Y-m-d');
-$yesterdayKey = (new DateTimeImmutable('yesterday', $userTimezone))->format('Y-m-d');
+$todayKey = (new DateTimeImmutable('today', $activityTimezone))->format('Y-m-d');
+$yesterdayKey = (new DateTimeImmutable('yesterday', $activityTimezone))->format('Y-m-d');
 $completedTaskGroups = [];
 
 foreach ($completedTasks as $task) {
-    $completedAt = new DateTimeImmutable((string) $task->completed_at, $userTimezone);
+    $completedAt = (new DateTimeImmutable(
+        (string) $task->completed_at,
+        getApplicationTimezone()
+    ))->setTimezone($activityTimezone);
     $dateKey = $completedAt->format('Y-m-d');
 
     if (!isset($completedTaskGroups[$dateKey])) {

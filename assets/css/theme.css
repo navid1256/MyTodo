@@ -116,6 +116,11 @@ html.dark-mode .main .view .content .list ul li.checked {
     background-color: #1b2a34;
 }
 
+html.dark-mode .main .view .content .list ul li .taskToggleButton i,
+html.dark-mode .activityTaskItem > i {
+    color: #9ec4d2;
+}
+
 html.dark-mode .main .view .content .list ul li.emptyTask {
     color: #91a2ae;
 }

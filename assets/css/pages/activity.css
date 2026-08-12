@@ -45,8 +45,11 @@
 }
 
 .activityTaskItem > i {
-    color: #69bd34;
-    font-size: 18px;
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    color: #74858d;
+    font-size: 16px;
     text-align: center;
 }
 

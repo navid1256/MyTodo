@@ -3,6 +3,50 @@ import { toggleTaskCompletion } from '../services/task-service.js';
 export function initTaskCompletion() {
     const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfTokenMeta ? csrfTokenMeta.content : '';
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    if (browserTimezone) {
+        document.cookie = 'mytodo_timezone=' + encodeURIComponent(browserTimezone)
+            + '; path=/; max-age=31536000; SameSite=Lax';
+    }
+
+    function updateTaskItem(toggleButton, task) {
+        const taskItem = toggleButton.closest('.taskItem');
+        const icon = toggleButton.querySelector('i');
+        const isDone = Boolean(task.is_done);
+
+        if (taskItem) {
+            taskItem.classList.toggle('checked', isDone);
+        }
+
+        toggleButton.setAttribute('aria-pressed', String(isDone));
+        toggleButton.setAttribute(
+            'aria-label',
+            isDone ? 'Mark task as incomplete' : 'Mark task as completed'
+        );
+
+        if (icon) {
+            icon.classList.toggle('fa-square-check', isDone);
+            icon.classList.toggle('fa-square', !isDone);
+        }
+    }
+
+    function updateCompletedCount(count) {
+        const completedCount = document.querySelector('.completedCount');
+        const completedButton = document.querySelector('.completedButton');
+        const safeCount = Math.max(0, Number(count) || 0);
+
+        if (completedCount) {
+            completedCount.textContent = String(safeCount);
+        }
+
+        if (completedButton) {
+            completedButton.setAttribute(
+                'aria-label',
+                safeCount + ' tasks completed today'
+            );
+        }
+    }
 
     document.addEventListener('click', function (event) {
         const toggleButton = event.target.closest('[data-task-toggle]');
@@ -20,8 +64,11 @@ export function initTaskCompletion() {
         toggleButton.setAttribute('aria-disabled', 'true');
 
         toggleTaskCompletion(taskId, csrfToken)
-            .then(function () {
-                window.location.reload();
+            .then(function (responseData) {
+                updateTaskItem(toggleButton, responseData.task);
+                updateCompletedCount(responseData.completed_today_count);
+                delete toggleButton.dataset.processing;
+                toggleButton.removeAttribute('aria-disabled');
             })
             .catch(function (error) {
                 window.alert(error.message || 'The task status could not be updated.');

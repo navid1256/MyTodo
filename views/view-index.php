@@ -73,7 +73,7 @@ $pageStylesheets = [
   'change-password' => 'assets/css/pages/change-password.css',
 ];
 $activePageStylesheet = $pageStylesheets[$activeView] ?? null;
-$usesTaskModals = in_array($activeView, ['home', 'manage-tasks', 'messages'], true);
+$usesTaskModals = in_array($activeView, ['home', 'activity', 'manage-tasks', 'messages'], true);
 
 $renderTaskToolbar = static function () use ($completedTasksToday): void {
   $completedCount = max(0, (int) $completedTasksToday);
@@ -228,6 +228,7 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
 
         <?php elseif ($activeView === 'activity'): ?>
 
+          <?php $renderTaskToolbar(); ?>
           <?php require __DIR__ . '/pages/activity.php'; ?>
 
         <?php else: ?>
@@ -248,7 +249,7 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
 
         <?php endif; ?>
 
-        <?php if (in_array($activeView, ['home', 'manage-tasks', 'messages'], true)): ?>
+        <?php if ($usesTaskModals): ?>
 
           <?php require __DIR__ . '/modals/task.php'; ?>
           <?php require __DIR__ . '/modals/date-time.php'; ?>
