@@ -20,7 +20,8 @@ if (!in_array($activeView, $allowedViews, true)) {
     $activeView = 'manage-tasks';
 }
 
-$userTimezone = new DateTimeZone('Asia/Tehran');
+$userTimezone = getApplicationTimezone();
+$activityTimezone = getClientTimezone();
 $userProfile = getCurrentUserProfile();
 $profileErrors = [];
 $profileSuccess = isset($_SESSION['profile_success']) && is_string($_SESSION['profile_success'])
@@ -147,7 +148,8 @@ $noDateTasks = [];
 $todayTasks = [];
 $tomorrowTasks = [];
 $today = new DateTimeImmutable('today', $userTimezone);
-$completedTasksToday = countCompletedTasksForDate($today);
+$activityToday = new DateTimeImmutable('today', $activityTimezone);
+$completedTasksToday = countCompletedTasksForDate($activityToday);
 
 if ($activeView === 'home') {
     $tomorrow = $today->modify('+1 day');

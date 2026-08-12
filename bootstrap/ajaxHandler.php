@@ -90,6 +90,7 @@ switch ($_POST['action']) {
             }
 
             $task = toggleCurrentUserTaskCompletion((int) $taskId);
+            $clientToday = new DateTimeImmutable('today', getClientTimezone());
 
             echo json_encode([
                 'success' => true,
@@ -98,6 +99,7 @@ switch ($_POST['action']) {
                     'is_done' => $task->is_done,
                     'completed_at' => $task->completed_at,
                 ],
+                'completed_today_count' => countCompletedTasksForDate($clientToday),
             ], JSON_THROW_ON_ERROR);
         } catch (InvalidArgumentException $exception) {
             http_response_code(422);

@@ -263,7 +263,7 @@ function toggleCurrentUserTaskCompletion(int $taskId): object
 
         $isDone = !(bool) $task->is_done;
         $completedAt = $isDone
-            ? new DateTimeImmutable('now', new DateTimeZone('Asia/Tehran'))
+            ? new DateTimeImmutable('now', getApplicationTimezone())
             : null;
         $updateStatement = $pdo->prepare(
             "UPDATE tasks
@@ -300,6 +300,9 @@ function countCompletedTasksForDate(DateTimeInterface $date): int
     $current_user_id = getCurrentUserId();
     $start = DateTimeImmutable::createFromInterface($date)->setTime(0, 0);
     $end = $start->modify('+1 day');
+    $databaseTimezone = getApplicationTimezone();
+    $databaseStart = $start->setTimezone($databaseTimezone);
+    $databaseEnd = $end->setTimezone($databaseTimezone);
 
     $sql = "SELECT COUNT(*)
             FROM tasks
@@ -310,8 +313,8 @@ function countCompletedTasksForDate(DateTimeInterface $date): int
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':user_id' => $current_user_id,
-        ':start_at' => $start->format('Y-m-d H:i:s'),
-        ':end_at' => $end->format('Y-m-d H:i:s'),
+        ':start_at' => $databaseStart->format('Y-m-d H:i:s'),
+        ':end_at' => $databaseEnd->format('Y-m-d H:i:s'),
     ]);
 
     return (int) $stmt->fetchColumn();
