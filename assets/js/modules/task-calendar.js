@@ -55,7 +55,7 @@ export function initTaskCalendar() {
         if (selectedDateLabel) {
             selectedDateLabel.hidden = isShowingAllTasks;
             selectedDateLabel.textContent = date
-                ? '· ' + new Intl.DateTimeFormat('en-US', {
+                ? new Intl.DateTimeFormat('en-US', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric'

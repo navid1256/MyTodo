@@ -12,6 +12,7 @@
 /** @var array $notifications */
 /** @var array $sentNotifications */
 /** @var int $sentNotificationCount */
+/** @var DateTimeZone $userTimezone */
 $sentNotificationCount = isset($sentNotificationCount) ? max(0, (int) $sentNotificationCount) : 0;
 $notifications = isset($notifications) && is_array($notifications) ? $notifications : [];
 $sentNotifications = isset($sentNotifications) && is_array($sentNotifications) ? $sentNotifications : [];
@@ -174,11 +175,6 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
     </div>
     <div class="main">
       <div class="nav">
-        <div class="searchbox">
-          <div><i class="fa-solid fa-magnifying-glass"></i>
-            <input type="search" placeholder="Search" />
-          </div>
-        </div>
         <div class="menu">
           <div class="title">Navigation</div>
           <ul class="navigation-list">
@@ -220,6 +216,7 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
 
         <?php elseif ($activeView === 'messages'): ?>
 
+          <?php $renderTaskToolbar(); ?>
           <?php require __DIR__ . '/pages/messages.php'; ?>
 
         <?php elseif ($activeView === 'notifications'): ?>
