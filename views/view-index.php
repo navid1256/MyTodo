@@ -13,6 +13,8 @@
 /** @var array $sentNotifications */
 /** @var int $sentNotificationCount */
 /** @var DateTimeZone $userTimezone */
+/** @var DateTimeZone $activityTimezone */
+/** @var DateTimeImmutable $today */
 $sentNotificationCount = isset($sentNotificationCount) ? max(0, (int) $sentNotificationCount) : 0;
 $notifications = isset($notifications) && is_array($notifications) ? $notifications : [];
 $sentNotifications = isset($sentNotifications) && is_array($sentNotifications) ? $sentNotifications : [];
@@ -121,7 +123,10 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
   <link rel="stylesheet" href="assets/css/theme.css">
 </head>
 
-<body>
+<body
+  data-active-view="<?= htmlspecialchars($activeView, ENT_QUOTES, 'UTF-8') ?>"
+  data-render-timezone="<?= htmlspecialchars($activityTimezone->getName(), ENT_QUOTES, 'UTF-8') ?>"
+  data-render-date="<?= htmlspecialchars($today->format('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>">
   <div class="page">
     <div class="pageHeader">
       <div class="title">Dashboard</div>

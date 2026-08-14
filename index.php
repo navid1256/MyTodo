@@ -147,15 +147,15 @@ $completedTasks = $activeView === 'activity' ? getCurrentUserCompletedTasks() : 
 $noDateTasks = [];
 $todayTasks = [];
 $tomorrowTasks = [];
-$today = new DateTimeImmutable('today', $userTimezone);
 $activityToday = new DateTimeImmutable('today', $activityTimezone);
+$today = $activityToday;
 $completedTasksToday = countCompletedTasksForDate($activityToday);
 
 if ($activeView === 'home') {
     $tomorrow = $today->modify('+1 day');
-    $noDateTasks = getTasksWithoutDueDate();
-    $todayTasks = getTasksForDate($today);
-    $tomorrowTasks = getTasksForDate($tomorrow);
+    $noDateTasks = getTasksWithoutDueDate($today);
+    $todayTasks = getTasksForDate($today, $today);
+    $tomorrowTasks = getTasksForDate($tomorrow, $today);
 }
 
 // dd($tasks);

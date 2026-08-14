@@ -178,40 +178,67 @@ function getTasks()
     return $stmt->fetchAll(PDO::FETCH_OBJ);
 }
 
-function getTasksForDate(DateTimeInterface $date)
+function getTasksForDate(
+    DateTimeInterface $date,
+    ?DateTimeInterface $showCompletedSince = null
+): array
 {
     global $pdo;
     $current_user_id = getCurrentUserId();
     $start = DateTimeImmutable::createFromInterface($date)->setTime(0, 0);
     $end = $start->modify('+1 day');
+    $completionFilter = $showCompletedSince !== null
+        ? ' AND (is_done = 0 OR completed_at >= :completed_since)'
+        : '';
 
     $sql = "SELECT *
             FROM tasks
             WHERE user_id = :user_id
               AND due_at >= :start_at
-              AND due_at < :end_at
+              AND due_at < :end_at" . $completionFilter . "
             ORDER BY due_at ASC, id ASC";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([
+    $parameters = [
         ':user_id' => $current_user_id,
         ':start_at' => $start->format('Y-m-d H:i:s'),
         ':end_at' => $end->format('Y-m-d H:i:s'),
-    ]);
+    ];
+
+    if ($showCompletedSince !== null) {
+        $parameters[':completed_since'] = DateTimeImmutable::createFromInterface($showCompletedSince)
+            ->setTime(0, 0)
+            ->setTimezone(getApplicationTimezone())
+            ->format('Y-m-d H:i:s');
+    }
+
+    $stmt->execute($parameters);
 
     return $stmt->fetchAll(PDO::FETCH_OBJ);
 }
 
-function getTasksWithoutDueDate(): array
+function getTasksWithoutDueDate(?DateTimeInterface $showCompletedSince = null): array
 {
     global $pdo;
 
+    $completionFilter = $showCompletedSince !== null
+        ? ' AND (is_done = 0 OR completed_at >= :completed_since)'
+        : '';
     $sql = "SELECT *
             FROM tasks
             WHERE user_id = :user_id
-              AND due_at IS NULL
+              AND due_at IS NULL" . $completionFilter . "
             ORDER BY created_at DESC, id DESC";
     $statement = $pdo->prepare($sql);
-    $statement->execute([':user_id' => getCurrentUserId()]);
+    $parameters = [':user_id' => getCurrentUserId()];
+
+    if ($showCompletedSince !== null) {
+        $parameters[':completed_since'] = DateTimeImmutable::createFromInterface($showCompletedSince)
+            ->setTime(0, 0)
+            ->setTimezone(getApplicationTimezone())
+            ->format('Y-m-d H:i:s');
+    }
+
+    $statement->execute($parameters);
 
     return $statement->fetchAll(PDO::FETCH_OBJ);
 }

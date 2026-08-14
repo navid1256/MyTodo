@@ -10,6 +10,7 @@ import { initTaskCalendar } from './modules/task-calendar.js';
 import { initPasswordChange } from './modules/password-change.js';
 import { initNotificationCenter } from './modules/notification-center.js';
 import { initTaskCompletion } from './modules/task-completion.js';
+import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 
 initTheme();
 initNavigation();
@@ -19,6 +20,7 @@ initTaskCalendar();
 initPasswordChange();
 initNotificationCenter();
 initTaskCompletion();
+initHomeDayRefresh();
 
 const dateTimePicker = initDateTimePicker();
 const reminderPicker = initReminderPicker();
