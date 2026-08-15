@@ -1,3 +1,8 @@
+.main .activityView {
+    height: 100%;
+    box-sizing: border-box;
+}
+
 .main .view .activityContent {
     overflow-y: auto;
     -ms-overflow-style: none;

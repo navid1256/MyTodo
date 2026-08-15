@@ -16,7 +16,7 @@ export function initTaskCalendar() {
     const filteredTasksEmpty = document.getElementById('filteredTasksEmpty');
     const allTasksEmpty = document.getElementById('allTasksEmpty');
     const calendarStatus = document.getElementById('taskCalendarStatus');
-    const taskItems = Array.from(document.querySelectorAll('#manageTaskItems .taskItem'));
+    let taskItems = Array.from(document.querySelectorAll('#manageTaskItems .taskItem'));
 
     if (!taskCalendar || !calendarMonthLabel || !calendarDays) {
         return;
@@ -25,15 +25,19 @@ export function initTaskCalendar() {
     const today = startOfDay(new Date());
     let calendarViewDate = new Date(today.getFullYear(), today.getMonth(), 1);
     let selectedDate = null;
-    const taskCountsByDate = taskItems.reduce(function (counts, taskItem) {
-        const taskDate = taskItem.dataset.taskDate;
+    function getTaskCountsByDate() {
+        return taskItems.reduce(function (counts, taskItem) {
+            const taskDate = taskItem.dataset.taskDate;
 
-        if (taskDate) {
-            counts[taskDate] = (counts[taskDate] || 0) + 1;
-        }
+            if (taskDate) {
+                counts[taskDate] = (counts[taskDate] || 0) + 1;
+            }
 
-        return counts;
-    }, {});
+            return counts;
+        }, {});
+    }
+
+    let taskCountsByDate = getTaskCountsByDate();
 
     function formatAccessibleDate(date) {
         return new Intl.DateTimeFormat('en-US', {
@@ -208,6 +212,27 @@ export function initTaskCalendar() {
     if (showAllTasksButton) {
         showAllTasksButton.addEventListener('click', showAllTasks);
     }
+
+    document.addEventListener('task:removed-from-manage', function (event) {
+        const taskId = Number(event.detail && event.detail.taskId);
+
+        if (!Number.isInteger(taskId) || taskId < 1) {
+            return;
+        }
+
+        taskItems = taskItems.filter(function (taskItem) {
+            return Number(taskItem.dataset.taskId) !== taskId;
+        });
+        taskCountsByDate = getTaskCountsByDate();
+
+        if (selectedDate) {
+            filterTasksByDate(selectedDate);
+            renderCalendar();
+            return;
+        }
+
+        showAllTasks();
+    });
 
     showAllTasks();
 }
