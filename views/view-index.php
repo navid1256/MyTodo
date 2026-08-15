@@ -210,7 +210,7 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
           </ul>
         </div>
       </div>
-      <div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= in_array($activeView, ['messages', 'notifications'], true) ? ' messagesView' : '' ?>" id="tasks">
+      <div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= $activeView === 'activity' ? ' activityView' : '' ?><?= in_array($activeView, ['messages', 'notifications'], true) ? ' messagesView' : '' ?>" id="tasks">
         <?php if ($activeView === 'profile'): ?>
 
           <?php require __DIR__ . '/pages/profile.php'; ?>

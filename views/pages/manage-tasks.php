@@ -15,6 +15,9 @@
         </div>
         <ul id="manageTaskItems">
             <?php $renderTaskItems($tasks, 'manage-tasks', 'No tasks found.', false, true); ?>
+            <?php if ($tasks): ?>
+                <li class="emptyTask allTasksEmpty" id="allTasksEmpty" hidden>No tasks found.</li>
+            <?php endif; ?>
             <li class="emptyTask filteredTasksEmpty" id="filteredTasksEmpty" hidden>
                 No tasks due on this date.
             </li>

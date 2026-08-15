@@ -48,6 +48,17 @@ export function initTaskCompletion() {
         }
     }
 
+    function removeCompletedTaskFromManageTasks(taskItem, taskId) {
+        if (!taskItem || document.body.dataset.activeView !== 'manage-tasks') {
+            return;
+        }
+
+        taskItem.remove();
+        document.dispatchEvent(new CustomEvent('task:removed-from-manage', {
+            detail: { taskId: Number(taskId) }
+        }));
+    }
+
     document.addEventListener('click', function (event) {
         const toggleButton = event.target.closest('[data-task-toggle]');
 
@@ -56,6 +67,8 @@ export function initTaskCompletion() {
         }
 
         const taskId = Number(toggleButton.dataset.taskId);
+        const taskItem = toggleButton.closest('.taskItem');
+
         if (!Number.isInteger(taskId) || taskId < 1 || csrfToken === '') {
             return;
         }
@@ -67,6 +80,9 @@ export function initTaskCompletion() {
             .then(function (responseData) {
                 updateTaskItem(toggleButton, responseData.task);
                 updateCompletedCount(responseData.completed_today_count);
+                if (responseData.task.is_done) {
+                    removeCompletedTaskFromManageTasks(taskItem, responseData.task.id);
+                }
                 delete toggleButton.dataset.processing;
                 toggleButton.removeAttribute('aria-disabled');
             })

@@ -171,6 +171,7 @@ function getTasks()
     $sql = "SELECT *
             FROM tasks
             WHERE user_id = :user_id
+              AND is_done = 0
             ORDER BY due_at IS NULL, due_at ASC, id DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':user_id' => $current_user_id]);

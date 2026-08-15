@@ -18,6 +18,7 @@ $renderTaskItems = static function (
         <?php $taskDate = !empty($task->due_at) ? substr((string) $task->due_at, 0, 10) : ''; ?>
         <li
             class="taskItem<?= $task->is_done ? ' checked' : ''; ?>"
+            data-task-id="<?= (int) $task->id ?>"
             data-task-date="<?= htmlspecialchars($taskDate, ENT_QUOTES, 'UTF-8') ?>">
             <button
                 class="taskToggleButton"
