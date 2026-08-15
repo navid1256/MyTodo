@@ -27,18 +27,17 @@ export function validateRule(rule, startDate) {
         return 'Please set a task date before adding repeat settings.';
     }
 
-    if (rule.frequency === 'custom') {
-        if (!Number.isInteger(rule.interval) || rule.interval < 1 || rule.interval > 999) {
-            return 'Repeat Every must be a whole number between 1 and 999.';
-        }
+    if (rule.frequency === 'custom'
+        && (!Number.isInteger(rule.interval) || rule.interval < 1 || rule.interval > 999)) {
+        return 'Repeat Every must be a whole number between 1 and 999.';
+    }
 
-        if (rule.unit === 'week' && rule.week_days.length === 0) {
-            return 'Choose at least one weekday for the repeat schedule.';
-        }
+    if (rule.unit === 'week' && rule.week_days.length === 0) {
+        return 'Choose at least one weekday for the repeat schedule.';
+    }
 
-        if (rule.unit === 'month' && (rule.month_day < 1 || rule.month_day > 31)) {
-            return 'Choose a valid day of the month.';
-        }
+    if (rule.unit === 'month' && (rule.month_day < 1 || rule.month_day > 31)) {
+        return 'Choose a valid day of the month.';
     }
 
     if (rule.ends.type === 'date') {
@@ -69,7 +68,9 @@ export function formatRuleSummary(rule) {
     if (rule.frequency === 'daily') {
         scheduleText = 'Repeats daily';
     } else if (rule.frequency === 'weekly') {
-        scheduleText = 'Repeats weekly on ' + WEEKDAY_NAMES[rule.week_days[0]];
+        scheduleText = 'Repeats weekly on ' + rule.week_days.map(function (day) {
+            return WEEKDAY_NAMES[day];
+        }).join(', ');
     } else if (rule.frequency === 'monthly') {
         scheduleText = 'Repeats monthly on day ' + rule.month_day;
     } else if (rule.unit === 'day') {

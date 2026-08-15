@@ -26,10 +26,22 @@ export function createRepeatForm(options) {
         });
     }
 
-    function ensureRepeatOnSelection() {
+    function getRuleUnit(frequency) {
+        if (frequency === 'weekly') {
+            return 'week';
+        }
+
+        if (frequency === 'monthly') {
+            return 'month';
+        }
+
+        return frequency === 'custom' && repeatUnit ? repeatUnit.value : 'day';
+    }
+
+    function ensureRepeatOnSelection(unit) {
         const baseDate = options.getBaseDate();
 
-        if (repeatUnit && repeatUnit.value === 'week' && !weekDayInputs.some(function (input) { return input.checked; })) {
+        if (unit === 'week' && !weekDayInputs.some(function (input) { return input.checked; })) {
             const baseWeekDay = weekDayInputs.find(function (input) {
                 return Number(input.value) === baseDate.getDay();
             });
@@ -39,7 +51,7 @@ export function createRepeatForm(options) {
             }
         }
 
-        if (repeatUnit && repeatUnit.value === 'month' && !monthDayInputs.some(function (input) { return input.checked; })) {
+        if (unit === 'month' && !monthDayInputs.some(function (input) { return input.checked; })) {
             selectValue(monthDayInputs, baseDate.getDate());
         }
     }
@@ -48,20 +60,20 @@ export function createRepeatForm(options) {
         const frequency = selectedValue(frequencyInputs);
         const endType = selectedValue(endInputs);
         const isCustom = frequency === 'custom';
-        const customUnit = repeatUnit ? repeatUnit.value : 'day';
+        const unit = getRuleUnit(frequency);
 
         if (customRepeatSection) {
             customRepeatSection.hidden = !isCustom;
         }
 
-        ensureRepeatOnSelection();
+        ensureRepeatOnSelection(unit);
 
         if (repeatOnWeek) {
-            repeatOnWeek.hidden = !isCustom || customUnit !== 'week';
+            repeatOnWeek.hidden = unit !== 'week';
         }
 
         if (repeatOnMonth) {
-            repeatOnMonth.hidden = !isCustom || customUnit !== 'month';
+            repeatOnMonth.hidden = unit !== 'month';
         }
 
         if (repeatEndDateSection) {
@@ -121,14 +133,6 @@ export function createRepeatForm(options) {
         const selectedMonthDay = monthDayInputs.find(function (input) { return input.checked; });
         let monthDay = selectedMonthDay ? Number(selectedMonthDay.value) : baseDate.getDate();
         const endType = selectedValue(endInputs);
-
-        if (frequency === 'weekly') {
-            weekDays = [baseDate.getDay()];
-        }
-
-        if (frequency === 'monthly') {
-            monthDay = baseDate.getDate();
-        }
 
         return {
             frequency,
