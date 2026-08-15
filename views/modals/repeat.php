@@ -45,31 +45,32 @@
                     </select>
                 </div>
 
-                <fieldset class="repeatOnWeek" id="repeatOnWeek" hidden>
-                    <legend>Repeat on</legend>
-                    <div class="repeatWeekDays">
-                        <label><input type="checkbox" value="0"><span>Sun</span></label>
-                        <label><input type="checkbox" value="1"><span>Mon</span></label>
-                        <label><input type="checkbox" value="2"><span>Tue</span></label>
-                        <label><input type="checkbox" value="3"><span>Wed</span></label>
-                        <label><input type="checkbox" value="4"><span>Thu</span></label>
-                        <label><input type="checkbox" value="5"><span>Fri</span></label>
-                        <label><input type="checkbox" value="6"><span>Sat</span></label>
-                    </div>
-                </fieldset>
-
-                <fieldset class="repeatOnMonth" id="repeatOnMonth" hidden>
-                    <legend>Repeat on day</legend>
-                    <div class="repeatMonthDays">
-                        <?php for ($monthDay = 1; $monthDay <= 31; $monthDay++): ?>
-                            <label>
-                                <input type="radio" name="repeat_month_day" value="<?= $monthDay ?>">
-                                <span><?= $monthDay ?></span>
-                            </label>
-                        <?php endfor; ?>
-                    </div>
-                </fieldset>
             </section>
+
+            <fieldset class="repeatOnWeek" id="repeatOnWeek" hidden>
+                <legend>Repeat on</legend>
+                <div class="repeatWeekDays">
+                    <label><input type="checkbox" value="0"><span>Sun</span></label>
+                    <label><input type="checkbox" value="1"><span>Mon</span></label>
+                    <label><input type="checkbox" value="2"><span>Tue</span></label>
+                    <label><input type="checkbox" value="3"><span>Wed</span></label>
+                    <label><input type="checkbox" value="4"><span>Thu</span></label>
+                    <label><input type="checkbox" value="5"><span>Fri</span></label>
+                    <label><input type="checkbox" value="6"><span>Sat</span></label>
+                </div>
+            </fieldset>
+
+            <fieldset class="repeatOnMonth" id="repeatOnMonth" hidden>
+                <legend>Repeat on day</legend>
+                <div class="repeatMonthDays">
+                    <?php for ($monthDay = 1; $monthDay <= 31; $monthDay++): ?>
+                        <label>
+                            <input type="radio" name="repeat_month_day" value="<?= $monthDay ?>">
+                            <span><?= $monthDay ?></span>
+                        </label>
+                    <?php endfor; ?>
+                </div>
+            </fieldset>
 
             <section class="repeatEndsSection" aria-labelledby="repeatEndsTitle">
                 <h3 id="repeatEndsTitle">Repeat ends at</h3>
