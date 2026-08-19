@@ -12,17 +12,30 @@ import { initNotificationCenter } from './modules/notification-center.js';
 import { initTaskCompletion } from './modules/task-completion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 
+let dashboardViewController = null;
+
+function initDashboardView() {
+    if (dashboardViewController) {
+        dashboardViewController.abort();
+    }
+
+    dashboardViewController = new AbortController();
+    const signal = dashboardViewController.signal;
+
+    initTaskCalendar(signal);
+    initNotificationCenter(signal);
+    initTaskCompletion(signal);
+    initHomeDayRefresh(signal);
+
+    const dateTimePicker = initDateTimePicker();
+    const reminderPicker = initReminderPicker(signal);
+    const repeatPicker = initRepeatPicker();
+    initTaskModal(dateTimePicker, reminderPicker, repeatPicker, signal);
+}
+
 initTheme();
-initNavigation();
 initProfileMenu();
 initAvatarPicker();
-initTaskCalendar();
 initPasswordChange();
-initNotificationCenter();
-initTaskCompletion();
-initHomeDayRefresh();
-
-const dateTimePicker = initDateTimePicker();
-const reminderPicker = initReminderPicker();
-const repeatPicker = initRepeatPicker();
-initTaskModal(dateTimePicker, reminderPicker, repeatPicker);
+initNavigation({ onViewLoaded: initDashboardView });
+initDashboardView();

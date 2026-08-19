@@ -1,6 +1,6 @@
 import { toggleTaskCompletion } from '../services/task-service.js';
 
-export function initTaskCompletion() {
+export function initTaskCompletion(signal) {
     const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfTokenMeta ? csrfTokenMeta.content : '';
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -91,5 +91,5 @@ export function initTaskCompletion() {
                 delete toggleButton.dataset.processing;
                 toggleButton.removeAttribute('aria-disabled');
             });
-    });
+    }, signal ? { signal } : undefined);
 }
