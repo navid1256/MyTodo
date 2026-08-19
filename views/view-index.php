@@ -86,11 +86,12 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
   echo '    <button class="button active" id="openTaskModal" type="button">';
   echo '      Add New Task';
   echo '    </button>';
-  echo '    <div class="button completedButton"';
-  echo '         aria-label="' . $completedCount . ' tasks completed today">';
+  echo '    <a class="button completedButton" href="?view=activity&amp;filter=today"';
+  echo '       data-dashboard-link';
+  echo '       aria-label="View ' . $completedCount . ' tasks completed today">';
   echo '      <span class="completedCount">' . $completedCount . '</span>';
   echo '      <span>Completed</span>';
-  echo '    </div>';
+  echo '    </a>';
   echo '  </div>';
   echo '</div>';
 };

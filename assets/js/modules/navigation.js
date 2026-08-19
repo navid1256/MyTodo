@@ -195,11 +195,11 @@ export function initNavigation(options) {
         // Navigation remains functional when browser storage is unavailable.
       }
 
-      onViewLoaded(payload);
-
       if (shouldPushHistory) {
         window.history.pushState({ dashboardView: payload.activeView }, '', target.href);
       }
+
+      onViewLoaded(payload);
 
       nextView.removeAttribute('aria-busy');
       nextView.setAttribute('tabindex', '-1');
@@ -262,6 +262,28 @@ export function initNavigation(options) {
 
       loadDashboardView(control.href, true);
     });
+  });
+
+  document.addEventListener('click', function (event) {
+    const dashboardLink = event.target.closest('a[data-dashboard-link]');
+
+    if (!dashboardLink
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey) {
+      return;
+    }
+
+    const view = getDashboardNavigationView(dashboardLink.href, window.location.href);
+
+    if (!view) {
+      return;
+    }
+
+    event.preventDefault();
+    loadDashboardView(dashboardLink.href, true);
   });
 
   window.history.replaceState(

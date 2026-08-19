@@ -20,11 +20,49 @@
 
 .activityPageTitle {
     margin: 0;
-    padding: 10px 0 16px;
-    border-bottom: 1px solid #cbd5da;
     color: #54b9cd;
     font-size: 14px;
     text-transform: uppercase;
+}
+
+.activityPageHeader {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0 10px;
+    border-bottom: 1px solid #cbd5da;
+}
+
+.activityFilter {
+    width: 150px;
+    max-width: 100%;
+    height: 32px;
+    padding: 0 20px 0 10px;
+    border: 1px solid #74858d;
+    border-radius: 7px;
+    outline: none;
+    background-color: #fff;
+    color: #48575f;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.activityFilter:focus-visible {
+    border-color: #2e8294;
+    box-shadow: 0 0 0 3px rgba(46, 130, 148, 0.24);
+}
+
+html.dark-mode .activityPageHeader {
+    border-color: #3b4a57;
+}
+
+html.dark-mode .activityFilter {
+    border-color: #6b8998;
+    background-color: #1e303b;
+    color: #d8e5eb;
 }
 
 .activityDateGroup {
@@ -56,7 +94,7 @@
     border-bottom: 1px solid #d6dde1;
 }
 
-.activityTaskItem > i {
+.activityTaskItem>i {
     width: auto;
     height: auto;
     margin: 0 auto;
@@ -87,6 +125,15 @@
 }
 
 @media (max-width: 620px) {
+    .activityPageHeader {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .activityFilter {
+        width: 100%;
+    }
+
     .activityTaskItem {
         grid-template-columns: 28px minmax(0, 1fr);
         padding: 10px 0;
