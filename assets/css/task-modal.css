@@ -880,7 +880,8 @@
 .repeatFrequencyOptions label,
 .repeatEndOptions label,
 .repeatWeekDays label,
-.repeatMonthDays label {
+.repeatMonthDays label,
+.repeatMonthLastDay {
     position: relative;
     cursor: pointer;
 }
@@ -888,7 +889,8 @@
 .repeatFrequencyOptions input,
 .repeatEndOptions input,
 .repeatWeekDays input,
-.repeatMonthDays input {
+.repeatMonthDays input,
+.repeatMonthLastDay input {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -916,7 +918,8 @@
 .repeatFrequencyOptions input:checked+span,
 .repeatEndOptions input:checked+span,
 .repeatWeekDays input:checked+span,
-.repeatMonthDays input:checked+span {
+.repeatMonthDays input:checked+span,
+.repeatMonthLastDay input:checked+span {
     border-color: #168df0;
     background-color: #168df0;
     color: #ffffff;
@@ -926,7 +929,8 @@
 .repeatFrequencyOptions input:focus-visible+span,
 .repeatEndOptions input:focus-visible+span,
 .repeatWeekDays input:focus-visible+span,
-.repeatMonthDays input:focus-visible+span {
+.repeatMonthDays input:focus-visible+span,
+.repeatMonthLastDay input:focus-visible+span {
     outline: 3px solid rgba(22, 141, 240, 0.2);
     outline-offset: 2px;
 }
@@ -997,20 +1001,21 @@
 .repeatWeekDays span,
 .repeatMonthDays span {
     display: grid;
+    width: 50px;
     aspect-ratio: 1;
     place-items: center;
     border: 1px solid #c8d6de;
     border-radius: 50%;
     background-color: #ffffff;
     color: #52636d;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 700;
     transition: 0.18s ease;
 }
 
 .repeatWeekDays span {
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
     margin: 0 auto;
     aspect-ratio: auto;
 }
@@ -1019,6 +1024,39 @@
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: 7px;
+}
+
+.repeatMonthLastDay {
+    position: relative;
+    display: block;
+    margin-top: 12px;
+    cursor: pointer;
+}
+
+.repeatMonthLastDay span {
+    display: grid;
+    min-height: 42px;
+    padding: 0 14px;
+    place-items: center;
+    border: 1px solid #c8d6de;
+    border-radius: 12px;
+    background-color: #f1f6f8;
+    color: #4c606b;
+    font-size: 13px;
+    font-weight: 700;
+    box-sizing: border-box;
+    transition: 0.18s ease;
+}
+
+.repeatMonthHint {
+    margin: 10px 0 0;
+    color: #4f6876;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.repeatMonthHint[hidden] {
+    display: none;
 }
 
 .repeatEndOptions {

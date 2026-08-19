@@ -530,6 +530,7 @@ html.dark-mode .repeatCalendarHeader h4 {
 html.dark-mode .repeatModalHint,
 html.dark-mode .repeatOnWeek legend,
 html.dark-mode .repeatOnMonth legend,
+html.dark-mode .repeatMonthHint,
 html.dark-mode .repeatCountField {
     color: #c5d2d9;
 }
@@ -544,7 +545,8 @@ html.dark-mode .repeatEndOptions span {
 html.dark-mode .repeatFrequencyOptions input:checked+span,
 html.dark-mode .repeatEndOptions input:checked+span,
 html.dark-mode .repeatWeekDays input:checked+span,
-html.dark-mode .repeatMonthDays input:checked+span {
+html.dark-mode .repeatMonthDays input:checked+span,
+html.dark-mode .repeatMonthLastDay input:checked+span {
     border-color: #258bdc;
     background-color: #258bdc;
     color: #ffffff;
@@ -566,7 +568,8 @@ html.dark-mode .repeatCountField input {
 }
 
 html.dark-mode .repeatWeekDays span,
-html.dark-mode .repeatMonthDays span {
+html.dark-mode .repeatMonthDays span,
+html.dark-mode .repeatMonthLastDay span {
     border-color: #455664;
     background-color: #263642;
     color: #cbd7de;

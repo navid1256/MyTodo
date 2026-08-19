@@ -70,6 +70,11 @@
                         </label>
                     <?php endfor; ?>
                 </div>
+                <label class="repeatMonthLastDay">
+                    <input type="radio" name="repeat_month_day" value="last">
+                    <span>Last day of month</span>
+                </label>
+                <p class="repeatMonthHint" id="repeatMonthHint" aria-live="polite" hidden></p>
             </fieldset>
 
             <section class="repeatEndsSection" aria-labelledby="repeatEndsTitle">
