@@ -94,6 +94,24 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
   echo '  </div>';
   echo '</div>';
 };
+
+if (($_GET['partial'] ?? '') === '1') {
+  ob_start();
+  require __DIR__ . '/components/dashboard-view.php';
+  $partialHtml = ob_get_clean();
+
+  header('Content-Type: application/json; charset=utf-8');
+  echo json_encode([
+    'html' => $partialHtml,
+    'activeView' => $activeView,
+    'pageStylesheet' => $activePageStylesheet,
+    'taskModalStylesheet' => $usesTaskModals ? 'assets/css/task-modal.css' : null,
+    'renderTimezone' => $activityTimezone->getName(),
+    'renderDate' => $today->format('Y-m-d'),
+    'sentNotificationCount' => $sentNotificationCount,
+  ], JSON_THROW_ON_ERROR);
+  return;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -115,10 +133,10 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
   </script>
   <link rel="stylesheet" href="assets/css/core.css">
   <?php if ($usesTaskModals): ?>
-    <link rel="stylesheet" href="assets/css/task-modal.css">
+    <link id="taskModalStylesheet" rel="stylesheet" href="assets/css/task-modal.css">
   <?php endif; ?>
   <?php if ($activePageStylesheet !== null): ?>
-    <link rel="stylesheet" href="<?= htmlspecialchars($activePageStylesheet, ENT_QUOTES, 'UTF-8') ?>">
+    <link id="activePageStylesheet" rel="stylesheet" href="<?= htmlspecialchars($activePageStylesheet, ENT_QUOTES, 'UTF-8') ?>">
   <?php endif; ?>
   <link rel="stylesheet" href="assets/css/theme.css">
 </head>
@@ -210,56 +228,7 @@ $renderTaskToolbar = static function () use ($completedTasksToday): void {
           </ul>
         </div>
       </div>
-      <div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= $activeView === 'activity' ? ' activityView' : '' ?><?= in_array($activeView, ['messages', 'notifications'], true) ? ' messagesView' : '' ?>" id="tasks">
-        <?php if ($activeView === 'profile'): ?>
-
-          <?php require __DIR__ . '/pages/profile.php'; ?>
-
-        <?php elseif ($activeView === 'change-password'): ?>
-
-          <?php require __DIR__ . '/pages/change-password.php'; ?>
-
-        <?php elseif ($activeView === 'messages'): ?>
-
-          <?php $renderTaskToolbar(); ?>
-          <?php require __DIR__ . '/pages/messages.php'; ?>
-
-        <?php elseif ($activeView === 'notifications'): ?>
-
-          <?php require __DIR__ . '/pages/notifications.php'; ?>
-
-        <?php elseif ($activeView === 'activity'): ?>
-
-          <?php $renderTaskToolbar(); ?>
-          <?php require __DIR__ . '/pages/activity.php'; ?>
-
-        <?php else: ?>
-
-          <?php $renderTaskToolbar(); ?>
-
-          <div class="content<?= $activeView === 'manage-tasks' ? ' manageTasksContent' : '' ?>">
-            <?php if ($activeView === 'home'): ?>
-
-              <?php require __DIR__ . '/pages/home.php'; ?>
-
-            <?php else: ?>
-
-              <?php require __DIR__ . '/pages/manage-tasks.php'; ?>
-
-            <?php endif; ?>
-          </div>
-
-        <?php endif; ?>
-
-        <?php if ($usesTaskModals): ?>
-
-          <?php require __DIR__ . '/modals/task.php'; ?>
-          <?php require __DIR__ . '/modals/date-time.php'; ?>
-          <?php require __DIR__ . '/modals/reminder.php'; ?>
-          <?php require __DIR__ . '/modals/repeat.php'; ?>
-
-        <?php endif; ?>
-      </div>
+      <?php require __DIR__ . '/components/dashboard-view.php'; ?>
     </div>
   </div>
   <script type="module" src="assets/js/app.js"></script>

@@ -1,6 +1,6 @@
 import { createTask } from '../services/task-service.js';
 
-export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
+export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker, signal) {
     // متغیرهای Task Modal
     const taskModal = document.getElementById('taskModal');
     const openTaskModalButton = document.getElementById('openTaskModal');
@@ -131,7 +131,7 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         } else if (taskModal && !taskModal.hidden) {
             closeTaskModal();
         }
-    });
+    }, signal ? { signal } : undefined);
 
 }
 

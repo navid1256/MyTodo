@@ -13,7 +13,7 @@ import {
     setPreviewState
 } from './reminder-list.js';
 
-export function initReminderPicker() {
+export function initReminderPicker(signal) {
     const reminderModal = document.getElementById('reminderModal');
     const setTaskReminderButton = document.getElementById('setTaskReminderButton');
     const closeReminderModalButton = document.getElementById('closeReminderModal');
@@ -320,7 +320,7 @@ export function initReminderPicker() {
         } else if (reminderModal && !reminderModal.hidden) {
             reminderPreview.schedule();
         }
-    });
+    }, signal ? { signal } : undefined);
 
     updateCommittedReminderSummary();
 

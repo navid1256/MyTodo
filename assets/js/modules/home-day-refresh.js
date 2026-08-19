@@ -6,7 +6,7 @@ function getLocalDateKey(date) {
     return year + '-' + month + '-' + day;
 }
 
-export function initHomeDayRefresh() {
+export function initHomeDayRefresh(signal) {
     if (document.body.dataset.activeView !== 'home') {
         return;
     }
@@ -33,7 +33,7 @@ export function initHomeDayRefresh() {
         if (!document.hidden) {
             refreshWhenDayChanges();
         }
-    });
+    }, signal ? { signal } : undefined);
 
-    window.addEventListener('focus', refreshWhenDayChanges);
+    window.addEventListener('focus', refreshWhenDayChanges, signal ? { signal } : undefined);
 }

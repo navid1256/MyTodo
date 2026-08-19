@@ -9,6 +9,7 @@ import {
 import {
     convertTo12Hour,
     convertTo24Hour,
+    normalizeTimeInput,
 } from '../../utils/time-utils.js';
 
 import {
@@ -383,6 +384,20 @@ export function initDateTimePicker() {
             }
 
             updateTimeControls();
+        });
+    });
+
+    [taskTimeHour, taskTimeMinute].forEach(function (input) {
+        if (!input) {
+            return;
+        }
+
+        input.addEventListener('input', function () {
+            input.value = normalizeTimeInput(
+                input.value,
+                Number(input.min),
+                Number(input.max)
+            );
         });
     });
 

@@ -20,3 +20,17 @@ export function convertTo24Hour(hour12, minute, period) {
         period: period
     };
 }
+
+export function normalizeTimeInput(value, minimum, maximum) {
+    if (value === '') {
+        return '';
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+        return '';
+    }
+
+    return String(Math.min(maximum, Math.max(minimum, Math.trunc(numericValue))));
+}

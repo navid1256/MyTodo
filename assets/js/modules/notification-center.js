@@ -12,7 +12,7 @@ function formatOffset(value, unit) {
     return numericValue + ' ' + unit + (numericValue === 1 ? '' : 's') + ' before due time';
 }
 
-export function initNotificationCenter() {
+export function initNotificationCenter(signal) {
     const page = document.querySelector('.notificationsPage');
 
     if (!page) {
@@ -195,5 +195,5 @@ export function initNotificationCenter() {
         if (event.key === 'Escape' && !modal.hidden) {
             closeEditor();
         }
-    });
+    }, signal ? { signal } : undefined);
 }

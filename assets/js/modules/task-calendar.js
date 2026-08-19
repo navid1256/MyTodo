@@ -5,7 +5,7 @@ import {
     startOfDay
 } from '../utils/date-utils.js';
 
-export function initTaskCalendar() {
+export function initTaskCalendar(signal) {
     const taskCalendar = document.getElementById('taskCalendar');
     const calendarMonthLabel = document.getElementById('taskCalendarMonth');
     const calendarDays = document.getElementById('taskCalendarDays');
@@ -232,7 +232,7 @@ export function initTaskCalendar() {
         }
 
         showAllTasks();
-    });
+    }, signal ? { signal } : undefined);
 
     showAllTasks();
 }
