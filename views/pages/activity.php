@@ -33,13 +33,23 @@ foreach ($completedTasks as $task) {
 ?>
 <div class="content activityContent">
     <section class="activityPage" aria-labelledby="activityPageTitle">
-        <h1 class="activityPageTitle" id="activityPageTitle">Completed Tasks</h1>
+        <div class="activityPageHeader">
+            <h1 class="activityPageTitle" id="activityPageTitle">Completed Tasks</h1>
+            <label class="srOnly" for="activityFilter">Filter completed tasks</label>
+            <select class="activityFilter" id="activityFilter" aria-label="Filter completed tasks">
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="all" selected>All Completed</option>
+            </select>
+        </div>
 
         <?php if (!$completedTaskGroups): ?>
             <p class="activityEmpty">No completed tasks found.</p>
         <?php else: ?>
-            <?php foreach ($completedTaskGroups as $group): ?>
-                <section class="activityDateGroup">
+            <?php foreach ($completedTaskGroups as $dateKey => $group): ?>
+                <section class="activityDateGroup" data-completed-date="<?= htmlspecialchars($dateKey, ENT_QUOTES, 'UTF-8') ?>">
                     <h2><?= htmlspecialchars($group['label'], ENT_QUOTES, 'UTF-8') ?></h2>
                     <ul>
                         <?php foreach ($group['tasks'] as $item): ?>
@@ -55,6 +65,9 @@ foreach ($completedTasks as $task) {
                     </ul>
                 </section>
             <?php endforeach; ?>
+            <p class="activityEmpty" id="activityFilterEmpty" role="status" hidden>
+                No completed tasks found for this period.
+            </p>
         <?php endif; ?>
     </section>
 </div>

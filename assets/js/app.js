@@ -11,6 +11,7 @@ import { initPasswordChange } from './modules/password-change.js';
 import { initNotificationCenter } from './modules/notification-center.js';
 import { initTaskCompletion } from './modules/task-completion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
+import { initActivityFilter } from './modules/activity-filter.js';
 
 let dashboardViewController = null;
 
@@ -26,6 +27,7 @@ function initDashboardView() {
     initNotificationCenter(signal);
     initTaskCompletion(signal);
     initHomeDayRefresh(signal);
+    initActivityFilter(signal);
 
     const dateTimePicker = initDateTimePicker();
     const reminderPicker = initReminderPicker(signal);

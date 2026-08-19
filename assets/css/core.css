@@ -406,6 +406,7 @@ span.created-at {
     gap: 8px;
     padding: 0px 18px;
     margin-right: 22px;
+    text-decoration: none;
 }
 
 .main .view .viewHeader .functions .button.active,
