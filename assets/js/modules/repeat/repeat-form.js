@@ -4,6 +4,7 @@ export function createRepeatForm(options) {
     const repeatUnit = document.getElementById('repeatUnit');
     const repeatOnWeek = document.getElementById('repeatOnWeek');
     const repeatOnMonth = document.getElementById('repeatOnMonth');
+    const repeatMonthHint = document.getElementById('repeatMonthHint');
     const repeatEndDateSection = document.getElementById('repeatEndDateSection');
     const repeatCountField = document.getElementById('repeatCountField');
     const repeatCount = document.getElementById('repeatCount');
@@ -56,6 +57,38 @@ export function createRepeatForm(options) {
         }
     }
 
+    function updateMonthHint(unit) {
+        if (!repeatMonthHint) {
+            return;
+        }
+
+        const selectedMonthDay = monthDayInputs.find(function (input) {
+            return input.checked;
+        });
+        const selectedValue = selectedMonthDay ? selectedMonthDay.value : '';
+
+        if (unit !== 'month' || selectedValue === '') {
+            repeatMonthHint.hidden = true;
+            repeatMonthHint.textContent = '';
+            return;
+        }
+
+        if (selectedValue === 'last') {
+            repeatMonthHint.textContent = 'This task will repeat on the last day of every month.';
+            repeatMonthHint.hidden = false;
+            return;
+        }
+
+        if (Number(selectedValue) >= 29) {
+            repeatMonthHint.textContent = 'For shorter months, this task will repeat on the last day of the month.';
+            repeatMonthHint.hidden = false;
+            return;
+        }
+
+        repeatMonthHint.hidden = true;
+        repeatMonthHint.textContent = '';
+    }
+
     function update() {
         const frequency = selectedValue(frequencyInputs);
         const endType = selectedValue(endInputs);
@@ -75,6 +108,8 @@ export function createRepeatForm(options) {
         if (repeatOnMonth) {
             repeatOnMonth.hidden = unit !== 'month';
         }
+
+        updateMonthHint(unit);
 
         if (repeatEndDateSection) {
             repeatEndDateSection.hidden = endType !== 'date';
@@ -106,7 +141,10 @@ export function createRepeatForm(options) {
         weekDayInputs.forEach(function (input) {
             input.checked = (rule.week_days || []).includes(Number(input.value));
         });
-        selectValue(monthDayInputs, rule.month_day || baseDate.getDate());
+        selectValue(
+            monthDayInputs,
+            rule.month_day_mode === 'last_day' ? 'last' : (rule.month_day || baseDate.getDate())
+        );
 
         if (repeatCount) {
             repeatCount.value = String(rule.ends.count || 10);
@@ -131,16 +169,22 @@ export function createRepeatForm(options) {
             .map(function (input) { return Number(input.value); })
             .sort(function (first, second) { return first - second; });
         const selectedMonthDay = monthDayInputs.find(function (input) { return input.checked; });
-        let monthDay = selectedMonthDay ? Number(selectedMonthDay.value) : baseDate.getDate();
+        const repeatsOnLastDay = Boolean(selectedMonthDay && selectedMonthDay.value === 'last');
+        const monthDay = repeatsOnLastDay
+            ? null
+            : (selectedMonthDay ? Number(selectedMonthDay.value) : baseDate.getDate());
         const endType = selectedValue(endInputs);
 
         return {
             frequency,
             interval,
             unit,
-            repeat_on: unit === 'week' ? weekDays : (unit === 'month' ? monthDay : null),
+            repeat_on: unit === 'week'
+                ? weekDays
+                : (unit === 'month' ? (repeatsOnLastDay ? 'last_day' : monthDay) : null),
             week_days: weekDays,
             month_day: monthDay,
+            month_day_mode: repeatsOnLastDay ? 'last_day' : 'clamp',
             ends: {
                 type: endType,
                 date: endType === 'date' ? options.calendar.getEndDate() : '',
@@ -159,6 +203,10 @@ export function createRepeatForm(options) {
     });
 
     endInputs.forEach(function (input) {
+        input.addEventListener('change', handleControlChange);
+    });
+
+    monthDayInputs.forEach(function (input) {
         input.addEventListener('change', handleControlChange);
     });
 
