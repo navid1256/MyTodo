@@ -74,6 +74,7 @@ $pageStylesheets = [
   'notifications' => 'assets/css/pages/messages.css',
   'profile' => 'assets/css/pages/profile.css',
   'change-password' => 'assets/css/pages/change-password.css',
+  'account-settings' => 'assets/css/pages/account-settings.css',
 ];
 $activePageStylesheet = $pageStylesheets[$activeView] ?? null;
 $usesTaskModals = in_array($activeView, ['home', 'activity', 'manage-tasks', 'messages'], true);
@@ -178,10 +179,10 @@ if (($_GET['partial'] ?? '') === '1') {
               <i class="fa-regular fa-user" aria-hidden="true"></i>
               <span>My Profile</span>
             </a>
-            <button type="button">
+            <a class="profileDropdownLink" href="?view=account-settings">
               <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
               <span>Account Settings</span>
-            </button>
+            </a>
             <button id="themeToggle" type="button" aria-pressed="false">
               <i id="themeIcon" class="fa-solid fa-moon" aria-hidden="true"></i>
               <span id="themeLabel">Dark Mode</span>

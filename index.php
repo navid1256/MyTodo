@@ -13,7 +13,7 @@ if (isset($_GET['delete_task'])&& is_numeric($_GET['delete_task'])) {
     echo "$deletedCount Tasks Succesfully Deleted";
 }
 
-$allowedViews = ['home', 'activity', 'manage-tasks', 'messages', 'notifications', 'profile', 'change-password'];
+$allowedViews = ['home', 'activity', 'manage-tasks', 'messages', 'notifications', 'profile', 'change-password', 'account-settings'];
 $activeView = $_GET['view'] ?? 'manage-tasks';
 
 if (!in_array($activeView, $allowedViews, true)) {

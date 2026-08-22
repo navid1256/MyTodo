@@ -1,0 +1,120 @@
+.main .accountSettingsView {
+    height: 100%;
+    overflow: auto;
+}
+
+.accountSettingsPage {
+    min-height: 100%;
+    padding: 0px 36px 70px;
+    box-sizing: border-box;
+    color: #1f2933;
+}
+
+.accountSettingsHeader {
+    display: flex;
+    min-height: 60px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-bottom: 1px solid #8d9ca4;
+}
+
+.accountSettingsHeader h1 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.accountSettingsIcon {
+    color: #54b9cd;
+    font-size: 24px;
+}
+
+.accountSettingsFields {
+    display: grid;
+    width: min(100%, 510px);
+    margin: 56px auto 0;
+    gap: 44px;
+    justify-content: center;
+}
+
+.accountSettingsField {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 126px;
+    align-items: center;
+    column-gap: 40px;
+}
+
+.accountSettingsField label {
+    font-size: 24px;
+    text-align: right;
+}
+
+.accountSettingsField select {
+    width: 126px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #93a2aa;
+    border-radius: 9px;
+    background-color: #f8fafb;
+    color: #34434b;
+    font: inherit;
+    font-size: 16px;
+    opacity: 1;
+}
+
+html.dark-mode .accountSettingsPage {
+    color: #f7fafc;
+}
+
+html.dark-mode .accountSettingsHeader {
+    border-color: #aebbc2;
+}
+
+html.dark-mode .accountSettingsIcon {
+    color: #f7fafc;
+}
+
+html.dark-mode .accountSettingsField select {
+    border-color: #4b4d4e;
+    background-color: #242321;
+    color: #f7fafc;
+    color-scheme: dark;
+}
+
+@media (max-width: 620px) {
+    .accountSettingsPage {
+        padding: 24px 16px 40px;
+    }
+
+    .accountSettingsHeader {
+        min-height: 92px;
+        gap: 20px;
+    }
+
+    .accountSettingsHeader h1 {
+        font-size: 28px;
+    }
+
+    .accountSettingsIcon {
+        font-size: 34px;
+    }
+
+    .accountSettingsFields {
+        margin-top: 42px;
+        gap: 26px;
+    }
+
+    .accountSettingsField {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .accountSettingsField label {
+        text-align: left;
+    }
+
+    .accountSettingsField select {
+        width: 100%;
+    }
+}

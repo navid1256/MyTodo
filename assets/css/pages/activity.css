@@ -31,15 +31,22 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 8px 0 10px;
+    padding: 0px 0 10px;
     border-bottom: 1px solid #cbd5da;
 }
 
-.activityFilter {
+.activityFilterControl {
+    position: relative;
     width: 150px;
     max-width: 100%;
+    color: #48575f;
+}
+
+.activityFilter {
+    width: 100%;
+    max-width: 100%;
     height: 32px;
-    padding: 0 20px 0 10px;
+    padding: 0 34px 0 10px;
     border: 1px solid #74858d;
     border-radius: 7px;
     outline: none;
@@ -48,6 +55,17 @@
     font: inherit;
     font-weight: 600;
     cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.activityFilterArrow {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    font-size: 10px;
+    pointer-events: none;
+    transform: translateY(-50%);
 }
 
 .activityFilter:focus-visible {
@@ -62,6 +80,10 @@ html.dark-mode .activityPageHeader {
 html.dark-mode .activityFilter {
     border-color: #6b8998;
     background-color: #1e303b;
+    color: #d8e5eb;
+}
+
+html.dark-mode .activityFilterControl {
     color: #d8e5eb;
 }
 
@@ -130,7 +152,7 @@ html.dark-mode .activityFilter {
         flex-direction: column;
     }
 
-    .activityFilter {
+    .activityFilterControl {
         width: 100%;
     }
 
