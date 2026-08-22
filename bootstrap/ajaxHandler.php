@@ -56,7 +56,7 @@ function readTaskReminders(string $remindersJson): array
 
     return $reminders;
 }
-
+/* this function reads the 'has_time' value from the POST data */
 function readHasTimeValue(): string
 {
     $hasTimeValue = isset($_POST['has_time']) && is_string($_POST['has_time'])
@@ -335,5 +335,3 @@ switch ($_POST['action']) {
         diepage("Invalid Action");
         break;
 }
-
-// var_dump($_POST);

@@ -12,6 +12,7 @@ import { initNotificationCenter } from './modules/notification-center.js';
 import { initTaskCompletion } from './modules/task-completion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
+import { initAccountSettings } from './modules/account-settings.js';
 
 let dashboardViewController = null;
 
@@ -28,6 +29,7 @@ function initDashboardView() {
     initTaskCompletion(signal);
     initHomeDayRefresh(signal);
     initActivityFilter(signal);
+    initAccountSettings(signal);
 
     const dateTimePicker = initDateTimePicker();
     const reminderPicker = initReminderPicker(signal);
