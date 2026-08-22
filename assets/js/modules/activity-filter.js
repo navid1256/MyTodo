@@ -1,4 +1,4 @@
-const ACTIVITY_FILTERS = ['today', 'yesterday', 'week', 'month', 'all'];
+const ACTIVITY_FILTERS = new Set(['today', 'yesterday', 'week', 'month', 'all']);
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 function parseDateKey(dateKey) {
@@ -62,7 +62,7 @@ export function initActivityFilter(signal) {
     }
 
     function normalizeFilter(filter) {
-        return ACTIVITY_FILTERS.includes(filter) ? filter : 'all';
+        return ACTIVITY_FILTERS.has(filter) ? filter : 'all';
     }
 
     function applyFilter(filter) {
