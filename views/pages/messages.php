@@ -10,7 +10,7 @@
         <div class="title notificationsTitle" id="notificationsPageTitle">
             <span>Notifications</span>
         </div>
-        <p class="notificationsPageMessage" id="notificationsPageMessage" role="status" aria-live="polite"></p>
+        <p class="notificationsPageMessage" id="notificationsPageMessage" role="status" aria-live="polite" hidden></p>
         <ul class="notificationsList" id="notificationsList">
             <?php if (!$notifications): ?>
                 <li class="emptyTask notificationsEmpty">No notifications found.</li>

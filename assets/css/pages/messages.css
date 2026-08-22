@@ -437,6 +437,7 @@
     display: block;
     width: auto;
     box-sizing: border-box;
+    margin-bottom: 10px;
 }
 
 .main .view .notificationsPageMessage {

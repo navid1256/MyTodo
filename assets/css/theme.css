@@ -61,6 +61,23 @@ html.dark-mode .main {
     background-color: #111a23;
 }
 
+html.dark-mode .main .view {
+    scrollbar-color: #258bdc #13212b;
+}
+
+html.dark-mode .main .view::-webkit-scrollbar-track {
+    background-color: #13212b;
+}
+
+html.dark-mode .main .view::-webkit-scrollbar-thumb {
+    border-color: #13212b;
+    background: linear-gradient(180deg, #349de9, #258bdc);
+}
+
+html.dark-mode .main .view::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #69bd34, #54a82c);
+}
+
 html.dark-mode .main .nav {
     background-color: #18242e;
 }

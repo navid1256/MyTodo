@@ -41,9 +41,12 @@ export function initNotificationCenter(signal) {
 
     function setPageMessage(message, type) {
         pageMessage.textContent = message;
+        pageMessage.hidden = message.trim() === '';
         pageMessage.classList.toggle('is-success', type === 'success');
         pageMessage.classList.toggle('is-error', type === 'error');
     }
+
+    setPageMessage('', '');
 
     function setModalMessage(message) {
         modalMessage.textContent = message;
