@@ -36,13 +36,16 @@ foreach ($completedTasks as $task) {
         <div class="activityPageHeader">
             <h1 class="activityPageTitle" id="activityPageTitle">Completed Tasks</h1>
             <label class="srOnly" for="activityFilter">Filter completed tasks</label>
-            <select class="activityFilter" id="activityFilter" aria-label="Filter completed tasks">
-                <option value="today">Today</option>
-                <option value="yesterday">Yesterday</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="all" selected>All Completed</option>
-            </select>
+            <div class="activityFilterControl">
+                <select class="activityFilter" id="activityFilter" aria-label="Filter completed tasks">
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="all" selected>All Completed</option>
+                </select>
+                <i class="activityFilterArrow fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </div>
         </div>
 
         <?php if (!$completedTaskGroups): ?>

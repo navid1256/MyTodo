@@ -4,7 +4,7 @@
 /** @var bool $usesTaskModals */
 /** @var Closure $renderTaskToolbar */
 ?>
-<div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= $activeView === 'activity' ? ' activityView' : '' ?><?= in_array($activeView, ['messages', 'notifications'], true) ? ' messagesView' : '' ?>" id="tasks">
+<div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'account-settings' ? ' accountSettingsView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= $activeView === 'activity' ? ' activityView' : '' ?><?= in_array($activeView, ['messages', 'notifications'], true) ? ' messagesView' : '' ?>" id="tasks">
   <?php if ($activeView === 'profile'): ?>
 
     <?php require __DIR__ . '/../pages/profile.php'; ?>
@@ -12,6 +12,10 @@
   <?php elseif ($activeView === 'change-password'): ?>
 
     <?php require __DIR__ . '/../pages/change-password.php'; ?>
+
+  <?php elseif ($activeView === 'account-settings'): ?>
+
+    <?php require __DIR__ . '/../pages/account-settings.php'; ?>
 
   <?php elseif ($activeView === 'messages'): ?>
 
