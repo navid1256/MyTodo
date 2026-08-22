@@ -158,6 +158,4 @@ if ($activeView === 'home') {
     $tomorrowTasks = getTasksForDate($tomorrow, $today);
 }
 
-// dd($tasks);
-
 include "views/view-index.php";
