@@ -8,7 +8,10 @@
 /** @var string $currentDisplayName */
 ?>
 <section class="profilePage" aria-labelledby="profilePageTitle">
-    <h1 class="srOnly" id="profilePageTitle">My Profile</h1>
+    <header class="profilePageHeader">
+        <i class="profilePageHeaderIcon fa-regular fa-user" aria-hidden="true"></i>
+        <h1 id="profilePageTitle">My Profile</h1>
+    </header>
     <?php if ($profileSuccess): ?>
         <div class="profileMessage profileMessageSuccess" role="status">
             <?= htmlspecialchars($profileSuccess, ENT_QUOTES, 'UTF-8') ?>

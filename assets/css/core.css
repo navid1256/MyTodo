@@ -352,6 +352,34 @@ span.created-at {
 .main .view {
     position: relative;
     margin-left: 200px;
+    scrollbar-width: thin;
+    scrollbar-color: #168df0 #e7eff3;
+}
+
+.main .view::-webkit-scrollbar {
+    width: 10px;
+}
+
+.main .view::-webkit-scrollbar-track {
+    margin: 18px 0;
+    border-radius: 999px;
+    background-color: #e7eff3;
+}
+
+.main .view::-webkit-scrollbar-thumb {
+    border: 2px solid #e7eff3;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #49aef1, #168df0);
+}
+
+.main .view::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #69bd34, #54a82c);
+}
+
+.main .view::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .main .view .viewHeader {

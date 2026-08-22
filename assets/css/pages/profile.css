@@ -5,9 +5,42 @@
 
 .profilePage {
     min-height: 100%;
-    padding: 34px 46px;
+    padding: 0px 36px 36px;
     box-sizing: border-box;
     color: #1f2933;
+}
+
+.profilePageHeader {
+    display: flex;
+    min-height: 60px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-bottom: 1px solid #8d9ca4;
+}
+
+.profilePageHeader h1 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.profilePageHeaderIcon {
+    color: #4f5659;
+    font-size: 24px;
+}
+
+.profilePageHeader + .profileMessage,
+.profilePageHeader + .profileOverview {
+    margin-top: 56px;
+}
+
+html.dark-mode .profilePageHeader {
+    border-color: #aebbc2;
+}
+
+html.dark-mode .profilePageHeaderIcon {
+    color: #f7fafc;
 }
 
 .profileMessage {
@@ -570,6 +603,23 @@
 }
 
 @media (max-width: 620px) {
+    .profilePage {
+        padding: 24px 16px 40px;
+    }
+
+    .profilePageHeader {
+        min-height: 92px;
+        gap: 20px;
+    }
+
+    .profilePageHeader h1 {
+        font-size: 28px;
+    }
+
+    .profilePageHeaderIcon {
+        font-size: 34px;
+    }
+
     .avatarPickerBackdrop {
         padding: 12px;
     }
