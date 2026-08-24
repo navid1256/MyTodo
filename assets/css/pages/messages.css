@@ -3,6 +3,53 @@
     box-sizing: border-box;
 }
 
+.sentNotificationsPage {
+    height: 100%;
+    padding: 0 36px 36px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    color: #1f2933;
+}
+
+.sentNotificationsPageHeader {
+    display: flex;
+    min-height: 60px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-bottom: 1px solid #8d9ca4;
+}
+
+.sentNotificationsPageHeader h1 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.sentNotificationsPageHeaderIcon {
+    color: #4f5659;
+    font-size: 24px;
+}
+
+.main .view .sentNotificationsPage .notificationsContent {
+    position: static;
+    margin-top: 56px;
+    padding: 0;
+    overflow: visible;
+}
+
+html.dark-mode .sentNotificationsPage {
+    color: #f7fafc;
+}
+
+html.dark-mode .sentNotificationsPageHeader {
+    border-color: #aebbc2;
+}
+
+html.dark-mode .sentNotificationsPageHeaderIcon {
+    color: #f7fafc;
+}
+
 .notificationsPage {
     min-height: 100%;
     padding: 34px 46px 50px;
@@ -558,6 +605,27 @@
 }
 
 @media (max-width: 620px) {
+    .sentNotificationsPage {
+        padding: 24px 16px 40px;
+    }
+
+    .sentNotificationsPageHeader {
+        min-height: 92px;
+        gap: 20px;
+    }
+
+    .sentNotificationsPageHeader h1 {
+        font-size: 28px;
+    }
+
+    .sentNotificationsPageHeaderIcon {
+        font-size: 34px;
+    }
+
+    .main .view .sentNotificationsPage .notificationsContent {
+        margin-top: 42px;
+    }
+
     .notificationsPage {
         padding: 24px 16px 36px;
     }

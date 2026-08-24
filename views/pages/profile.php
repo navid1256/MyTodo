@@ -8,7 +8,11 @@
 /** @var string $currentDisplayName */
 ?>
 <section class="profilePage" aria-labelledby="profilePageTitle">
-    <header class="profilePageHeader">
+    <header class="profilePageHeader dashboardSectionHeader">
+        <a class="dashboardBackButton" href="?view=home" data-dashboard-back aria-label="Back to previous page">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            <span>Back</span>
+        </a>
         <i class="profilePageHeaderIcon fa-regular fa-user" aria-hidden="true"></i>
         <h1 id="profilePageTitle">My Profile</h1>
     </header>

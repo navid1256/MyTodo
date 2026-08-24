@@ -54,6 +54,7 @@
     content: var(--fa);
 }
 
+.fa-arrow-left { --fa: "\f060"; }
 .fa-arrow-right-from-bracket { --fa: "\f08b"; }
 .fa-bell { --fa: "\f0f3"; }
 .fa-chart-simple { --fa: "\e473"; }
