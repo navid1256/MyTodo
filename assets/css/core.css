@@ -1,16 +1,6 @@
 /* Font Awesome subset used by the dashboard */
 @import url(fontawesome-subset.css);
 
-@font-face {
-    font-family: 'FA Utility';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url(../font/fa-utility-semibold-600.woff2) format('woff2');
-}
-
-
-
 html {
     min-height: 100%;
 }
@@ -21,7 +11,7 @@ body {
     margin: 0px;
     background: linear-gradient(30deg, #0891B2, #B5EEF0, #5EEAD4) fixed;
     background-attachment: fixed;
-    font-family: "FA Utility", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 14px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -415,7 +405,7 @@ span.created-at {
 .dashboardBackButton:focus-visible {
     border-color: #54b9cd;
     background-color: rgba(84, 185, 205, 0.14);
-    color: #217188;
+    color: #54b9cd;
 }
 
 html.dark-mode .dashboardBackButton {
@@ -649,12 +639,12 @@ html.dark-mode .dashboardBackButton:focus-visible {
     font-weight: 600;
 }
 
-.main .view .content .list ul li.taskItem > span {
+.main .view .content .list ul li.taskItem>span {
     position: relative;
     transition: color 0.3s ease;
 }
 
-.main .view .content .list ul li.taskItem > span::after {
+.main .view .content .list ul li.taskItem>span::after {
     content: "";
     position: absolute;
     top: 50%;
@@ -669,18 +659,19 @@ html.dark-mode .dashboardBackButton:focus-visible {
     transition: transform 0.4s ease;
 }
 
-.main .view .content .list ul li.taskItem.checked > span {
+.main .view .content .list ul li.taskItem.checked>span {
     color: #7c898f;
 }
 
-.main .view .content .list ul li.taskItem.checked > span::after {
+.main .view .content .list ul li.taskItem.checked>span::after {
     transform: scaleX(1);
     transform-origin: left center;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .main .view .content .list ul li.taskItem > span,
-    .main .view .content .list ul li.taskItem > span::after {
+
+    .main .view .content .list ul li.taskItem>span,
+    .main .view .content .list ul li.taskItem>span::after {
         transition: none;
     }
 }
