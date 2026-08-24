@@ -12,7 +12,6 @@
 
 
 html {
-    /* background-image: url(http://www.ultraimg.com/images/2UeGfhZ.jpg); */
     min-height: 100%;
 }
 
@@ -380,6 +379,61 @@ span.created-at {
     display: none;
     width: 0;
     height: 0;
+}
+
+.dashboardSectionHeader {
+    position: relative;
+    padding-inline: 112px;
+    box-sizing: border-box;
+}
+
+.dashboardBackButton {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    display: inline-flex;
+    width: auto;
+    min-width: 85px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 15px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background-color: transparent;
+    color: #4f5659;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    margin-block: auto;
+    text-decoration: none;
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.dashboardBackButton:hover,
+.dashboardBackButton:focus-visible {
+    border-color: #54b9cd;
+    background-color: rgba(84, 185, 205, 0.14);
+    color: #217188;
+}
+
+html.dark-mode .dashboardBackButton {
+    border-color: #f7fafc;
+    color: #f7fafc;
+}
+
+html.dark-mode .dashboardBackButton:hover,
+html.dark-mode .dashboardBackButton:focus-visible {
+    border-color: #54b9cd;
+    background-color: rgba(84, 185, 205, 0.14);
+    color: #54b9cd;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboardBackButton {
+        transition: none;
+    }
 }
 
 .main .view .viewHeader {

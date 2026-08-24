@@ -265,6 +265,20 @@ export function initNavigation(options) {
   });
 
   document.addEventListener('click', function (event) {
+    const dashboardBackLink = event.target.closest('a[data-dashboard-back]');
+
+    if (dashboardBackLink
+      && event.button === 0
+      && !event.metaKey
+      && !event.ctrlKey
+      && !event.shiftKey
+      && !event.altKey
+      && window.history.length > 1) {
+      event.preventDefault();
+      window.history.back();
+      return;
+    }
+
     const dashboardLink = event.target.closest('a[data-dashboard-link]');
 
     if (!dashboardLink

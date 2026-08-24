@@ -1,5 +1,5 @@
 <?php
-include "bootstrap/init.php";
+include_once "bootstrap/init.php";
 
 if (getCurrentUserId() === 0) {
     header('Location: ' . BASE_URL . 'auth.php');
@@ -8,7 +8,7 @@ if (getCurrentUserId() === 0) {
 
 $currentUser = getCurrentUser();
 
-if (isset($_GET['delete_task'])&& is_numeric($_GET['delete_task'])) {
+if (isset($_GET['delete_task']) && is_numeric($_GET['delete_task'])) {
     $deletedCount = deleteTask($_GET['delete_task']);
     echo "$deletedCount Tasks Succesfully Deleted";
 }
@@ -59,12 +59,14 @@ if ($activeView === 'profile' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST
         $profileErrors[] = 'Your session has expired. Please submit the form again.';
     }
 
-    foreach ([
-        'firstname' => 'First name',
-        'lastname' => 'Last name',
-        'job_title' => 'Job title',
-        'country' => 'Country',
-    ] as $field => $label) {
+    foreach (
+        [
+            'firstname' => 'First name',
+            'lastname' => 'Last name',
+            'job_title' => 'Job title',
+            'country' => 'Country',
+        ] as $field => $label
+    ) {
         if (mb_strlen($profileInput[$field]) > 100) {
             $profileErrors[] = "$label must not exceed 100 characters.";
         }
@@ -158,4 +160,4 @@ if ($activeView === 'home') {
     $tomorrowTasks = getTasksForDate($tomorrow, $today);
 }
 
-include "views/view-index.php";
+include_once "views/view-index.php";
