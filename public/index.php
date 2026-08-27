@@ -26,7 +26,7 @@ try {
             || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
 
         $requestHost = strtolower((string) parse_url(
-            'http://' . ($_SERVER['HTTP_HOST'] ?? ''),
+            'https://' . ($_SERVER['HTTP_HOST'] ?? ''),
             PHP_URL_HOST
         ));
         $remoteAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
