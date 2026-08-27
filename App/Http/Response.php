@@ -13,8 +13,7 @@ final class Response
         private readonly string $body = '',
         private readonly int $statusCode = 200,
         private readonly array $headers = []
-    ) {
-    }
+    ) {}
 
     public static function redirect(string $location, int $statusCode = 302): self
     {
@@ -32,4 +31,10 @@ final class Response
         echo $this->body;
         exit;
     }
+}
+
+function diepage($msg)
+{
+    echo $msg;
+    die();
 }

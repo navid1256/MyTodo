@@ -1,5 +1,10 @@
 <?php
-include "constant.php";
+
+include_once BASE_PATH . "bootstrap/config.php";
+
+include_once BASE_PATH . "libs/helpers.php";
+
+include_once BASE_PATH . "vendor/autoload.php";
 
 if (session_status() === PHP_SESSION_NONE) {
     $sessionPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'mytodo-sessions';
@@ -21,12 +26,6 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 }
 
-include BASE_PATH."bootstrap/config.php";
-
-include BASE_PATH."libs/helpers.php";
-
-include BASE_PATH."vendor/autoload.php";
-
 try {
     $pdo = new PDO(
         "mysql:dbname=$database_config->db; host={$database_config->host}",
@@ -38,5 +37,5 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    diepage('Connection failed :' . $e->getMessage()) ;
+    diepage('Connection failed :' . $e->getMessage());
 }
