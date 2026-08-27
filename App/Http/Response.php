@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use App\Exceptions\JsonEncodingException;
+use App\Exceptions\ViewNotFoundException;
 use JsonException;
-use RuntimeException;
 
 final class Response
 {
@@ -59,7 +60,7 @@ final class Response
         try {
             $json = json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         } catch (JsonException $exception) {
-            throw new RuntimeException('Failed to encode response data to JSON: ' . $exception->getMessage(), 0, $exception);
+            throw new JsonEncodingException('Failed to encode response data to JSON: ' . $exception->getMessage(), 0, $exception);
         }
 
         $mergedHeaders = array_merge(['Content-Type' => 'application/json; charset=utf-8'], $headers);
@@ -83,12 +84,12 @@ final class Response
         }
 
         if (!is_file($resolvedPath)) {
-            throw new RuntimeException("View template not found: {$viewPath}");
+            throw new ViewNotFoundException("View template not found: {$viewPath}");
         }
 
         ob_start();
         extract($data, EXTR_SKIP);
-        require $resolvedPath;
+        require_once $resolvedPath;
         $content = (string) ob_get_clean();
 
         $mergedHeaders = array_merge(['Content-Type' => 'text/html; charset=utf-8'], $headers);

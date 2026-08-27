@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\AvatarStorageException;
+use App\Exceptions\ProfileUpdateException;
 use App\Helpers\AvatarHelper;
 use App\Repositories\UserRepository;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use PDOException;
-use RuntimeException;
 
 final class ProfileService
 {
@@ -22,7 +23,7 @@ final class ProfileService
         $directory = $rootPath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'avatars';
 
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new RuntimeException('The avatar storage directory could not be created.');
+            throw new AvatarStorageException('The avatar storage directory could not be created.');
         }
 
         return $directory;
@@ -40,7 +41,7 @@ final class ProfileService
         $absolutePath = $directory . DIRECTORY_SEPARATOR . $fileName;
 
         if (file_put_contents($absolutePath, $contents, LOCK_EX) === false) {
-            throw new RuntimeException('The profile picture could not be saved.');
+            throw new AvatarStorageException('The profile picture could not be saved.');
         }
 
         return 'storage/avatars/' . $fileName;
@@ -198,8 +199,8 @@ final class ProfileService
                 $this->deleteAvatar($newAvatarPath);
             }
 
-            throw new RuntimeException('Your profile could not be saved. Please try again.', 0, $exception);
-        } catch (InvalidArgumentException | RuntimeException $exception) {
+            throw new ProfileUpdateException('Your profile could not be saved. Please try again.', 0, $exception);
+        } catch (InvalidArgumentException | AvatarStorageException $exception) {
             if ($newAvatarPath !== '') {
                 $this->deleteAvatar($newAvatarPath);
             }

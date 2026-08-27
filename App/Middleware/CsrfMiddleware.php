@@ -32,23 +32,17 @@ final class CsrfMiddleware
 
     public function handle(Request $request): ?Response
     {
-        if ($request->method() !== 'POST') {
+        $token = $request->post('csrf_token') ?? $request->header('X-CSRF-TOKEN');
+
+        if ($request->method() !== 'POST' || self::isValid($token)) {
             return null;
         }
 
-        $token = $request->post('csrf_token') ?? $request->header('X-CSRF-TOKEN');
-
-        if (!self::isValid($token)) {
-            if ($request->isAjax()) {
-                return Response::json([
-                    'success' => false,
-                    'message' => 'Your session has expired. Please refresh the page and try again.',
-                ], 403);
-            }
-
-            return Response::text('Invalid security token.', 403);
-        }
-
-        return null;
+        return $request->isAjax()
+            ? Response::json([
+                'success' => false,
+                'message' => 'Your session has expired. Please refresh the page and try again.',
+            ], 403)
+            : Response::text('Invalid security token.', 403);
     }
 }
