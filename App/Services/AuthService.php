@@ -6,7 +6,6 @@ namespace App\Services;
 
 use App\Repositories\UserRepository;
 use InvalidArgumentException;
-use RuntimeException;
 
 final class AuthService
 {
@@ -52,7 +51,6 @@ final class AuthService
     public function login(string $username, string $password): bool
     {
         $user = $this->userRepository->findByUsername($username);
-
         if ($user === null) {
             return false;
         }
@@ -75,6 +73,44 @@ final class AuthService
         return true;
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function validateRegisterInput(
+        string $email,
+        string $username,
+        string $password,
+        string $passwordConfirmation
+    ): array {
+        $errors = [];
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Please enter a valid email address.';
+        }
+
+        if (!preg_match('/^\w{3,50}$/', $username)) {
+            $errors[] = 'Username must be 3-50 characters and contain only letters, numbers, or underscores.';
+        }
+
+        if (strlen($password) < 8) {
+            $errors[] = 'Password must contain at least 8 characters.';
+        }
+
+        if ($password !== $passwordConfirmation) {
+            $errors[] = 'Password confirmation does not match.';
+        }
+
+        if ($errors === [] && $this->userRepository->usernameExists($username)) {
+            $errors[] = 'This username is already in use.';
+        }
+
+        if ($errors === [] && $this->userRepository->emailExists($email)) {
+            $errors[] = 'This email address is already registered.';
+        }
+
+        return $errors;
+    }
+
     public function register(string $email, string $username, string $password): int
     {
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
@@ -89,7 +125,6 @@ final class AuthService
         }
 
         $storedPassword = $this->userRepository->findPasswordHashById($userId);
-
         if ($storedPassword === null || !$this->verifyPassword($currentPassword, $storedPassword)) {
             return false;
         }
