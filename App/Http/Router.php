@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http;
 
-use Closure;
-use InvalidArgumentException;
-use RuntimeException;
+use App\Exceptions\ClassNotFoundException;
+use App\Exceptions\InvalidMiddlewareException;
+use App\Exceptions\RouteHandlerException;
 
 final class Router
 {
@@ -99,12 +99,26 @@ final class Router
      */
     private function executeRoute(array $route, Request $request): Response
     {
-        // 1. Run middleware pipeline
-        foreach ($route['middlewares'] as $middleware) {
+        $middlewareResponse = $this->runMiddlewares($route['middlewares'], $request);
+        if ($middlewareResponse !== null) {
+            return $middlewareResponse;
+        }
+
+        $result = $this->invokeHandler($route['handler'], $request);
+
+        return $this->toResponse($result);
+    }
+
+    /**
+     * @param array<int, class-string|object> $middlewares
+     */
+    private function runMiddlewares(array $middlewares, Request $request): ?Response
+    {
+        foreach ($middlewares as $middleware) {
             $middlewareInstance = is_object($middleware) ? $middleware : $this->resolve($middleware);
 
             if (!method_exists($middlewareInstance, 'handle')) {
-                throw new RuntimeException("Middleware " . get_class($middlewareInstance) . " must have a handle() method.");
+                throw new InvalidMiddlewareException('Middleware ' . get_class($middlewareInstance) . ' must have a handle() method.');
             }
 
             $response = $middlewareInstance->handle($request);
@@ -113,37 +127,40 @@ final class Router
             }
         }
 
-        // 2. Execute route handler
-        $handler = $route['handler'];
+        return null;
+    }
 
+    /**
+     * @param callable|array{0: class-string|object, 1: string} $handler
+     */
+    private function invokeHandler(callable|array $handler, Request $request): mixed
+    {
         if (is_callable($handler) && !is_array($handler)) {
-            $result = $handler($request);
-        } elseif (is_array($handler) && count($handler) === 2) {
+            return $handler($request);
+        }
+
+        if (is_array($handler) && count($handler) === 2) {
             [$controllerTarget, $action] = $handler;
             $controllerInstance = is_object($controllerTarget) ? $controllerTarget : $this->resolve($controllerTarget);
 
             if (!method_exists($controllerInstance, $action)) {
-                throw new RuntimeException("Action {$action} not found on controller " . get_class($controllerInstance));
+                throw new RouteHandlerException("Action {$action} not found on controller " . get_class($controllerInstance));
             }
 
-            $result = $controllerInstance->$action($request);
-        } else {
-            throw new InvalidArgumentException('Invalid route handler provided.');
+            return $controllerInstance->$action($request);
         }
 
-        if ($result instanceof Response) {
-            return $result;
-        }
+        throw new RouteHandlerException('Invalid route handler provided.');
+    }
 
-        if (is_string($result)) {
-            return Response::text($result);
-        }
-
-        if (is_array($result)) {
-            return Response::json($result);
-        }
-
-        return new Response('', 204);
+    private function toResponse(mixed $result): Response
+    {
+        return match (true) {
+            $result instanceof Response => $result,
+            is_string($result) => Response::text($result),
+            is_array($result) => Response::json($result),
+            default => new Response('', 204),
+        };
     }
 
     /**
@@ -159,7 +176,7 @@ final class Router
         }
 
         if (!class_exists($class)) {
-            throw new RuntimeException("Target class {$class} does not exist.");
+            throw new ClassNotFoundException("Target class {$class} does not exist.");
         }
 
         return new $class();

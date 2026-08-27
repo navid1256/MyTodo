@@ -15,6 +15,8 @@ use Throwable;
 
 final class AuthController
 {
+    private const AUTH_VIEW = 'pages/auth';
+
     public function __construct(
         private readonly AuthService $authService,
         private readonly UserRepository $userRepository
@@ -31,14 +33,12 @@ final class AuthController
 
         $activeAuthForm = $request->queryString('action') === 'register' ? 'register' : 'login';
 
-        return Response::view('pages/auth', [
-            'activeAuthForm' => $activeAuthForm,
-            'authErrors' => [],
-            'authSuccess' => $authSuccess,
-            'oldInput' => ['email' => '', 'username' => ''],
-            'csrfToken' => CsrfMiddleware::getToken(),
-            'baseUrl' => '/',
-        ]);
+        return $this->renderAuthView(
+            form: $activeAuthForm,
+            errors: [],
+            success: $authSuccess,
+            oldInput: ['email' => '', 'username' => '']
+        );
     }
 
     public function login(Request $request): Response
@@ -62,14 +62,12 @@ final class AuthController
             return Response::redirect('/');
         }
 
-        return Response::view('pages/auth', [
-            'activeAuthForm' => 'login',
-            'authErrors' => $authErrors,
-            'authSuccess' => null,
-            'oldInput' => $oldInput,
-            'csrfToken' => CsrfMiddleware::getToken(),
-            'baseUrl' => '/',
-        ]);
+        return $this->renderAuthView(
+            form: 'login',
+            errors: $authErrors,
+            success: null,
+            oldInput: $oldInput
+        );
     }
 
     public function register(Request $request): Response
@@ -83,34 +81,16 @@ final class AuthController
         $password = (string) ($request->post('password') ?? '');
         $passwordConfirmation = (string) ($request->post('password_confirmation') ?? '');
         $oldInput = ['email' => $email, 'username' => $username];
-        $authErrors = [];
 
         if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
-            $authErrors[] = 'Your session has expired. Please submit the form again.';
+            $authErrors = ['Your session has expired. Please submit the form again.'];
         } else {
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $authErrors[] = 'Please enter a valid email address.';
-            }
-
-            if (!preg_match('/^[A-Za-z0-9_]{3,50}$/', $username)) {
-                $authErrors[] = 'Username must be 3-50 characters and contain only letters, numbers, or underscores.';
-            }
-
-            if (strlen($password) < 8) {
-                $authErrors[] = 'Password must contain at least 8 characters.';
-            }
-
-            if ($password !== $passwordConfirmation) {
-                $authErrors[] = 'Password confirmation does not match.';
-            }
-
-            if ($authErrors === [] && $this->userRepository->usernameExists($username)) {
-                $authErrors[] = 'This username is already in use.';
-            }
-
-            if ($authErrors === [] && $this->userRepository->emailExists($email)) {
-                $authErrors[] = 'This email address is already registered.';
-            }
+            $authErrors = $this->validateRegisterInput(
+                email: $email,
+                username: $username,
+                password: $password,
+                passwordConfirmation: $passwordConfirmation
+            );
         }
 
         if ($authErrors === []) {
@@ -124,14 +104,12 @@ final class AuthController
             }
         }
 
-        return Response::view('pages/auth', [
-            'activeAuthForm' => 'register',
-            'authErrors' => $authErrors,
-            'authSuccess' => null,
-            'oldInput' => $oldInput,
-            'csrfToken' => CsrfMiddleware::getToken(),
-            'baseUrl' => '/',
-        ]);
+        return $this->renderAuthView(
+            form: 'register',
+            errors: $authErrors,
+            success: null,
+            oldInput: $oldInput
+        );
     }
 
     public function changePassword(Request $request): Response
@@ -156,32 +134,14 @@ final class AuthController
         $newPassword = (string) ($request->post('new_password') ?? '');
         $newPasswordConfirmation = (string) ($request->post('new_password_confirmation') ?? '');
 
-        try {
-            if ($currentPassword === '') {
-                throw new InvalidArgumentException('Current password is required.');
-            }
+        $result = $this->processPasswordChange(
+            userId: $userId,
+            currentPassword: $currentPassword,
+            newPassword: $newPassword,
+            confirmation: $newPasswordConfirmation
+        );
 
-            $this->authService->validateNewPassword($newPassword, $newPasswordConfirmation);
-
-            if (!$this->authService->changePassword($userId, $currentPassword, $newPassword)) {
-                throw new InvalidArgumentException('Current password is incorrect.');
-            }
-
-            return Response::json([
-                'success' => true,
-                'message' => 'Your password has been changed successfully.',
-            ]);
-        } catch (InvalidArgumentException $exception) {
-            return Response::json([
-                'success' => false,
-                'message' => $exception->getMessage(),
-            ], 422);
-        } catch (Throwable) {
-            return Response::json([
-                'success' => false,
-                'message' => 'Your password could not be changed. Please try again.',
-            ], 500);
-        }
+        return Response::json($result['body'], $result['status']);
     }
 
     public function logout(Request $request): Response
@@ -197,5 +157,109 @@ final class AuthController
         $this->authService->logout();
 
         return Response::redirect('/auth');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function validateRegisterInput(
+        string $email,
+        string $username,
+        string $password,
+        string $passwordConfirmation
+    ): array {
+        $errors = [];
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Please enter a valid email address.';
+        }
+
+        if (!preg_match('/^\w{3,50}$/', $username)) {
+            $errors[] = 'Username must be 3-50 characters and contain only letters, numbers, or underscores.';
+        }
+
+        if (strlen($password) < 8) {
+            $errors[] = 'Password must contain at least 8 characters.';
+        }
+
+        if ($password !== $passwordConfirmation) {
+            $errors[] = 'Password confirmation does not match.';
+        }
+
+        if ($errors === [] && $this->userRepository->usernameExists($username)) {
+            $errors[] = 'This username is already in use.';
+        }
+
+        if ($errors === [] && $this->userRepository->emailExists($email)) {
+            $errors[] = 'This email address is already registered.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @return array{status: int, body: array{success: bool, message: string}}
+     */
+    private function processPasswordChange(
+        int $userId,
+        string $currentPassword,
+        string $newPassword,
+        string $confirmation
+    ): array {
+        try {
+            if ($currentPassword === '') {
+                throw new InvalidArgumentException('Current password is required.');
+            }
+
+            $this->authService->validateNewPassword($newPassword, $confirmation);
+
+            if (!$this->authService->changePassword($userId, $currentPassword, $newPassword)) {
+                throw new InvalidArgumentException('Current password is incorrect.');
+            }
+
+            return [
+                'status' => 200,
+                'body' => [
+                    'success' => true,
+                    'message' => 'Your password has been changed successfully.',
+                ],
+            ];
+        } catch (InvalidArgumentException $exception) {
+            return [
+                'status' => 422,
+                'body' => [
+                    'success' => false,
+                    'message' => $exception->getMessage(),
+                ],
+            ];
+        } catch (Throwable) {
+            return [
+                'status' => 500,
+                'body' => [
+                    'success' => false,
+                    'message' => 'Your password could not be changed. Please try again.',
+                ],
+            ];
+        }
+    }
+
+    /**
+     * @param array<int, string> $errors
+     * @param array<string, string> $oldInput
+     */
+    private function renderAuthView(
+        string $form,
+        array $errors,
+        ?string $success,
+        array $oldInput
+    ): Response {
+        return Response::view(self::AUTH_VIEW, [
+            'activeAuthForm' => $form,
+            'authErrors' => $errors,
+            'authSuccess' => $success,
+            'oldInput' => $oldInput,
+            'csrfToken' => CsrfMiddleware::getToken(),
+            'baseUrl' => '/',
+        ]);
     }
 }
