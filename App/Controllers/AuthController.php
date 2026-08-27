@@ -7,7 +7,6 @@ namespace App\Controllers;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
-use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use InvalidArgumentException;
 use PDOException;
@@ -17,10 +16,7 @@ final class AuthController
 {
     private const AUTH_VIEW = 'pages/auth';
 
-    public function __construct(
-        private readonly AuthService $authService,
-        private readonly UserRepository $userRepository
-    ) {}
+    public function __construct(private readonly AuthService $authService) {}
 
     public function showLogin(Request $request): Response
     {
@@ -85,7 +81,7 @@ final class AuthController
         if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
             $authErrors = ['Your session has expired. Please submit the form again.'];
         } else {
-            $authErrors = $this->validateRegisterInput(
+            $authErrors = $this->authService->validateRegisterInput(
                 email: $email,
                 username: $username,
                 password: $password,
@@ -115,19 +111,12 @@ final class AuthController
     public function changePassword(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
-
         if ($userId <= 0) {
-            return Response::json([
-                'success' => false,
-                'message' => 'Authentication required.',
-            ], 401);
+            return Response::json(['success' => false, 'message' => 'Authentication required.'], 401);
         }
 
         if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
-            return Response::json([
-                'success' => false,
-                'message' => 'Your session has expired. Please refresh the page and try again.',
-            ], 403);
+            return Response::json(['success' => false, 'message' => 'Your session has expired. Please refresh the page and try again.'], 403);
         }
 
         $currentPassword = (string) ($request->post('current_password') ?? '');
@@ -160,44 +149,6 @@ final class AuthController
     }
 
     /**
-     * @return array<int, string>
-     */
-    private function validateRegisterInput(
-        string $email,
-        string $username,
-        string $password,
-        string $passwordConfirmation
-    ): array {
-        $errors = [];
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Please enter a valid email address.';
-        }
-
-        if (!preg_match('/^\w{3,50}$/', $username)) {
-            $errors[] = 'Username must be 3-50 characters and contain only letters, numbers, or underscores.';
-        }
-
-        if (strlen($password) < 8) {
-            $errors[] = 'Password must contain at least 8 characters.';
-        }
-
-        if ($password !== $passwordConfirmation) {
-            $errors[] = 'Password confirmation does not match.';
-        }
-
-        if ($errors === [] && $this->userRepository->usernameExists($username)) {
-            $errors[] = 'This username is already in use.';
-        }
-
-        if ($errors === [] && $this->userRepository->emailExists($email)) {
-            $errors[] = 'This email address is already registered.';
-        }
-
-        return $errors;
-    }
-
-    /**
      * @return array{status: int, body: array{success: bool, message: string}}
      */
     private function processPasswordChange(
@@ -217,29 +168,11 @@ final class AuthController
                 throw new InvalidArgumentException('Current password is incorrect.');
             }
 
-            return [
-                'status' => 200,
-                'body' => [
-                    'success' => true,
-                    'message' => 'Your password has been changed successfully.',
-                ],
-            ];
+            return ['status' => 200, 'body' => ['success' => true, 'message' => 'Your password has been changed successfully.']];
         } catch (InvalidArgumentException $exception) {
-            return [
-                'status' => 422,
-                'body' => [
-                    'success' => false,
-                    'message' => $exception->getMessage(),
-                ],
-            ];
+            return ['status' => 422, 'body' => ['success' => false, 'message' => $exception->getMessage()]];
         } catch (Throwable) {
-            return [
-                'status' => 500,
-                'body' => [
-                    'success' => false,
-                    'message' => 'Your password could not be changed. Please try again.',
-                ],
-            ];
+            return ['status' => 500, 'body' => ['success' => false, 'message' => 'Your password could not be changed. Please try again.']];
         }
     }
 
