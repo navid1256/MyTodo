@@ -1374,12 +1374,14 @@ span.created-at {
     margin-left: 92px;
     background-color: #16b8d4;
     box-shadow: 0 8px 18px rgba(22, 184, 212, 0.25);
+    text-decoration: none;
 }
 
 .changePasswordButton:hover,
 .changePasswordButton:focus-visible {
     background-color: #0fa5bf;
     outline: none;
+    text-decoration: none;
 }
 
 .profileActions {

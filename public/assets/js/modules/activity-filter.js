@@ -88,7 +88,7 @@ export function initActivityFilter(signal) {
     }
 
     const initialFilter = new URL(window.location.href).searchParams.get('filter');
-    applyFilter(initialFilter || filterSelect.value);
+    applyFilter(initialFilter || filterSelect.value || 'all');
 
     filterSelect.addEventListener('change', function () {
         const activeFilter = normalizeFilter(filterSelect.value);

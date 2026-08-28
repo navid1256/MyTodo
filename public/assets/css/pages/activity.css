@@ -31,7 +31,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 0px 0 10px;
+    padding: 0 0 10px;
     border-bottom: 1px solid #cbd5da;
 }
 
@@ -97,6 +97,10 @@ html.dark-mode .activityFilterControl {
     font-size: 13px;
 }
 
+html.dark-mode .activityDateGroup h2 {
+    color: #8fa0aa;
+}
+
 .activityDateGroup ul {
     margin: 0;
     padding: 0;
@@ -116,13 +120,20 @@ html.dark-mode .activityFilterControl {
     border-bottom: 1px solid #d6dde1;
 }
 
-.activityTaskItem>i {
+.activityTaskItem > i {
     width: auto;
     height: auto;
     margin: 0 auto;
-    color: #74858d;
-    font-size: 16px;
+    color: #54b9cd;
+    font-size: 18px;
     text-align: center;
+}
+
+.activityTaskMain {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .activityTaskTitle {
@@ -132,10 +143,36 @@ html.dark-mode .activityFilterControl {
     overflow-wrap: anywhere;
 }
 
+.activityTaskDue {
+    color: #87949b;
+    font-size: 12px;
+}
+
 .activityTaskItem time {
     color: #87949b;
     font-size: 12px;
     white-space: nowrap;
+    text-align: right;
+}
+
+html.dark-mode .activityTaskItem {
+    border-color: #31424d;
+}
+
+html.dark-mode .activityTaskItem > i {
+    color: #54b9cd;
+}
+
+html.dark-mode .activityTaskTitle {
+    color: #d8e5eb;
+}
+
+html.dark-mode .activityTaskDue {
+    color: #7b8e99;
+}
+
+html.dark-mode .activityTaskItem time {
+    color: #8fa0aa;
 }
 
 .activityEmpty {
@@ -144,6 +181,11 @@ html.dark-mode .activityFilterControl {
     border-bottom: 1px solid #d6dde1;
     color: #929b9f;
     font-style: italic;
+}
+
+html.dark-mode .activityEmpty {
+    border-color: #31424d;
+    color: #6b808c;
 }
 
 @media (max-width: 620px) {
@@ -164,5 +206,6 @@ html.dark-mode .activityFilterControl {
     .activityTaskItem time {
         grid-column: 2;
         white-space: normal;
+        text-align: left;
     }
 }

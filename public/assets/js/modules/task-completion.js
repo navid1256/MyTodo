@@ -78,10 +78,15 @@ export function initTaskCompletion(signal) {
 
         toggleTaskCompletion(taskId, csrfToken)
             .then(function (responseData) {
-                updateTaskItem(toggleButton, responseData.task);
+                const task = responseData.task || {
+                    id: taskId,
+                    is_done: Boolean(responseData.is_done)
+                };
+
+                updateTaskItem(toggleButton, task);
                 updateCompletedCount(responseData.completed_today_count);
-                if (responseData.task.is_done) {
-                    removeCompletedTaskFromManageTasks(taskItem, responseData.task.id);
+                if (task.is_done) {
+                    removeCompletedTaskFromManageTasks(taskItem, task.id);
                 }
                 delete toggleButton.dataset.processing;
                 toggleButton.removeAttribute('aria-disabled');

@@ -22,9 +22,14 @@ foreach ($completedTasks as $task) {
     $dateKey = $completedAt->format('Y-m-d');
 
     if (!isset($completedTaskGroups[$dateKey])) {
-        $dateLabel = $dateKey === $todayKey
-            ? 'Today'
-            : ($dateKey === $yesterdayKey ? 'Yesterday' : $completedAt->format('F j, Y'));
+        if ($dateKey === $todayKey) {
+            $dateLabel = 'Today';
+        } elseif ($dateKey === $yesterdayKey) {
+            $dateLabel = 'Yesterday';
+        } else {
+            $dateLabel = $completedAt->format('F j, Y');
+        }
+
         $completedTaskGroups[$dateKey] = [
             'label' => $dateLabel,
             'tasks' => [],
@@ -36,6 +41,11 @@ foreach ($completedTasks as $task) {
         'completed_at' => $completedAt,
     ];
 }
+
+$selectedFilter = isset($_GET['filter']) && is_string($_GET['filter']) ? $_GET['filter'] : 'all';
+if (!in_array($selectedFilter, ['today', 'yesterday', 'week', 'month', 'all'], true)) {
+    $selectedFilter = 'all';
+}
 ?>
 <div class="content activityContent">
     <section class="activityPage" aria-labelledby="activityPageTitle">
@@ -44,41 +54,38 @@ foreach ($completedTasks as $task) {
             <label class="srOnly" for="activityFilter">Filter completed tasks</label>
             <div class="activityFilterControl">
                 <select class="activityFilter" id="activityFilter" aria-label="Filter completed tasks">
-                    <option value="today">Today</option>
-                    <option value="yesterday">Yesterday</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                    <option value="all" selected>All Completed</option>
+                    <option value="today" <?= $selectedFilter === 'today' ? 'selected' : '' ?>>Today</option>
+                    <option value="yesterday" <?= $selectedFilter === 'yesterday' ? 'selected' : '' ?>>Yesterday</option>
+                    <option value="week" <?= $selectedFilter === 'week' ? 'selected' : '' ?>>This Week</option>
+                    <option value="month" <?= $selectedFilter === 'month' ? 'selected' : '' ?>>This Month</option>
+                    <option value="all" <?= $selectedFilter === 'all' ? 'selected' : '' ?>>All Completed</option>
                 </select>
                 <i class="activityFilterArrow fa-solid fa-chevron-down" aria-hidden="true"></i>
             </div>
         </div>
 
-        <?php if (empty($completedTaskGroups)): ?>
-            <p class="activityEmpty">No completed tasks found.</p>
-        <?php else: ?>
+        <p class="activityEmpty" id="activityFilterEmpty" <?= !empty($completedTaskGroups) ? 'hidden' : '' ?>>No completed tasks found.</p>
+
+        <?php if (!empty($completedTaskGroups)): ?>
             <?php foreach ($completedTaskGroups as $dateKey => $group): ?>
-                <section class="activityDateGroup" data-completed-date="<?= htmlspecialchars($dateKey, ENT_QUOTES, 'UTF-8') ?>">
+                <?php
+                $isToday = ($dateKey === $todayKey);
+                $isGroupVisible = ($selectedFilter === 'all') || ($selectedFilter === 'today' && $isToday);
+                ?>
+                <section class="activityDateGroup" data-completed-date="<?= htmlspecialchars($dateKey, ENT_QUOTES, 'UTF-8') ?>" <?= $isGroupVisible ? '' : 'hidden' ?>>
                     <h2><?= htmlspecialchars($group['label'], ENT_QUOTES, 'UTF-8') ?></h2>
                     <ul>
                         <?php foreach ($group['tasks'] as $item): ?>
                             <?php
                             $task = $item['task'];
-                            $taskId = (int) ($task->id ?? 0);
                             $title = (string) ($task->title ?? '');
-                            $dueAt = (string) ($task->due_at ?? '');
-                            $hasTime = !empty($task->has_time);
                             $completedAtText = $item['completed_at']->format('h:i A');
-                            $dueInfo = $dueAt !== ''
-                                ? 'Due ' . date('M j, Y', strtotime($dueAt)) . ($hasTime ? ' at ' . date('h:i A', strtotime($dueAt)) : ' · No time')
-                                : 'No due date';
+                            $isoCompletedAt = $item['completed_at']->format('c');
                             ?>
                             <li class="activityTaskItem">
-                                <div class="activityTaskMain">
-                                    <span class="activityTaskTitle"><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></span>
-                                    <span class="activityTaskDue"><?= htmlspecialchars($dueInfo, ENT_QUOTES, 'UTF-8') ?></span>
-                                </div>
-                                <span class="activityTaskCompletedAt">Completed at <?= htmlspecialchars($completedAtText, ENT_QUOTES, 'UTF-8') ?></span>
+                                <i class="fa-regular fa-square-check" aria-hidden="true"></i>
+                                <span class="activityTaskTitle"><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></span>
+                                <time datetime="<?= htmlspecialchars($isoCompletedAt, ENT_QUOTES, 'UTF-8') ?>">Completed at <?= htmlspecialchars($completedAtText, ENT_QUOTES, 'UTF-8') ?></time>
                             </li>
                         <?php endforeach; ?>
                     </ul>

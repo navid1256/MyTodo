@@ -5,13 +5,25 @@ export function getDashboardNavigationView(targetUrl, baseUrl) {
     const base = new URL(baseUrl);
     const target = new URL(targetUrl, base);
 
-    if (target.origin !== base.origin || target.pathname !== base.pathname) {
+    if (target.origin !== base.origin) {
       return null;
     }
 
-    const view = target.searchParams.get('view') || 'manage-tasks';
+    const path = target.pathname.replace(/\/+$/, '') || '/';
+    const pathToView = {
+      '/': 'home',
+      '/home': 'home',
+      '/activity': 'activity',
+      '/manage-tasks': 'manage-tasks',
+      '/messages': 'messages'
+    };
 
-    return DASHBOARD_AJAX_VIEWS.includes(view) ? view : null;
+    if (pathToView[path]) {
+      return pathToView[path];
+    }
+
+    const view = target.searchParams.get('view');
+    return (view && DASHBOARD_AJAX_VIEWS.includes(view)) ? view : null;
   } catch (error) {
     return null;
   }
@@ -21,7 +33,7 @@ export function initNavigation(options) {
   const navigationItems = document.querySelectorAll('.navigation-list li');
   const onViewLoaded = options && typeof options.onViewLoaded === 'function'
     ? options.onViewLoaded
-    : function () {};
+    : function () { };
   let activeRequestController = null;
 
   function activateNavigationItem(activeItem) {

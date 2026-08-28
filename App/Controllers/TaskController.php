@@ -102,8 +102,21 @@ final class TaskController
         } else {
             try {
                 $updatedTask = $this->taskService->toggleTask($taskId, $this->authService->getCurrentUserId());
+                $clientToday = new DateTimeImmutable('today', TimezoneHelper::getClientTimezone());
+                $completedCount = $this->taskService->countCompletedTasksForDate(
+                    $this->authService->getCurrentUserId(),
+                    $clientToday
+                );
 
-                $response = Response::json(['success' => true, 'is_done' => (bool) $updatedTask->is_done]);
+                $response = Response::json([
+                    'success' => true,
+                    'is_done' => (bool) $updatedTask->is_done,
+                    'task' => [
+                        'id' => (int) $updatedTask->id,
+                        'is_done' => (bool) $updatedTask->is_done,
+                    ],
+                    'completed_today_count' => $completedCount,
+                ]);
             } catch (TaskNotFoundException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
             } catch (Throwable $exception) {
