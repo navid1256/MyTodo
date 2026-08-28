@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Application;
 use App\Database\Database;
 use App\Http\Request;
-use App\Http\Response;
 use App\Http\SessionManager;
 
 $rootPath = dirname(__DIR__);
@@ -19,4 +19,8 @@ date_default_timezone_set($appConfig['timezone']);
 SessionManager::start();
 $pdo = Database::connect($databaseConfig);
 
+$app = new Application($pdo, $rootPath);
 $request = Request::createFromGlobals();
+$response = $app->handle($request);
+
+$response->send();
