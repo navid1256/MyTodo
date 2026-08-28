@@ -1,59 +1,73 @@
 <?php
+
+declare(strict_types=1);
+
+if (!function_exists('formatTaskTimeInfo')) {
+    function formatTaskTimeInfo(object $task, bool $showDueDate, bool $showDueTime): string
+    {
+        $dueAt = (string) ($task->due_at ?? '');
+        $hasTime = !empty($task->has_time);
+        $createdAt = (string) ($task->created_at ?? '');
+
+        $content = match (true) {
+            $showDueDate && $dueAt !== '' => 'Due ' . date('M j, Y', strtotime($dueAt)) . ' ' . ($hasTime ? 'at ' . date('h:i A', strtotime($dueAt)) : '· No time'),
+            $showDueDate => 'No due date',
+            $showDueTime && $dueAt !== '' => $hasTime ? 'Due at ' . date('h:i A', strtotime($dueAt)) : 'No time set',
+            default => 'Created At ' . htmlspecialchars($createdAt, ENT_QUOTES, 'UTF-8'),
+        };
+
+        return '<span class="created-at">' . $content . '</span>';
+    }
+}
+
+if (!function_exists('renderSingleTaskItem')) {
+    function renderSingleTaskItem(object $task, string $viewName, bool $showDueDate, bool $showDueTime): void
+    {
+        $taskId = (int) ($task->id ?? 0);
+        $title = (string) ($task->title ?? '');
+        $isDone = !empty($task->is_done);
+        $dueAt = (string) ($task->due_at ?? '');
+        $taskDate = $dueAt !== '' ? substr($dueAt, 0, 10) : '';
+
+        $itemClass = $isDone ? 'taskItem checked' : 'taskItem';
+        $iconClass = $isDone ? 'fa-regular fa-square-check' : 'fa-regular fa-square';
+        $ariaPressed = $isDone ? 'true' : 'false';
+        $ariaLabel = $isDone ? 'Mark task as incomplete' : 'Mark task as completed';
+        $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+        $timeInfo = formatTaskTimeInfo($task, $showDueDate, $showDueTime);
+        $deleteUrl = '?view=' . urlencode($viewName) . '&amp;delete_task=' . $taskId;
+
+        echo "<li class=\"{$itemClass}\" data-task-id=\"{$taskId}\" data-task-date=\"{$taskDate}\">\n"
+            . "    <button class=\"taskToggleButton\" type=\"button\" data-task-toggle data-task-id=\"{$taskId}\" aria-pressed=\"{$ariaPressed}\" aria-label=\"{$ariaLabel}\">\n"
+            . "        <i class=\"{$iconClass}\" aria-hidden=\"true\"></i>\n"
+            . "    </button>\n"
+            . "    <span>{$escapedTitle}</span>\n"
+            . "    <div class=\"info\">\n"
+            . "        {$timeInfo}\n"
+            . "        <a class=\"deleteTaskLink\" href=\"{$deleteUrl}\" aria-label=\"Delete task {$escapedTitle}\" onclick=\"return confirm('Are You Sure To Delete This Task ?\\n{$escapedTitle}')\">\n"
+            . "            <i class=\"fa-regular fa-trash-can\" aria-hidden=\"true\"></i>\n"
+            . "        </a>\n"
+            . "    </div>\n"
+            . "</li>\n";
+    }
+}
+
 $renderTaskItems = static function (
-    $taskItems,
-    $viewName,
-    $emptyMessage,
-    $showDueTime = false,
-    $showDueDate = false
-) {
-    if (!sizeof($taskItems)) {
+    array $taskItems,
+    string $viewName,
+    string $emptyMessage,
+    bool $showDueTime = false,
+    bool $showDueDate = false
+): void {
+    if (empty($taskItems)) {
         $emptyClass = $showDueDate ? 'emptyTask allTasksEmpty' : 'emptyTask';
         $emptyId = $showDueDate ? ' id="allTasksEmpty"' : '';
-        echo '<li class="' . $emptyClass . '"' . $emptyId . '>'
-            . htmlspecialchars($emptyMessage, ENT_QUOTES, 'UTF-8') . '</li>';
+        $escapedMsg = htmlspecialchars($emptyMessage, ENT_QUOTES, 'UTF-8');
+        echo "<li class=\"{$emptyClass}\"{$emptyId}>{$escapedMsg}</li>\n";
         return;
     }
 
-    foreach ($taskItems as $task): ?>
-        <?php $taskDate = !empty($task->due_at) ? substr((string) $task->due_at, 0, 10) : ''; ?>
-        <li
-            class="taskItem<?= $task->is_done ? ' checked' : ''; ?>"
-            data-task-id="<?= (int) $task->id ?>"
-            data-task-date="<?= htmlspecialchars($taskDate, ENT_QUOTES, 'UTF-8') ?>">
-            <button
-                class="taskToggleButton"
-                type="button"
-                data-task-toggle
-                data-task-id="<?= (int) $task->id ?>"
-                aria-pressed="<?= $task->is_done ? 'true' : 'false' ?>"
-                aria-label="<?= $task->is_done ? 'Mark task as incomplete' : 'Mark task as completed' ?>">
-                <i class="<?= $task->is_done ? 'fa-regular fa-square-check' : 'fa-regular fa-square'; ?>" aria-hidden="true"></i>
-            </button>
-            <span><?= htmlspecialchars($task->title, ENT_QUOTES, 'UTF-8') ?></span>
-            <div class="info">
-                <?php if ($showDueDate): ?>
-                    <?php if (!empty($task->due_at)): ?>
-                        <span class="created-at">
-                            Due <?= date('M j, Y', strtotime($task->due_at)) ?>
-                            <?= !empty($task->has_time) ? 'at ' . date('h:i A', strtotime($task->due_at)) : '· No time' ?>
-                        </span>
-                    <?php else: ?>
-                        <span class="created-at">No due date</span>
-                    <?php endif; ?>
-                <?php elseif ($showDueTime && !empty($task->due_at)): ?>
-                    <?php if (!empty($task->has_time)): ?>
-                        <span class="created-at">Due at <?= date('h:i A', strtotime($task->due_at)) ?></span>
-                    <?php else: ?>
-                        <span class="created-at">No time set</span>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <span class="created-at">Created At <?= htmlspecialchars($task->created_at, ENT_QUOTES, 'UTF-8') ?></span>
-                <?php endif; ?>
-                <a href="?view=<?= urlencode($viewName) ?>&amp;delete_task=<?= $task->id ?>">
-                    <i class="fa-regular fa-trash-can" onclick="return confirm('Are You Sure To Delete This Task ?\n<?= htmlspecialchars($task->title, ENT_QUOTES, 'UTF-8') ?>')"></i>
-                </a>
-            </div>
-        </li>
-<?php endforeach;
+    foreach ($taskItems as $task) {
+        renderSingleTaskItem($task, $viewName, $showDueDate, $showDueTime);
+    }
 };
-?>
