@@ -1,10 +1,12 @@
 <?php
 
-/** @var array $todayTasks */
-/** @var array $tomorrowTasks */
-/** @var array $noDateTasks */
-/** @var \Closure $renderTaskItems */
+declare(strict_types=1);
 
+/** @var array<int, object> $todayTasks */
+/** @var array<int, object> $tomorrowTasks */
+/** @var array<int, object> $noDateTasks */
+
+require_once dirname(__DIR__) . '/components/task-items.php';
 ?>
 
 <div class="list">

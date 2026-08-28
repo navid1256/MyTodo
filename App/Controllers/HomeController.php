@@ -1,0 +1,75 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Helpers\TimezoneHelper;
+use App\Http\Response;
+use App\Middleware\CsrfMiddleware;
+use App\Repositories\UserRepository;
+use App\Services\AuthService;
+use App\Services\NotificationService;
+use App\Services\TaskService;
+use DateTimeImmutable;
+
+final class HomeController
+{
+    public function __construct(
+        private readonly TaskService $taskService,
+        private readonly NotificationService $notificationService,
+        private readonly AuthService $authService,
+        private readonly UserRepository $userRepository
+    ) {}
+
+    public function index(): Response
+    {
+        $userId = $this->authService->getCurrentUserId();
+        $clientTimezone = TimezoneHelper::getClientTimezone();
+        $today = new DateTimeImmutable('today', $clientTimezone);
+        $tomorrow = $today->modify('+1 day');
+
+        $userProfile = $this->userRepository->getProfile($userId);
+        $currentUser = $this->authService->getCurrentUser();
+        $displayName = $this->resolveDisplayName($userProfile, $currentUser);
+        $avatarUrl = $this->resolveAvatarUrl($userProfile);
+
+        return Response::view('pages/home', [
+            'todayTasks' => $this->taskService->getTasksForDate($userId, $today, $today),
+            'tomorrowTasks' => $this->taskService->getTasksForDate($userId, $tomorrow, $today),
+            'noDateTasks' => $this->taskService->getTasksWithoutDueDate($userId, $today),
+            'completedTasksToday' => $this->taskService->countCompletedTasksForDate($userId, $today),
+            'sentNotificationCount' => $this->notificationService->countSentNotifications($userId),
+            'currentDisplayName' => $displayName,
+            'avatarUrl' => $avatarUrl,
+            'csrfToken' => CsrfMiddleware::getToken(),
+            'renderDate' => $today->format('Y-m-d'),
+            'renderTimezone' => $clientTimezone->getName(),
+        ]);
+    }
+
+    private function resolveDisplayName(?object $profile, ?array $user): string
+    {
+        $firstName = trim((string) ($profile->firstname ?? ''));
+        $lastName = trim((string) ($profile->lastname ?? ''));
+
+        if ($firstName !== '' && $lastName !== '') {
+            return $firstName . ' ' . $lastName;
+        }
+
+        return trim((string) ($user['username'] ?? 'User'));
+    }
+
+    private function resolveAvatarUrl(?object $profile): string
+    {
+        $savedUrl = trim((string) ($profile->avatar_url ?? ''));
+
+        if ($savedUrl === '') {
+            return '/assets/img/user-default-avatar.webp';
+        }
+
+        return preg_match('#^(?:https?://|data:)#i', $savedUrl)
+            ? $savedUrl
+            : '/' . ltrim($savedUrl, '/');
+    }
+}

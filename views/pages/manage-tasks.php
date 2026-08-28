@@ -1,8 +1,10 @@
 <?php
 
-/** @var array $tasks */
-/** @var \Closure $renderTaskItems */
+declare(strict_types=1);
 
+/** @var array<int, object> $tasks */
+
+require_once dirname(__DIR__) . '/components/task-items.php';
 ?>
 
 <div class="manageTasksLayout">
@@ -15,7 +17,7 @@
         </div>
         <ul id="manageTaskItems">
             <?php $renderTaskItems($tasks, 'manage-tasks', 'No tasks found.', false, true); ?>
-            <?php if ($tasks): ?>
+            <?php if (!empty($tasks)): ?>
                 <li class="emptyTask allTasksEmpty" id="allTasksEmpty" hidden>No tasks found.</li>
             <?php endif; ?>
             <li class="emptyTask filteredTasksEmpty" id="filteredTasksEmpty" hidden>
@@ -29,7 +31,7 @@
             <button class="taskCalendarNav" id="previousTaskCalendarMonth" type="button" aria-label="Previous month">
                 <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
             </button>
-            <h2 id="taskCalendarMonth"></h2>
+            <h2 id="taskCalendarMonth">Calendar</h2>
             <button class="taskCalendarNav" id="nextTaskCalendarMonth" type="button" aria-label="Next month">
                 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
             </button>
