@@ -1,0 +1,735 @@
+/* Font Awesome subset used by the dashboard */
+@import url(fontawesome-subset.css);
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    padding: 0px;
+    margin: 0px;
+    background: linear-gradient(30deg, #0891B2, #B5EEF0, #5EEAD4) fixed;
+    background-attachment: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+input {
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.btn {
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.fa-trash,
+.fa-trash-can {
+    color: #bd1f1f !important;
+    float: right;
+    font-weight: 200;
+    font-size: 14px;
+}
+
+.fa-trash:hover,
+.fa-trash-can:hover {
+    font-weight: 700;
+}
+
+.clickable:hover {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+span.created-at {
+    font-size: 14px;
+    margin-right: 12px;
+}
+
+.page {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    top: 8%;
+    background-color: rgba(255, 255, 255, 0.7);
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    -moz-box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pageHeader {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    height: 50px;
+    line-height: 50px;
+    background-color: #54b9cd;
+    color: White;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 5px 20px;
+    vertical-align: middle;
+}
+
+.pageHeader .title {
+    width: 40%;
+    float: left;
+    line-height: 40px;
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+.pageHeader .userArea {
+    float: right;
+    display: flex;
+    height: 40px;
+    align-items: center;
+    gap: 14px;
+}
+
+.pageHeader button {
+    font-family: inherit;
+}
+
+.notificationButton {
+    position: relative;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 22px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.notificationButton:hover {
+    color: #edfafe;
+}
+
+.notificationBadge {
+    position: absolute;
+    top: -3px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border: 2px solid #54b9cd;
+    border-radius: 10px;
+    background-color: #e50914;
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+}
+
+.profileMenu {
+    position: relative;
+    height: 40px;
+}
+
+.pageHeader .userPanel {
+    display: flex;
+    height: 40px;
+    padding: 0;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+.pageHeader .userPanel .username {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.pageHeader .userPanel img {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.profileChevron {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.userPanel[aria-expanded="true"] .profileChevron {
+    transform: rotate(180deg);
+}
+
+.profileDropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: -15px;
+    width: 220px;
+    padding: 8px 0 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid #dfe4e7;
+    border-radius: 14px;
+    background-color: white;
+    box-shadow: 0 12px 30px rgba(35, 52, 63, 0.2);
+    color: #263342;
+    line-height: 1.2;
+}
+
+.profileDropdown[hidden] {
+    display: none;
+}
+
+.profileDropdown button,
+.profileDropdown .profileDropdownLink {
+    display: flex;
+    width: calc(100% - 12px);
+    min-height: 50px;
+    margin: 0 6px;
+    padding: 0 20px;
+    box-sizing: border-box;
+    align-items: center;
+    gap: 16px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #263342;
+    font-size: 16px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.profileDropdown button:hover,
+.profileDropdown button:focus-visible,
+.profileDropdown .profileDropdownLink:hover,
+.profileDropdown .profileDropdownLink:focus-visible {
+    background-color: #f5f7f8;
+    outline: none;
+    border-radius: 9px;
+}
+
+.profileDropdown button i,
+.profileDropdown .profileDropdownLink i {
+    width: 24px;
+    color: #687177;
+    font-size: 22px;
+    text-align: center;
+}
+
+.profileDropdown .signOutButton {
+    width: 100%;
+    min-height: 60px;
+    margin: 8px 0 0;
+    padding-left: 26px;
+    border-top: 1px solid #e7ebed;
+    border-radius: 0;
+    color: #d90818;
+}
+
+.profileDropdown .signOutButton i {
+    color: #d90818;
+}
+
+.main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    clear: both;
+    background-color: white;
+}
+
+.main .nav {
+    width: 200px;
+    height: 100%;
+    float: left;
+    box-sizing: border-box;
+    background-color: #e9eef0;
+}
+
+.main .nav .menu {
+    width: auto;
+    margin: 15px 15px;
+    color: #4f5659;
+}
+
+.main .nav .menu .title {
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.main .nav .menu ul {
+    margin: 12px 0 0;
+    padding: 0;
+}
+
+.success {
+    background: #def9df !important;
+    border: 1px solid #a4cca6 !important;
+    color: #205217 !important;
+}
+
+.main .nav .menu ul li a,
+.main .nav .menu ul li button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    border: 0;
+    background: transparent;
+    text-decoration: none;
+    color: #4f5659;
+    font: inherit;
+    font-weight: 600;
+    margin: 5px 0;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.main .nav .menu ul li.active a,
+.main .nav .menu ul li.active button {
+    color: #69bd34;
+}
+
+.main .nav .menu ul li {
+    list-style: none;
+    margin: 2px 0;
+    border-radius: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.main .nav .menu ul li.active {
+    color: #69bd34;
+}
+
+.main .nav .menu ul li:hover {
+    background-color: rgba(255, 255, 255, 0.65);
+    border-radius: 10px;
+}
+
+.main .nav .menu ul li i {
+    width: 20px;
+    margin: 0;
+    font-size: 18px;
+    text-align: center;
+}
+
+.main .view {
+    position: relative;
+    margin-left: 200px;
+    scrollbar-width: thin;
+    scrollbar-color: #168df0 #e7eff3;
+}
+
+.main .view::-webkit-scrollbar {
+    width: 10px;
+}
+
+.main .view::-webkit-scrollbar-track {
+    margin: 18px 0;
+    border-radius: 999px;
+    background-color: #e7eff3;
+}
+
+.main .view::-webkit-scrollbar-thumb {
+    border: 2px solid #e7eff3;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #49aef1, #168df0);
+}
+
+.main .view::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #69bd34, #54a82c);
+}
+
+.main .view::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.dashboardSectionHeader {
+    position: relative;
+    padding-inline: 112px;
+    box-sizing: border-box;
+}
+
+.dashboardBackButton {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    display: inline-flex;
+    width: auto;
+    min-width: 85px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 15px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background-color: transparent;
+    color: #4f5659;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    margin-block: auto;
+    text-decoration: none;
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.dashboardBackButton:hover,
+.dashboardBackButton:focus-visible {
+    border-color: #54b9cd;
+    background-color: rgba(84, 185, 205, 0.14);
+    color: #54b9cd;
+}
+
+html.dark-mode .dashboardBackButton {
+    border-color: #f7fafc;
+    color: #f7fafc;
+}
+
+html.dark-mode .dashboardBackButton:hover,
+html.dark-mode .dashboardBackButton:focus-visible {
+    border-color: #54b9cd;
+    background-color: rgba(84, 185, 205, 0.14);
+    color: #54b9cd;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboardBackButton {
+        transition: none;
+    }
+}
+
+.main .view .viewHeader {
+    width: 100%;
+    height: 70px;
+    line-height: 70px;
+    padding: 20px 20px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.main .view .viewHeader .title {
+    float: left;
+    font-size: 1.4em;
+    font-weight: 400;
+    padding: 0px;
+    color: #AAA;
+    margin-top: -18px;
+}
+
+.main .view .viewHeader .functions {
+    float: right;
+}
+
+.main .view .viewHeader .functions .button {
+    float: right;
+    height: 30px;
+    line-height: 30px;
+    border: 0;
+    background-color: #5ae556;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    margin: 0px 5px;
+    padding: 0px 20px;
+    cursor: pointer;
+    color: White;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 700;
+}
+
+.main .view .viewHeader .functions .button.active {
+    background-color: #54b9cd;
+}
+
+.main .view .viewHeader .functions .completedButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0px 18px;
+    margin-right: 22px;
+    text-decoration: none;
+}
+
+.main .view .viewHeader .functions .button.active,
+.main .view .viewHeader .functions .completedButton {
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        filter 0.25s ease;
+}
+
+.main .view .viewHeader .functions .button.active:hover,
+.main .view .viewHeader .functions .button.active:focus-visible {
+    box-shadow:
+        0 0 8px rgba(84, 185, 205, 0.8),
+        0 0 18px rgba(84, 185, 205, 0.55);
+    filter: brightness(1.08);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.main .view .viewHeader .functions .completedButton:hover,
+.main .view .viewHeader .functions .completedButton:focus-visible {
+    box-shadow:
+        0 0 8px rgba(90, 229, 86, 0.8),
+        0 0 18px rgba(90, 229, 86, 0.55);
+    filter: brightness(1.06);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.main .view .viewHeader .functions .completedCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    line-height: 1;
+    color: #4cad48;
+    background-color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.main .view .viewHeader .functions .button.inverz {
+    background-color: inherit;
+    border: 1px solid #AAA;
+    width: auto;
+    min-width: 15px;
+    color: #AAA;
+    font-size: 1.3em;
+    padding: 0px 10px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main .view .content {
+    position: absolute;
+    left: 0px;
+    top: 70px;
+    right: 0px;
+    bottom: 0px;
+    padding: 10px;
+}
+
+.main .view .content .list .title {
+    width: 100%;
+    padding: 10px;
+    gap: 5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #54b9cd;
+}
+
+.main .view .content .scheduledTaskList {
+    margin-top: 18px;
+}
+
+.main .view .content .list ul {
+    width: 100%;
+    padding-left: 10px;
+    color: #777;
+}
+
+.main .view .content .list ul li {
+    width: 100%;
+    height: 50px;
+    line-height: 50px;
+    list-style: none;
+    border-top: 1px solid #AAA;
+}
+
+.main .view .content .list ul li.checked {
+    background-color: #F0F4F5;
+}
+
+.main .view .content .list ul li.emptyTask {
+    color: #929b9f;
+    font-style: italic;
+}
+
+.main .view .content .list ul li:last-child {
+    border-bottom: 1px solid #AAA;
+}
+
+.main .view .content .list ul li i {
+    float: left;
+    width: 30px;
+    height: 50px;
+    line-height: 50px;
+    margin-left: 10px;
+    font-size: 1.4em;
+}
+
+.main .view .content .list ul li .taskToggleButton {
+    float: left;
+    width: 30px;
+    height: 50px;
+    margin: 0px 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.main .view .content .list ul li .taskToggleButton i {
+    float: none;
+    width: auto;
+    height: auto;
+    margin: 0;
+    line-height: 1;
+    color: #74858d;
+    font-size: 18px;
+    transition: color 0.2s ease;
+}
+
+.main .view .content .list ul li .taskToggleButton:hover,
+.main .view .content .list ul li .taskToggleButton:focus-visible {
+    color: #69bd34;
+    outline: none;
+}
+
+.main .view .content .list ul li .taskToggleButton:hover i,
+.main .view .content .list ul li .taskToggleButton:focus-visible i {
+    color: #69bd34;
+}
+
+.main .view .content .list ul li .taskToggleButton[data-processing="true"] {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.main .view .content .list ul li span {
+    float: left;
+    font-weight: 600;
+}
+
+.main .view .content .list ul li.taskItem>span {
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.main .view .content .list ul li.taskItem>span::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 999px;
+    background-color: currentColor;
+    pointer-events: none;
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.4s ease;
+}
+
+.main .view .content .list ul li.taskItem.checked>span {
+    color: #7c898f;
+}
+
+.main .view .content .list ul li.taskItem.checked>span::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .main .view .content .list ul li.taskItem>span,
+    .main .view .content .list ul li.taskItem>span::after {
+        transition: none;
+    }
+}
+
+.main .view .content .list ul li .info {
+    float: right;
+}
+
+.main .view .content .list ul li .info span {
+    font-weight: 300;
+}
+
+.main .view .content .list ul li .info .button {
+    float: right;
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    background-color: #AAA;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    margin: 10px 10px;
+    text-align: center;
+    cursor: pointer;
+    color: White;
+    font-weight: 700;
+}
+
+.main .view .content .list ul li .info .button.green {
+    background-color: #85C157;
+}
+
+.clear {
+    clear: both;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+body,
+.page,
+.pageHeader,
+.main,
+.main .nav,
+.profileDropdown,
+.profileDropdown button,
+.main .view .content .list ul li {
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease,
+        color 0.25s ease;
+}

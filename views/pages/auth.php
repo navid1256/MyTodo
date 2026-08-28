@@ -41,9 +41,9 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
 
     <div id="background" class="<?= $isRegister ? 'two' : '' ?>">
         <?php if ($authSuccess): ?>
-            <div class="auth-success" role="status">
+            <output class="auth-success" aria-live="polite">
                 <?= htmlspecialchars($authSuccess, ENT_QUOTES, 'UTF-8') ?>
-            </div>
+            </output>
         <?php endif; ?>
         <div id="panel-box">
             <div class="panel">
@@ -61,7 +61,9 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
+                        <label class="srOnly" for="login-username">Username</label>
                         <input
+                            id="login-username"
                             name="username"
                             type="text"
                             required
@@ -69,6 +71,7 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
                             placeholder="Username"
                             value="<?= htmlspecialchars((string) $oldInput['username'], ENT_QUOTES, 'UTF-8') ?>" />
                         <div class="password-field">
+                            <label class="srOnly" for="login-password">Password</label>
                             <input
                                 id="login-password"
                                 name="password"
@@ -107,14 +110,18 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
+                        <label class="srOnly" for="register-email">Email</label>
                         <input
+                            id="register-email"
                             name="email"
                             type="email"
                             required
                             autocomplete="email"
                             placeholder="Email"
                             value="<?= htmlspecialchars((string) $oldInput['email'], ENT_QUOTES, 'UTF-8') ?>" />
+                        <label class="srOnly" for="register-username">Username</label>
                         <input
+                            id="register-username"
                             name="username"
                             type="text"
                             required
@@ -125,6 +132,7 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
                             placeholder="Username"
                             value="<?= htmlspecialchars((string) $oldInput['username'], ENT_QUOTES, 'UTF-8') ?>" />
                         <div class="password-field">
+                            <label class="srOnly" for="register-password">Password</label>
                             <input
                                 id="register-password"
                                 name="password"
@@ -148,6 +156,7 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
                             </button>
                         </div>
                         <div class="password-field">
+                            <label class="srOnly" for="register-password-confirmation">Confirm Password</label>
                             <input
                                 id="register-password-confirmation"
                                 name="password_confirmation"

@@ -1,10 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 /** @var string $activeView */
 /** @var bool $usesTaskModals */
-/** @var Closure $renderTaskToolbar */
+/** @var Closure|null $renderTaskToolbar */
+
+$viewClassMap = [
+    'profile' => ' profileView',
+    'change-password' => ' profileView',
+    'account-settings' => ' accountSettingsView',
+    'manage-tasks' => ' manageTasksView',
+    'activity' => ' activityView',
+    'messages' => ' messagesView',
+    'notifications' => ' messagesView',
+];
+$extraClass = $viewClassMap[$activeView] ?? '';
 ?>
-<div class="view<?= in_array($activeView, ['profile', 'change-password'], true) ? ' profileView' : '' ?><?= $activeView === 'account-settings' ? ' accountSettingsView' : '' ?><?= $activeView === 'manage-tasks' ? ' manageTasksView' : '' ?><?= $activeView === 'activity' ? ' activityView' : '' ?><?= in_array($activeView, ['messages', 'notifications'], true) ? ' messagesView' : '' ?>" id="tasks">
+<div class="view<?= $extraClass ?>" id="tasks">
   <?php if ($activeView === 'profile'): ?>
 
     <?php require_once __DIR__ . '/../pages/profile.php'; ?>
@@ -19,7 +32,7 @@
 
   <?php elseif ($activeView === 'messages'): ?>
 
-    <?php $renderTaskToolbar(); ?>
+    <?php if (isset($renderTaskToolbar) && is_callable($renderTaskToolbar)) { $renderTaskToolbar(); } ?>
     <?php require_once __DIR__ . '/../pages/messages.php'; ?>
 
   <?php elseif ($activeView === 'notifications'): ?>
@@ -28,12 +41,12 @@
 
   <?php elseif ($activeView === 'activity'): ?>
 
-    <?php $renderTaskToolbar(); ?>
+    <?php if (isset($renderTaskToolbar) && is_callable($renderTaskToolbar)) { $renderTaskToolbar(); } ?>
     <?php require_once __DIR__ . '/../pages/activity.php'; ?>
 
   <?php else: ?>
 
-    <?php $renderTaskToolbar(); ?>
+    <?php if (isset($renderTaskToolbar) && is_callable($renderTaskToolbar)) { $renderTaskToolbar(); } ?>
 
     <div class="content<?= $activeView === 'manage-tasks' ? ' manageTasksContent' : '' ?>">
       <?php if ($activeView === 'home'): ?>
@@ -49,7 +62,7 @@
 
   <?php endif; ?>
 
-  <?php if ($usesTaskModals): ?>
+  <?php if (!empty($usesTaskModals)): ?>
 
     <?php require_once __DIR__ . '/../modals/task.php'; ?>
     <?php require_once __DIR__ . '/../modals/date-time.php'; ?>

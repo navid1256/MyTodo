@@ -62,15 +62,30 @@ final class Application
             $authService,
             $userRepository
         ));
-        $this->router->bind(TaskController::class, new TaskController($taskService, $authService));
+        $this->router->bind(TaskController::class, new TaskController(
+            $taskService,
+            $authService,
+            $userRepository,
+            $notificationService
+        ));
         $this->router->bind(ReminderController::class, new ReminderController($reminderService, $authService));
-        $this->router->bind(NotificationController::class, new NotificationController($notificationService, $authService));
+        $this->router->bind(NotificationController::class, new NotificationController(
+            $notificationService,
+            $authService,
+            $userRepository
+        ));
         $this->router->bind(ProfileController::class, new ProfileController($profileService, $userRepository));
     }
 
     private function loadRoutes(): void
     {
-        $routes = require_once $this->rootPath . DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'web.php';
-        $routes($this->router);
+        $webRoutes = require_once $this->rootPath . DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'web.php';
+        $webRoutes($this->router);
+
+        $apiFile = $this->rootPath . DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'api.php';
+        if (is_file($apiFile)) {
+            $apiRoutes = require_once $apiFile;
+            $apiRoutes($this->router);
+        }
     }
 }

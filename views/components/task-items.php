@@ -52,22 +52,35 @@ if (!function_exists('renderSingleTaskItem')) {
     }
 }
 
+if (!function_exists('renderTaskItems')) {
+    function renderTaskItems(
+        ?array $taskItems,
+        string $viewName,
+        string $emptyMessage,
+        bool $showDueTime = false,
+        bool $showDueDate = false
+    ): void {
+        $items = $taskItems ?? [];
+        if (empty($items)) {
+            $emptyClass = $showDueDate ? 'emptyTask allTasksEmpty' : 'emptyTask';
+            $emptyId = $showDueDate ? ' id="allTasksEmpty"' : '';
+            $escapedMsg = htmlspecialchars($emptyMessage, ENT_QUOTES, 'UTF-8');
+            echo "<li class=\"{$emptyClass}\"{$emptyId}>{$escapedMsg}</li>\n";
+            return;
+        }
+
+        foreach ($items as $task) {
+            renderSingleTaskItem($task, $viewName, $showDueDate, $showDueTime);
+        }
+    }
+}
+
 $renderTaskItems = static function (
-    array $taskItems,
+    ?array $taskItems,
     string $viewName,
     string $emptyMessage,
     bool $showDueTime = false,
     bool $showDueDate = false
 ): void {
-    if (empty($taskItems)) {
-        $emptyClass = $showDueDate ? 'emptyTask allTasksEmpty' : 'emptyTask';
-        $emptyId = $showDueDate ? ' id="allTasksEmpty"' : '';
-        $escapedMsg = htmlspecialchars($emptyMessage, ENT_QUOTES, 'UTF-8');
-        echo "<li class=\"{$emptyClass}\"{$emptyId}>{$escapedMsg}</li>\n";
-        return;
-    }
-
-    foreach ($taskItems as $task) {
-        renderSingleTaskItem($task, $viewName, $showDueDate, $showDueTime);
-    }
+    renderTaskItems($taskItems, $viewName, $emptyMessage, $showDueTime, $showDueDate);
 };
