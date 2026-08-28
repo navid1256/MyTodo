@@ -1,6 +1,7 @@
 <?php
-defined('BASE_PATH') OR die("Permision Denied !");
-function getCurrentUrl(){
+defined('BASE_PATH') or die("Permision Denied !");
+function getCurrentUrl()
+{
     return 1;
 }
 

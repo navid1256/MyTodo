@@ -151,12 +151,8 @@ final class AuthController
     /**
      * @return array{status: int, body: array{success: bool, message: string}}
      */
-    private function processPasswordChange(
-        int $userId,
-        string $currentPassword,
-        string $newPassword,
-        string $confirmation
-    ): array {
+    private function processPasswordChange(int $userId, string $currentPassword, string $newPassword, string $confirmation): array
+    {
         try {
             if ($currentPassword === '') {
                 throw new InvalidArgumentException('Current password is required.');
