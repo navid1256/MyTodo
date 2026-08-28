@@ -34,7 +34,8 @@ final class HomeController
         $displayName = $this->resolveDisplayName($userProfile, $currentUser);
         $avatarUrl = $this->resolveAvatarUrl($userProfile);
 
-        return Response::view('pages/home', [
+        return Response::view('layouts/dashboard', [
+            'activeView' => 'home',
             'todayTasks' => $this->taskService->getTasksForDate($userId, $today, $today),
             'tomorrowTasks' => $this->taskService->getTasksForDate($userId, $tomorrow, $today),
             'noDateTasks' => $this->taskService->getTasksWithoutDueDate($userId, $today),
@@ -45,6 +46,8 @@ final class HomeController
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderDate' => $today->format('Y-m-d'),
             'renderTimezone' => $clientTimezone->getName(),
+            'currentUser' => $currentUser,
+            'userProfile' => $userProfile,
         ]);
     }
 

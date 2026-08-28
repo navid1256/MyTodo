@@ -14,9 +14,14 @@ use App\Middleware\AuthMiddleware;
 return static function (Router $router): void {
     // Authentication Routes
     $router->get('/auth', [AuthController::class, 'showLogin']);
+    $router->get('/login', [AuthController::class, 'showLogin']);
+    $router->post('/login', [AuthController::class, 'login']);
     $router->post('/auth/login', [AuthController::class, 'login']);
+    $router->get('/register', [AuthController::class, 'showLogin']);
+    $router->post('/register', [AuthController::class, 'register']);
     $router->post('/auth/register', [AuthController::class, 'register']);
     $router->post('/auth/change-password', [AuthController::class, 'changePassword'], [AuthMiddleware::class]);
+    $router->post('/logout', [AuthController::class, 'logout'], [AuthMiddleware::class]);
     $router->post('/auth/logout', [AuthController::class, 'logout'], [AuthMiddleware::class]);
 
     // Dashboard & Home Routes
@@ -32,8 +37,11 @@ return static function (Router $router): void {
     // Reminders Routes
     $router->post('/reminders/preview', [ReminderController::class, 'preview'], [AuthMiddleware::class]);
 
-    // Notifications Routes
-    $router->get('/notifications', [NotificationController::class, 'index'], [AuthMiddleware::class]);
+    // Messages (Notifications Management Center - Sidebar)
+    $router->get('/messages', [NotificationController::class, 'messages'], [AuthMiddleware::class]);
+
+    // Sent Notifications (Archive - Header Bell Icon)
+    $router->get('/notifications', [NotificationController::class, 'notifications'], [AuthMiddleware::class]);
     $router->post('/notifications/update', [NotificationController::class, 'update'], [AuthMiddleware::class]);
     $router->post('/notifications/cancel', [NotificationController::class, 'cancel'], [AuthMiddleware::class]);
 

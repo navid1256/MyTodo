@@ -15,7 +15,7 @@
         </symbol>
     </svg>
 
-    <a class="backToProfileLink" href="?view=profile">
+    <a class="backToProfileLink" href="/profile">
         <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
         <span>Back to My Profile</span>
     </a>
@@ -25,7 +25,7 @@
         <p>Enter your current password and choose a secure new password.</p>
     </header>
 
-    <form class="changePasswordForm" id="changePasswordForm" method="POST">
+    <form class="changePasswordForm" id="changePasswordForm" action="/auth/change-password" method="POST">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
         <div class="changePasswordField">
@@ -112,8 +112,8 @@
             </label>
         </div>
 
-        <p class="passwordConfirmationMessage" id="passwordConfirmationMessage" aria-live="polite"></p>
-        <p class="changePasswordMessage" id="changePasswordMessage" role="status" aria-live="polite"></p>
+        <output class="passwordConfirmationMessage" id="passwordConfirmationMessage" aria-live="polite"></output>
+        <output class="changePasswordMessage" id="changePasswordMessage" aria-live="polite"></output>
 
         <div class="changePasswordActions">
             <button class="confirmPasswordButton" id="confirmPasswordButton" type="submit">Confirm</button>

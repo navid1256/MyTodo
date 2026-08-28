@@ -6,31 +6,74 @@ namespace App\Controllers;
 
 use App\Exceptions\NotificationNotFoundException;
 use App\Exceptions\NotificationValidationException;
-use App\Exceptions\ReminderValidationException;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
+use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
+use InvalidArgumentException;
 use Throwable;
 
 final class NotificationController
 {
+    private const DASHBOARD_LAYOUT = 'layouts/dashboard';
     private const AUTH_REQUIRED_MESSAGE = 'Authentication required.';
     private const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please refresh the page and try again.';
 
     public function __construct(
         private readonly NotificationService $notificationService,
-        private readonly AuthService $authService
+        private readonly AuthService $authService,
+        private readonly UserRepository $userRepository
     ) {}
 
     public function index(): Response
     {
-        $userId = $this->authService->getCurrentUserId();
-        $notifications = $this->notificationService->getNotificationsForUser($userId);
+        return $this->notifications();
+    }
 
-        return Response::view('pages/notifications', [
-            'notifications' => $notifications,
+    /**
+     * Display Sent Notifications Archive (Header Bell Icon -> /notifications)
+     */
+    public function notifications(): Response
+    {
+        $userId = $this->authService->getCurrentUserId();
+        $sentNotifications = $this->notificationService->getNotificationsForUser($userId, 'sent');
+        $sentCount = $this->notificationService->countSentNotifications($userId);
+        $currentUser = $this->authService->getCurrentUser();
+        $userProfile = $this->userRepository->getProfile($userId);
+
+        return Response::view(self::DASHBOARD_LAYOUT, [
+            'activeView' => 'notifications',
+            'sentNotifications' => $sentNotifications,
+            'sentNotificationCount' => $sentCount,
+            'currentDisplayName' => $this->resolveDisplayName($userProfile, $currentUser),
+            'avatarUrl' => $this->resolveAvatarUrl($userProfile),
+            'currentUser' => $currentUser,
+            'userProfile' => $userProfile,
+            'csrfToken' => CsrfMiddleware::getToken(),
+        ]);
+    }
+
+    /**
+     * Display Notifications Management Center (Sidebar Navigation -> /messages)
+     */
+    public function messages(): Response
+    {
+        $userId = $this->authService->getCurrentUserId();
+        $allNotifications = $this->notificationService->getNotificationsForUser($userId);
+        $sentCount = $this->notificationService->countSentNotifications($userId);
+        $currentUser = $this->authService->getCurrentUser();
+        $userProfile = $this->userRepository->getProfile($userId);
+
+        return Response::view(self::DASHBOARD_LAYOUT, [
+            'activeView' => 'messages',
+            'notifications' => $allNotifications,
+            'sentNotificationCount' => $sentCount,
+            'currentDisplayName' => $this->resolveDisplayName($userProfile, $currentUser),
+            'avatarUrl' => $this->resolveAvatarUrl($userProfile),
+            'currentUser' => $currentUser,
+            'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
         ]);
     }
@@ -43,14 +86,35 @@ final class NotificationController
         }
 
         $notificationId = filter_var($request->post('notification_id'), FILTER_VALIDATE_INT);
-        $offsetValueInput = $request->postString('offset_value');
+        $offsetValue = filter_var($request->post('offset_value'), FILTER_VALIDATE_INT);
         $offsetUnit = $request->postString('offset_unit');
 
-        if (!$notificationId || !ctype_digit($offsetValueInput)) {
-            return Response::json(['success' => false, 'message' => 'Enter a valid notification time.'], 422);
+        if ($notificationId === false || $offsetValue === false || $offsetValue < 0) {
+            $response = Response::json(['success' => false, 'message' => 'Please provide valid reminder details.'], 422);
+        } else {
+            try {
+                $updatedReminder = $this->notificationService->updateNotification(
+                    $notificationId,
+                    $this->authService->getCurrentUserId(),
+                    $offsetValue,
+                    $offsetUnit
+                );
+
+                $response = Response::json([
+                    'success' => true,
+                    'notification' => [
+                        'id' => (int) $updatedReminder->id,
+                        'remind_at' => (string) $updatedReminder->remind_at,
+                        'offset_value' => (int) $updatedReminder->offset_value,
+                        'offset_unit' => (string) $updatedReminder->offset_unit,
+                    ],
+                ]);
+            } catch (Throwable $exception) {
+                $response = $this->handleUpdateError($exception);
+            }
         }
 
-        return $this->processUpdate((int) $notificationId, (int) $offsetValueInput, $offsetUnit);
+        return $response;
     }
 
     public function cancel(Request $request): Response
@@ -61,83 +125,29 @@ final class NotificationController
         }
 
         $notificationId = filter_var($request->post('notification_id'), FILTER_VALIDATE_INT);
-        if (!$notificationId) {
-            return Response::json(['success' => false, 'message' => 'Invalid notification.'], 422);
-        }
+        if ($notificationId === false || $notificationId < 1) {
+            $response = Response::json(['success' => false, 'message' => 'Invalid notification.'], 422);
+        } else {
+            try {
+                $this->notificationService->cancelNotification(
+                    $notificationId,
+                    $this->authService->getCurrentUserId()
+                );
 
-        return $this->processCancel((int) $notificationId);
-    }
-
-    private function processUpdate(int $notificationId, int $offsetValue, string $offsetUnit): Response
-    {
-        $userId = $this->authService->getCurrentUserId();
-
-        try {
-            $notification = $this->notificationService->updateNotification(
-                notificationId: $notificationId,
-                userId: $userId,
-                offsetValue: $offsetValue,
-                offsetUnit: $offsetUnit
-            );
-
-            return Response::json([
-                'success' => true,
-                'message' => 'Notification updated successfully.',
-                'notification' => [
-                    'id' => $notification->id,
-                    'offset_value' => $notification->offset_value,
-                    'offset_unit' => $notification->offset_unit,
-                    'remind_at' => $notification->remind_at,
-                    'formatted_remind_at' => $notification->formatted_remind_at,
-                    'status' => $notification->status,
-                ],
-            ]);
-        } catch (Throwable $exception) {
-            return $this->handleUpdateError($exception);
-        }
-    }
-
-    private function handleUpdateError(Throwable $exception): Response
-    {
-        $statusCode = match (true) {
-            $exception instanceof NotificationNotFoundException => 404,
-            $exception instanceof NotificationValidationException,
-            $exception instanceof ReminderValidationException => 422,
-            default => 500,
-        };
-
-        $message = $statusCode === 500
-            ? 'The notification could not be updated. Please try again.'
-            : $exception->getMessage();
-
-        return Response::json(['success' => false, 'message' => $message], $statusCode);
-    }
-
-    private function processCancel(int $notificationId): Response
-    {
-        $userId = $this->authService->getCurrentUserId();
-
-        try {
-            if (!$this->notificationService->cancelNotification($notificationId, $userId)) {
-                return Response::json(['success' => false, 'message' => 'Only pending or failed notifications can be cancelled.'], 422);
+                $response = Response::json(['success' => true]);
+            } catch (NotificationNotFoundException $exception) {
+                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
+            } catch (Throwable $exception) {
+                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
             }
-
-            return Response::json([
-                'success' => true,
-                'message' => 'Notification cancelled successfully.',
-                'notification' => [
-                    'id' => $notificationId,
-                    'status' => 'cancelled',
-                ],
-            ]);
-        } catch (Throwable) {
-            return Response::json(['success' => false, 'message' => 'The notification could not be cancelled. Please try again.'], 500);
         }
+
+        return $response;
     }
 
     private function guardRequest(Request $request): ?Response
     {
-        if ($this->authService->getCurrentUserId() <= 0) {
+        if ($this->authService->getCurrentUserId() === 0) {
             return Response::json(['success' => false, 'message' => self::AUTH_REQUIRED_MESSAGE], 401);
         }
 
@@ -146,5 +156,42 @@ final class NotificationController
         }
 
         return null;
+    }
+
+    private function handleUpdateError(Throwable $exception): Response
+    {
+        $statusCode = match (true) {
+            $exception instanceof NotificationNotFoundException => 404,
+            $exception instanceof NotificationValidationException || $exception instanceof InvalidArgumentException => 422,
+            default => 500,
+        };
+
+        return Response::json(['success' => false, 'message' => $exception->getMessage()], $statusCode);
+    }
+
+    private function resolveDisplayName(?object $profile, ?array $user): string
+    {
+        $firstName = trim((string) ($profile->firstname ?? ''));
+        $lastName = trim((string) ($profile->lastname ?? ''));
+
+        if ($firstName !== '' && $lastName !== '') {
+            return $firstName . ' ' . $lastName;
+        }
+
+        return (string) ($user['username'] ?? 'User');
+    }
+
+    private function resolveAvatarUrl(?object $profile): string
+    {
+        $defaultAvatarUrl = '/assets/img/user-default-avatar.webp';
+        $savedAvatarUrl = trim((string) ($profile->avatar_url ?? ''));
+
+        if ($savedAvatarUrl === '') {
+            return $defaultAvatarUrl;
+        }
+
+        return preg_match('#^(?:https?://|data:)#i', $savedAvatarUrl)
+            ? $savedAvatarUrl
+            : '/' . ltrim($savedAvatarUrl, '/');
     }
 }

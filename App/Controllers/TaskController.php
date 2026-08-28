@@ -11,7 +11,9 @@ use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
+use App\Repositories\UserRepository;
 use App\Services\AuthService;
+use App\Services\NotificationService;
 use App\Services\TaskService;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -20,21 +22,36 @@ use Throwable;
 
 final class TaskController
 {
+    private const DASHBOARD_LAYOUT = 'layouts/dashboard';
     private const AUTH_REQUIRED_MESSAGE = 'Authentication required.';
     private const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please refresh the page and try again.';
 
     public function __construct(
         private readonly TaskService $taskService,
-        private readonly AuthService $authService
+        private readonly AuthService $authService,
+        private readonly UserRepository $userRepository,
+        private readonly NotificationService $notificationService
     ) {}
 
     public function index(): Response
     {
         $userId = $this->authService->getCurrentUserId();
         $tasks = $this->taskService->getTasksForUser($userId);
+        $currentUser = $this->authService->getCurrentUser();
+        $userProfile = $this->userRepository->getProfile($userId);
+        $clientToday = new DateTimeImmutable('today', TimezoneHelper::getClientTimezone());
+        $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
+        $sentCount = $this->notificationService->countSentNotifications($userId);
 
-        return Response::view('pages/manage-tasks', [
+        return Response::view(self::DASHBOARD_LAYOUT, [
+            'activeView' => 'manage-tasks',
             'tasks' => $tasks,
+            'completedTasksToday' => $completedTodayCount,
+            'sentNotificationCount' => $sentCount,
+            'currentDisplayName' => $this->resolveDisplayName($userProfile, $currentUser),
+            'avatarUrl' => $this->resolveAvatarUrl($userProfile),
+            'currentUser' => $currentUser,
+            'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
         ]);
     }
@@ -43,12 +60,21 @@ final class TaskController
     {
         $userId = $this->authService->getCurrentUserId();
         $completedTasks = $this->taskService->getCompletedTasks($userId);
+        $currentUser = $this->authService->getCurrentUser();
+        $userProfile = $this->userRepository->getProfile($userId);
         $clientToday = new DateTimeImmutable('today', TimezoneHelper::getClientTimezone());
         $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
+        $sentCount = $this->notificationService->countSentNotifications($userId);
 
-        return Response::view('pages/activity', [
+        return Response::view(self::DASHBOARD_LAYOUT, [
+            'activeView' => 'activity',
             'completedTasks' => $completedTasks,
-            'completedTodayCount' => $completedTodayCount,
+            'completedTasksToday' => $completedTodayCount,
+            'sentNotificationCount' => $sentCount,
+            'currentDisplayName' => $this->resolveDisplayName($userProfile, $currentUser),
+            'avatarUrl' => $this->resolveAvatarUrl($userProfile),
+            'currentUser' => $currentUser,
+            'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
         ]);
     }
@@ -71,96 +97,103 @@ final class TaskController
         }
 
         $taskId = filter_var($request->post('task_id'), FILTER_VALIDATE_INT);
-        if (!$taskId) {
-            return Response::json(['success' => false, 'message' => 'Invalid task.'], 422);
+        if ($taskId === false || $taskId < 1) {
+            $response = Response::json(['success' => false, 'message' => 'Invalid task ID.'], 422);
+        } else {
+            try {
+                $updatedTask = $this->taskService->toggleTask($taskId, $this->authService->getCurrentUserId());
+
+                $response = Response::json(['success' => true, 'is_done' => (bool) $updatedTask->is_done]);
+            } catch (TaskNotFoundException $exception) {
+                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
+            } catch (Throwable $exception) {
+                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
+            }
         }
 
-        return $this->processTaskToggle((int) $taskId);
+        return $response;
     }
 
     public function delete(Request $request): Response
     {
-        $guardResponse = $this->guardTextRequest($request);
+        $guardResponse = $this->guardJsonRequest($request);
         if ($guardResponse !== null) {
             return $guardResponse;
         }
 
         $taskId = filter_var($request->post('task_id'), FILTER_VALIDATE_INT);
-        $userId = $this->authService->getCurrentUserId();
+        if ($taskId === false || $taskId < 1) {
+            $response = Response::json(['success' => false, 'message' => 'Invalid task ID.'], 422);
+        } else {
+            try {
+                $this->taskService->deleteTask($taskId, $this->authService->getCurrentUserId());
 
-        return ($taskId && $this->taskService->deleteTask((int) $taskId, $userId))
-            ? Response::text('1')
-            : Response::text('Task not found.', 404);
+                $response = Response::json(['success' => true]);
+            } catch (TaskNotFoundException $exception) {
+                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
+            } catch (Throwable $exception) {
+                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
+            }
+        }
+
+        return $response;
     }
 
     private function processTaskCreation(Request $request): Response
     {
-        $userId = $this->authService->getCurrentUserId();
         $taskTitle = $request->postString('task_title');
-        $dueAtValue = $request->postString('due_at');
+        $dueAtString = $request->postString('due_at');
         $hasTime = $request->postString('has_time') === '1';
-        $remindersJson = $request->postString('reminders', '[]');
+        $remindersJson = $request->postString('reminders');
+
+        $reminders = [];
+        if ($remindersJson !== '') {
+            try {
+                $reminders = json_decode($remindersJson, true, 512, JSON_THROW_ON_ERROR);
+            } catch (JsonException) {
+                return Response::text('Invalid reminders payload.', 422);
+            }
+        }
+
+        $dueAt = null;
+        if ($dueAtString !== '') {
+            try {
+                $clientTimezone = $this->resolveUserTimezone($request);
+                $dueAt = new DateTimeImmutable($dueAtString, $clientTimezone);
+            } catch (Throwable) {
+                return Response::text('Invalid due date format.', 422);
+            }
+        }
 
         try {
-            if (mb_strlen($taskTitle) < 3) {
-                throw new TaskValidationException('Task title must be at least 3 characters long.');
-            }
-
-            if (mb_strlen($taskTitle) > 512) {
-                throw new TaskValidationException('Task title must not exceed 512 characters.');
-            }
-
-            $dueAt = $this->parseDueAt($dueAtValue);
-            if ($hasTime && $dueAt === null) {
-                throw new TaskValidationException('Please set a date before enabling task time.');
-            }
-
-            $reminders = $this->parseRemindersJson($remindersJson);
-
             $this->taskService->createTask(
-                userId: $userId,
-                title: $taskTitle,
-                dueAt: $dueAt,
-                hasTime: $hasTime,
-                reminders: $reminders
+                $this->authService->getCurrentUserId(),
+                $taskTitle,
+                $dueAt,
+                $hasTime,
+                is_array($reminders) ? $reminders : []
             );
 
-            return Response::text('1');
+            $response = Response::text('1', 200);
         } catch (TaskValidationException | ReminderValidationException $exception) {
-            return Response::text($exception->getMessage(), 422);
-        } catch (Throwable) {
-            return Response::text('The task could not be saved. Please try again.', 500);
+            $response = Response::text($exception->getMessage(), 422);
+        } catch (Throwable $exception) {
+            $response = Response::text($exception->getMessage(), 500);
         }
+
+        return $response;
     }
 
-    private function processTaskToggle(int $taskId): Response
+    private function resolveUserTimezone(Request $request): DateTimeZone
     {
-        $userId = $this->authService->getCurrentUserId();
+        $timezoneCookie = $request->cookieString('mytodo_timezone');
 
-        try {
-            $task = $this->taskService->toggleTask($taskId, $userId);
-            $clientToday = new DateTimeImmutable('today', TimezoneHelper::getClientTimezone());
-            $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
-
-            return Response::json([
-                'success' => true,
-                'task' => [
-                    'id' => $task->id,
-                    'is_done' => $task->is_done,
-                    'completed_at' => $task->completed_at,
-                ],
-                'completed_today_count' => $completedTodayCount,
-            ]);
-        } catch (TaskNotFoundException $exception) {
-            return Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
-        } catch (Throwable) {
-            return Response::json(['success' => false, 'message' => 'The task status could not be updated. Please try again.'], 500);
-        }
+        return TimezoneHelper::getClientTimezone($timezoneCookie !== '' ? $timezoneCookie : null);
     }
 
     private function guardTextRequest(Request $request): ?Response
     {
-        if ($this->authService->getCurrentUserId() <= 0) {
+        if ($this->authService->getCurrentUserId() === 0) {
             return Response::text(self::AUTH_REQUIRED_MESSAGE, 401);
         }
 
@@ -173,7 +206,7 @@ final class TaskController
 
     private function guardJsonRequest(Request $request): ?Response
     {
-        if ($this->authService->getCurrentUserId() <= 0) {
+        if ($this->authService->getCurrentUserId() === 0) {
             return Response::json(['success' => false, 'message' => self::AUTH_REQUIRED_MESSAGE], 401);
         }
 
@@ -184,42 +217,29 @@ final class TaskController
         return null;
     }
 
-    private function parseDueAt(string $dueAtValue): ?DateTimeImmutable
+    private function resolveDisplayName(?object $profile, ?array $user): string
     {
-        if ($dueAtValue === '') {
-            return null;
+        $firstName = trim((string) ($profile->firstname ?? ''));
+        $lastName = trim((string) ($profile->lastname ?? ''));
+
+        if ($firstName !== '' && $lastName !== '') {
+            return $firstName . ' ' . $lastName;
         }
 
-        $timezone = new DateTimeZone('Asia/Tehran');
-        $dueAt = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $dueAtValue, $timezone);
-        $dateErrors = DateTimeImmutable::getLastErrors();
-
-        if (
-            !$dueAt
-            || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
-            || $dueAt->format('Y-m-d\TH:i') !== $dueAtValue
-        ) {
-            throw new TaskValidationException('Please select a valid task date and time.');
-        }
-
-        return $dueAt;
+        return (string) ($user['username'] ?? 'User');
     }
 
-    /**
-     * @return array<int, mixed>
-     */
-    private function parseRemindersJson(string $remindersJson): array
+    private function resolveAvatarUrl(?object $profile): string
     {
-        try {
-            $reminders = json_decode($remindersJson, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            throw new ReminderValidationException('The reminder settings are invalid.');
+        $defaultAvatarUrl = '/assets/img/user-default-avatar.webp';
+        $savedAvatarUrl = trim((string) ($profile->avatar_url ?? ''));
+
+        if ($savedAvatarUrl === '') {
+            return $defaultAvatarUrl;
         }
 
-        if (!is_array($reminders) || !array_is_list($reminders)) {
-            throw new ReminderValidationException('The reminder settings are invalid.');
-        }
-
-        return $reminders;
+        return preg_match('#^(?:https?://|data:)#i', $savedAvatarUrl)
+            ? $savedAvatarUrl
+            : '/' . ltrim($savedAvatarUrl, '/');
     }
 }

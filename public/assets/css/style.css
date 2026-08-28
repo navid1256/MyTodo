@@ -1,0 +1,4472 @@
+/* Font Awesome subset used by the dashboard */
+@import url(fontawesome-subset.css);
+
+@font-face {
+    font-family: 'FA Utility';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url(../font/fa-utility-semibold-600.woff2) format('woff2');
+}
+
+
+
+html {
+    /* background-image: url(http://www.ultraimg.com/images/2UeGfhZ.jpg); */
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    padding: 0px;
+    margin: 0px;
+    background: linear-gradient(30deg, #0891B2, #B5EEF0, #5EEAD4) fixed;
+    background-attachment: fixed;
+    font-family: "FA Utility", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    font-synthesis: antialiased;
+}
+
+input {
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.btn {
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.fa-trash,
+.fa-trash-can {
+    color: #bd1f1f !important;
+    float: right;
+    font-weight: 200;
+    font-size: 14px;
+}
+
+.fa-trash:hover,
+.fa-trash-can:hover {
+    font-weight: 700;
+}
+
+.clickable:hover {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+span.created-at {
+    font-size: 14px;
+    margin-right: 12px;
+}
+
+.page {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    top: 8%;
+    background-color: rgba(255, 255, 255, 0.7);
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    -moz-box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pageHeader {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    height: 50px;
+    line-height: 50px;
+    background-color: #54b9cd;
+    color: White;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 5px 20px;
+    vertical-align: middle;
+}
+
+.pageHeader .title {
+    width: 40%;
+    float: left;
+    line-height: 40px;
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+.pageHeader .userArea {
+    float: right;
+    display: flex;
+    height: 40px;
+    align-items: center;
+    gap: 14px;
+}
+
+.pageHeader button {
+    font-family: inherit;
+}
+
+.notificationButton {
+    position: relative;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.notificationButton:hover {
+    color: #edfafe;
+}
+
+.notificationBadge {
+    position: absolute;
+    top: -3px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border: 2px solid #54b9cd;
+    border-radius: 10px;
+    background-color: #e50914;
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+}
+
+.profileMenu {
+    position: relative;
+    height: 40px;
+}
+
+.pageHeader .userPanel {
+    display: flex;
+    height: 40px;
+    padding: 0;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+.pageHeader .userPanel .username {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.pageHeader .userPanel img {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.profileChevron {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.userPanel[aria-expanded="true"] .profileChevron {
+    transform: rotate(180deg);
+}
+
+.profileDropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: -15px;
+    width: 220px;
+    padding: 8px 0 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid #dfe4e7;
+    border-radius: 14px;
+    background-color: white;
+    box-shadow: 0 12px 30px rgba(35, 52, 63, 0.2);
+    color: #263342;
+    line-height: 1.2;
+}
+
+.profileDropdown[hidden] {
+    display: none;
+}
+
+.profileDropdown button,
+.profileDropdown .profileDropdownLink {
+    display: flex;
+    width: calc(100% - 12px);
+    min-height: 50px;
+    margin: 0 6px;
+    padding: 0 20px;
+    box-sizing: border-box;
+    align-items: center;
+    gap: 16px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #263342;
+    font-size: 16px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.profileDropdown button:hover,
+.profileDropdown button:focus-visible,
+.profileDropdown .profileDropdownLink:hover,
+.profileDropdown .profileDropdownLink:focus-visible {
+    background-color: #f5f7f8;
+    outline: none;
+    border-radius: 9px;
+}
+
+.profileDropdown button i,
+.profileDropdown .profileDropdownLink i {
+    width: 24px;
+    color: #687177;
+    font-size: 22px;
+    text-align: center;
+}
+
+.profileDropdown .signOutButton {
+    width: 100%;
+    min-height: 60px;
+    margin: 8px 0 0;
+    padding-left: 26px;
+    border-top: 1px solid #e7ebed;
+    border-radius: 0;
+    color: #d90818;
+}
+
+.profileDropdown .signOutButton i {
+    color: #d90818;
+}
+
+.main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    clear: both;
+    background-color: white;
+}
+
+.main .nav {
+    width: 200px;
+    height: 100%;
+    float: left;
+    box-sizing: border-box;
+    background-color: #e9eef0;
+}
+
+.main .nav .searchbox {
+    width: 170px;
+    height: 30px;
+    line-height: 30px;
+    margin: 15px 15px 17px;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.main .nav .searchbox i {
+    display: inline-block;
+    color: #bbb;
+    margin-left: 5px;
+    margin-right: 5px;
+    font-size: 16px;
+}
+
+.main .nav .searchbox input {
+    display: inline-block;
+    width: 120px;
+    padding: 0;
+    background-color: white;
+    color: #4f5659;
+    font-family: inherit;
+    border: 0;
+    outline: 0;
+}
+
+.main .nav .menu {
+    width: auto;
+    margin: 0 15px;
+    color: #4f5659;
+}
+
+.main .nav .menu .title {
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.main .nav .menu ul {
+    margin: 12px 0 0;
+    padding: 0;
+}
+
+.success {
+    background: #def9df !important;
+    border: 1px solid #a4cca6 !important;
+    color: #205217 !important;
+}
+
+.main .nav .menu ul li a,
+.main .nav .menu ul li button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    border: 0;
+    background: transparent;
+    text-decoration: none;
+    color: #4f5659;
+    font: inherit;
+    font-weight: 600;
+    margin: 5px 0;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.main .nav .menu ul li.active a,
+.main .nav .menu ul li.active button {
+    color: #69bd34;
+}
+
+.main .nav .menu ul li {
+    list-style: none;
+    margin: 2px 0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.main .nav .menu ul li.active {
+    color: #69bd34;
+}
+
+.main .nav .menu ul li:hover {
+    background-color: rgba(255, 255, 255, 0.65);
+    border-radius: 10px;
+}
+
+.main .nav .menu ul li i {
+    width: 20px;
+    margin: 0;
+    font-size: 18px;
+    text-align: center;
+}
+
+.main .view {
+    position: relative;
+    margin-left: 200px;
+}
+
+.main .view .viewHeader {
+    width: 100%;
+    height: 70px;
+    line-height: 70px;
+    padding: 20px 20px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.main .view .viewHeader .title {
+    float: left;
+    font-size: 1.4em;
+    font-weight: 400;
+    padding: 0px;
+    color: #AAA;
+    margin-top: -18px;
+}
+
+.main .view .viewHeader .functions {
+    float: right;
+}
+
+.main .view .viewHeader .functions .button {
+    float: right;
+    height: 30px;
+    line-height: 30px;
+    border: 0;
+    background-color: #5ae556;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    margin: 0px 5px;
+    padding: 0px 20px;
+    cursor: pointer;
+    color: White;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 700;
+}
+
+.main .view .viewHeader .functions .button.active {
+    background-color: #54b9cd;
+}
+
+.main .view .viewHeader .functions .completedButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0px 20px;
+    margin-right: 22px;
+}
+
+.main .view .viewHeader .functions .button.active,
+.main .view .viewHeader .functions .completedButton {
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        filter 0.25s ease;
+}
+
+.main .view .viewHeader .functions .button.active:hover,
+.main .view .viewHeader .functions .button.active:focus-visible {
+    box-shadow:
+        0 0 8px rgba(84, 185, 205, 0.8),
+        0 0 18px rgba(84, 185, 205, 0.55);
+    filter: brightness(1.08);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.main .view .viewHeader .functions .completedButton:hover,
+.main .view .viewHeader .functions .completedButton:focus-visible {
+    box-shadow:
+        0 0 8px rgba(90, 229, 86, 0.8),
+        0 0 18px rgba(90, 229, 86, 0.55);
+    filter: brightness(1.06);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.main .view .viewHeader .functions .completedCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    line-height: 1;
+    color: #4cad48;
+    background-color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.main .view .viewHeader .functions .button.inverz {
+    background-color: inherit;
+    border: 1px solid #AAA;
+    width: auto;
+    min-width: 15px;
+    color: #AAA;
+    font-size: 1.3em;
+    padding: 0px 10px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main .view .content {
+    position: absolute;
+    left: 0px;
+    top: 70px;
+    right: 0px;
+    bottom: 0px;
+    padding: 10px;
+}
+
+.main .view .content .list .title {
+    width: 100%;
+    padding: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #54b9cd;
+}
+
+.main .view .content .scheduledTaskList {
+    margin-top: 18px;
+}
+
+.main .view .content .list ul {
+    width: 100%;
+    padding-left: 10px;
+    color: #777;
+}
+
+.main .view .content .list ul li {
+    width: 100%;
+    height: 50px;
+    line-height: 50px;
+    list-style: none;
+    border-top: 1px solid #AAA;
+}
+
+.main .view .content .list ul li.checked {
+    background-color: #F0F4F5;
+}
+
+.main .view .content .list ul li.emptyTask {
+    color: #929b9f;
+    font-style: italic;
+}
+
+.main .view .content .list ul li:last-child {
+    border-bottom: 1px solid #AAA;
+}
+
+.main .view .content .list ul li i {
+    float: left;
+    width: 30px;
+    height: 50px;
+    line-height: 50px;
+    margin-left: 10px;
+    font-size: 1.4em;
+}
+
+.main .view .content .list ul li span {
+    float: left;
+    font-weight: 600;
+}
+
+.main .view .content .list ul li .info {
+    float: right;
+}
+
+.main .view .content .list ul li .info span {
+    font-weight: 300;
+}
+
+.main .view .content .list ul li .info .button {
+    float: right;
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    background-color: #AAA;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    margin: 10px 10px;
+    text-align: center;
+    cursor: pointer;
+    color: White;
+    font-weight: 700;
+}
+
+.main .view .content .list ul li .info .button.green {
+    background-color: #85C157;
+}
+
+.main .view .manageTasksContent {
+    padding: 0 0 10px 10px;
+    overflow-y: auto;
+}
+
+.main .manageTasksView {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.main .messagesView {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.manageTasksLayout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    align-items: start;
+    gap: 20px;
+}
+
+.manageTaskList {
+    min-width: 0;
+    padding-top: 10px;
+}
+
+.main .view .content .manageTaskListTitle {
+    display: flex;
+    width: auto;
+    min-height: 40px;
+    align-items: center;
+    gap: 8px;
+}
+
+.allTasksFilter {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #54b9cd;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.allTasksFilter:hover,
+.allTasksFilter:focus-visible {
+    color: #329caf;
+    outline: none;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.allTasksFilter.is-active {
+    color: #329caf;
+}
+
+.selectedTaskDateLabel {
+    color: #667982;
+    font-size: 12px;
+    text-transform: none;
+}
+
+.main .view .content .manageTaskList ul {
+    width: auto;
+    margin: 0;
+    padding-left: 10px;
+}
+
+.main .view .content .manageTaskList ul li.taskItem {
+    display: flex;
+    width: 100%;
+    min-height: 50px;
+    height: auto;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+.main .view .content .manageTaskList ul li.taskItem[hidden] {
+    display: none;
+}
+
+.main .view .content .manageTaskList ul li.taskItem>i {
+    flex: 0 0 30px;
+    float: none;
+    margin-left: 10px;
+    line-height: 50px;
+}
+
+.main .view .content .manageTaskList ul li.taskItem>span {
+    min-width: 0;
+    flex: 1 1 auto;
+    float: none;
+    padding: 9px 0;
+    overflow-wrap: anywhere;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info {
+    display: flex;
+    flex: 0 0 auto;
+    float: none;
+    align-items: center;
+    gap: 4px;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info span,
+.main .view .content .manageTaskList ul li.taskItem .info i {
+    float: none;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info .created-at {
+    white-space: nowrap;
+}
+
+.main .view .content .manageTaskList ul li.taskItem .info a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.taskCalendar {
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background-color: #f7fafb;
+    box-shadow: 0 8px 22px rgba(33, 73, 91, 0.12);
+}
+
+.taskCalendarHeader {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
+    height: 46px;
+    align-items: center;
+    background-color: #54b9cd;
+    color: #ffffff;
+}
+
+.taskCalendarHeader h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.taskCalendarNav {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    justify-self: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #ffffff;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.taskCalendarNav:hover,
+.taskCalendarNav:focus-visible {
+    background-color: rgba(255, 255, 255, 0.2);
+    outline: none;
+}
+
+.taskCalendarWeekdays,
+.taskCalendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.taskCalendarWeekdays {
+    padding: 12px 10px 6px;
+}
+
+.taskCalendarWeekdays span {
+    color: #6c7b83;
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.taskCalendarDays {
+    padding: 4px 10px 14px;
+}
+
+.taskCalendarDay {
+    position: relative;
+    display: grid;
+    width: 100%;
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #57666e;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        box-shadow 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.taskCalendarDay:hover,
+.taskCalendarDay:focus-visible {
+    background-color: #dff3f6;
+    color: #248da1;
+    outline: none;
+    transform: scale(1.08);
+}
+
+.taskCalendarDay.outside-month {
+    color: #bcc5ca;
+}
+
+.taskCalendarDay.today:not(.selected) {
+    background-color: #e4eaed;
+    color: #44555e;
+    font-weight: 800;
+}
+
+.taskCalendarDay.has-tasks:not(.selected) {
+    box-shadow: inset 0 0 0 2px #69bd34;
+    color: #3f7721;
+    font-weight: 800;
+}
+
+.taskCalendarDay.selected {
+    background-color: #28c8c2;
+    box-shadow: 0 5px 12px rgba(40, 200, 194, 0.35);
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.clear {
+    clear: both;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.main .profileView {
+    height: 100%;
+    overflow: auto;
+}
+
+.profilePage {
+    min-height: 100%;
+    padding: 34px 46px;
+    box-sizing: border-box;
+    color: #1f2933;
+}
+
+.profileMessage {
+    margin: 0 0 18px;
+    padding: 12px 16px;
+    border: 1px solid;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.profileMessage p {
+    margin: 4px 0;
+}
+
+.profileMessageSuccess {
+    border-color: #9bd47a;
+    background-color: #e5f7db;
+    color: #2f6f20;
+}
+
+.profileMessageError {
+    border-color: #efaaaa;
+    background-color: #fde5e5;
+    color: #9f1c1c;
+}
+
+.profileOverview {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    column-gap: 40px;
+    row-gap: 40px;
+    padding-bottom: 46px;
+    border-bottom: 1px solid #7d858b;
+}
+
+.profilePicture {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #66727a;
+}
+
+.profilePicture img {
+    width: 154px;
+    height: 154px;
+    border: 5px solid #e1e7ea;
+    border-radius: 50%;
+    box-sizing: border-box;
+    box-shadow: 0 8px 20px rgba(35, 52, 63, 0.15);
+    object-fit: cover;
+}
+
+.profilePictureButton {
+    position: relative;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.profilePictureButton:focus-visible {
+    outline: 4px solid rgba(22, 141, 240, 0.3);
+    outline-offset: 3px;
+}
+
+.profilePictureOverlay {
+    position: absolute;
+    inset: auto 5px 1px;
+    display: grid;
+    min-height: 44px;
+    place-items: center;
+    border-radius: 0 0 72px 72px;
+    background-color: rgba(13, 31, 43, 0.72);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.profilePictureButton:hover .profilePictureOverlay,
+.profilePictureButton:focus-visible .profilePictureOverlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.profilePicture small {
+    max-width: 170px;
+    color: #81909a;
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.avatar-picker-open {
+    overflow: hidden;
+}
+
+.avatarPickerBackdrop {
+    position: fixed;
+    z-index: 1200;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(14, 25, 33, 0.7);
+    box-sizing: border-box;
+}
+
+.avatarPickerBackdrop[hidden],
+.avatarGalleryPanel[hidden],
+.avatarCropPanel[hidden] {
+    display: none;
+}
+
+.avatarPickerModal {
+    position: relative;
+    width: min(650px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 30px 34px 26px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 1px solid #d9e3e8;
+    border-radius: 28px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.4);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.avatarPickerClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    cursor: pointer;
+}
+
+.avatarPickerClose:hover,
+.avatarPickerClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.avatarPickerModal>h2 {
+    margin: 0;
+    padding: 0 42px;
+    color: #263842;
+    font-size: 24px;
+    text-align: center;
+}
+
+.avatarPickerHint {
+    margin: 8px 0 20px;
+    color: #61737d;
+    font-size: 13px;
+    text-align: center;
+}
+
+.boringAvatarGrid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.boringAvatarOption {
+    position: relative;
+    display: grid;
+    aspect-ratio: 1;
+    padding: 5px;
+    place-items: center;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.boringAvatarOption img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.boringAvatarOption:hover,
+.boringAvatarOption:focus-visible {
+    border-color: #84c9f7;
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.boringAvatarOption.is-selected {
+    border-color: #168df0;
+    box-shadow: 0 0 0 4px rgba(22, 141, 240, 0.16);
+}
+
+.boringAvatarOption.is-selected::after {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border: 3px solid #fbfdfd;
+    border-radius: 50%;
+    background-color: #69bd34;
+    color: #ffffff;
+    content: "✓";
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.chooseDeviceButton,
+.backToAvatarGallery {
+    display: block;
+    min-height: 42px;
+    margin: 22px auto 0;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #168df0, #0784e9);
+    box-shadow: 0 6px 14px rgba(7, 132, 233, 0.24);
+    color: #ffffff;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.chooseDeviceButton:hover,
+.chooseDeviceButton:focus-visible,
+.backToAvatarGallery:hover,
+.backToAvatarGallery:focus-visible {
+    filter: brightness(0.95);
+    outline: 3px solid rgba(22, 141, 240, 0.18);
+}
+
+.backToAvatarGallery {
+    min-height: 34px;
+    margin: 0 0 14px;
+    padding: 0 15px;
+    background: #e7edf0;
+    box-shadow: none;
+    color: #52636d;
+    font-size: 12px;
+}
+
+.avatarCropViewport {
+    position: relative;
+    width: min(430px, 100%);
+    height: 300px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 3px solid #ffffff;
+    border-radius: 18px;
+    background-color: #1a2832;
+    box-shadow: 0 12px 30px rgba(21, 42, 56, 0.24);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.avatarCropViewport.is-dragging {
+    cursor: grabbing;
+}
+
+.avatarCropViewport img {
+    position: absolute;
+    display: block;
+    max-width: none;
+    pointer-events: none;
+    user-select: none;
+}
+
+.avatarCropRing {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 240px;
+    height: 240px;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 999px rgba(8, 21, 30, 0.54),
+        inset 0 0 0 1px rgba(16, 35, 48, 0.35);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+}
+
+.avatarCropHint {
+    margin: 12px 0 8px;
+    color: #61737d;
+    font-size: 12px;
+    text-align: center;
+}
+
+.avatarZoomControl {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 300px) 36px;
+    align-items: center;
+    justify-content: center;
+    column-gap: 18px;
+    color: #52636d;
+}
+
+.avatarZoomControl input {
+    /* width: 100%; */
+    height: 26px;
+    margin: 0;
+    appearance: none;
+    border: 0;
+    outline: none;
+    background: transparent;
+    cursor: ew-resize;
+}
+
+.avatarZoomControl input::-webkit-slider-runnable-track {
+    height: 5px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #168df0, #69bd34);
+}
+
+.avatarZoomControl input::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+    margin-top: -6.5px;
+    appearance: none;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    background-color: #168df0;
+    box-shadow: 0 2px 7px rgba(22, 141, 240, 0.32);
+}
+
+.avatarZoomControl input::-moz-range-track {
+    height: 5px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #168df0, #69bd34);
+}
+
+.avatarZoomControl input::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    background-color: #168df0;
+    box-shadow: 0 2px 7px rgba(22, 141, 240, 0.32);
+}
+
+.avatarZoomControl button {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid #c8d6de;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #425862;
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.avatarZoomControl button:hover,
+.avatarZoomControl button:focus-visible {
+    border-color: #168df0;
+    background-color: #e1f2fd;
+    color: #0878d3;
+    outline: 3px solid rgba(22, 141, 240, 0.15);
+}
+
+.avatarPickerMessage {
+    min-height: 18px;
+    margin: 13px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.avatarPickerActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.cancelAvatarButton,
+.applyAvatarButton {
+    min-width: 104px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelAvatarButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyAvatarButton {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+    color: #ffffff;
+}
+
+.applyAvatarButton:disabled {
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.cancelAvatarButton:hover,
+.cancelAvatarButton:focus-visible,
+.applyAvatarButton:not(:disabled):hover,
+.applyAvatarButton:not(:disabled):focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+.profileFields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 46px 56px;
+    align-content: start;
+    padding-top: 24px;
+}
+
+.profileField {
+    display: grid;
+    grid-template-columns: 105px minmax(140px, 1fr);
+    align-items: center;
+    gap: 12px;
+    color: #20272d;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.profileField>span {
+    text-align: right;
+}
+
+.profileField input,
+.profileField select {
+    width: 100%;
+    height: 34px;
+    padding: 5px 10px;
+    box-sizing: border-box;
+    border: 1px solid #aeb8be;
+    border-radius: 3px;
+    outline: none;
+    background-color: #f6f8f9;
+    color: #263342;
+    font: inherit;
+    font-weight: 400;
+}
+
+.profileField input:focus,
+.profileField select:focus {
+    border-color: #54b9cd;
+    box-shadow: 0 0 0 3px rgba(84, 185, 205, 0.16);
+}
+
+.profileField input[readonly] {
+    border-color: transparent;
+    background-color: #e1e5e7;
+    color: #59656d;
+}
+
+.profileSecurity {
+    padding: 14px 16px;
+}
+
+.profileSecurity h2 {
+    margin: 0 0 28px;
+    font-size: 20px;
+    color: #1d252b;
+}
+
+.changePasswordButton,
+.saveProfileButton {
+    min-width: 90px;
+    min-height: 44px;
+    padding: 10px 20px;
+    border: 0;
+    border-radius: 24px;
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.changePasswordButton {
+    margin-left: 92px;
+    background-color: #16b8d4;
+    box-shadow: 0 8px 18px rgba(22, 184, 212, 0.25);
+}
+
+.changePasswordButton:hover,
+.changePasswordButton:focus-visible {
+    background-color: #0fa5bf;
+    outline: none;
+}
+
+.profileActions {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+}
+
+.saveProfileButton {
+    background-color: #69bd34;
+    box-shadow: 0 8px 18px rgba(105, 189, 52, 0.25);
+}
+
+.saveProfileButton:hover,
+.saveProfileButton:focus-visible {
+    background-color: #59a52b;
+    outline: none;
+}
+
+.changePasswordNavigation {
+    margin: 0;
+}
+
+.changePasswordPage {
+    position: relative;
+    width: 100%;
+    min-height: 100%;
+    padding: 34px 46px 50px;
+    box-sizing: border-box;
+    color: #1f2933;
+}
+
+.backToProfileLink {
+    position: absolute;
+    top: 34px;
+    left: 46px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #438a9c;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.backToProfileLink:hover,
+.backToProfileLink:focus-visible {
+    color: #217188;
+    outline: none;
+}
+
+.changePasswordHeader {
+    width: min(100%, 868px);
+    margin: 58px auto 30px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #d7e0e5;
+}
+
+.changePasswordHeader h1 {
+    margin: 0 0 8px;
+    color: #1f2c36;
+    font-size: 26px;
+}
+
+.changePasswordHeader p {
+    margin: 0;
+    color: #6f7e87;
+    font-size: 14px;
+}
+
+.changePasswordForm {
+    display: grid;
+    width: min(100%, 728px);
+    margin: 0 auto;
+    gap: 22px;
+}
+
+.changePasswordField {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 520px);
+    align-items: center;
+    gap: 18px;
+    color: #2b3740;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.changePasswordField>label {
+    text-align: right;
+}
+
+.changePasswordInput {
+    position: relative;
+    width: 100%;
+}
+
+.changePasswordField input {
+    width: 100%;
+    height: 48px;
+    padding: 10px 50px 10px 14px;
+    box-sizing: border-box;
+    border: 1px solid #b9c6cd;
+    border-radius: 10px;
+    outline: none;
+    background-color: #f7f9fa;
+    color: #263342;
+    font: inherit;
+    font-weight: 400;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.passwordIconDefinitions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.changePasswordToggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: inline-flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    outline: none;
+    background-color: transparent;
+    color: #6f7e87;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.changePasswordToggle:hover,
+.changePasswordToggle:focus-visible {
+    background-color: rgba(84, 185, 205, 0.12);
+    color: #438a9c;
+}
+
+.changePasswordIcon {
+    width: 20px;
+    height: 20px;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.changePasswordIconOpen {
+    display: none;
+}
+
+.changePasswordToggle[aria-pressed="true"] .changePasswordIconClosed {
+    display: none;
+}
+
+.changePasswordToggle[aria-pressed="true"] .changePasswordIconOpen {
+    display: block;
+}
+
+.changePasswordField input:focus {
+    border-color: #54b9cd;
+    box-shadow: 0 0 0 3px rgba(84, 185, 205, 0.16);
+}
+
+.changePasswordField input.is-invalid {
+    border-color: #df626b;
+    box-shadow: 0 0 0 3px rgba(223, 98, 107, 0.12);
+}
+
+.passwordRequirements {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-left: 208px;
+}
+
+.passwordRequirement {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #7a878f;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.passwordRequirement input {
+    width: 18px;
+    height: 23px;
+    margin: 0;
+    border: 2px solid #9daab2;
+    border-radius: 50%;
+    appearance: none;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 12px 13px;
+    opacity: 1;
+    transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.passwordRequirement input:checked {
+    border-color: #69bd34;
+    background-color: #69bd34;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.2 4.7 9 10 3' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.passwordRequirement.is-met {
+    color: #4d9728;
+}
+
+.passwordConfirmationMessage,
+.changePasswordMessage {
+    min-height: 18px;
+    margin: -10px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.passwordConfirmationMessage {
+    color: #c94852;
+}
+
+.changePasswordMessage.is-error {
+    color: #c94852;
+}
+
+.changePasswordMessage.is-success {
+    color: #4d9728;
+}
+
+.changePasswordActions {
+    position: absolute;
+    right: 50px;
+    bottom: 50px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.confirmPasswordButton {
+    min-width: 112px;
+    min-height: 44px;
+    padding: 10px 24px;
+    border: 0;
+    border-radius: 24px;
+    background-color: #69bd34;
+    box-shadow: 0 8px 18px rgba(105, 189, 52, 0.25);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.confirmPasswordButton:hover,
+.confirmPasswordButton:focus-visible {
+    background-color: #59a52b;
+    box-shadow: 0 10px 24px rgba(105, 189, 52, 0.32);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.confirmPasswordButton:disabled {
+    cursor: wait;
+    opacity: 0.68;
+    transform: none;
+}
+
+@media (max-width: 620px) {
+    .changePasswordPage {
+        padding: 24px 16px 36px;
+    }
+
+    .changePasswordField {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .changePasswordField>label {
+        text-align: left;
+    }
+
+    .passwordRequirements {
+        margin-left: 0;
+    }
+
+    .backToProfileLink,
+    .changePasswordActions {
+        position: static;
+    }
+
+    .changePasswordHeader {
+        margin-top: 26px;
+    }
+
+    .changePasswordActions {
+        justify-content: flex-end;
+        padding-top: 4px;
+    }
+}
+
+.notificationsPage {
+    min-height: 100%;
+    padding: 34px 46px 50px;
+    box-sizing: border-box;
+    color: #1f2933;
+}
+
+.notificationsHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: 1080px;
+    margin: 0 auto 26px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #d7e0e5;
+}
+
+.notificationsEyebrow {
+    margin: 0 0 6px;
+    color: #54b9cd;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.notificationsHeader h1 {
+    margin: 0 0 8px;
+    color: #1f2c36;
+    font-size: 27px;
+}
+
+.notificationsHeader>div>p:last-child {
+    margin: 0;
+    color: #6f7e87;
+    font-size: 14px;
+}
+
+.notificationsTotal {
+    flex: 0 0 auto;
+    padding: 8px 13px;
+    border-radius: 999px;
+    background-color: #e9f6f8;
+    color: #31899c;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.notificationsPageMessage {
+    min-height: 20px;
+    max-width: 1080px;
+    margin: -12px auto 12px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.notificationsPageMessage.is-success {
+    color: #4d9728;
+}
+
+.notificationsPageMessage.is-error {
+    color: #c94852;
+}
+
+.notificationsList {
+    display: grid;
+    max-width: 1080px;
+    margin: 0 auto;
+    gap: 14px;
+}
+
+.notificationItem {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    border: 1px solid #d7e0e5;
+    border-radius: 15px;
+    background-color: #ffffff;
+    box-shadow: 0 7px 20px rgba(35, 52, 63, 0.07);
+}
+
+.notificationItemIcon {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #e9f6f8;
+    color: #3d9db1;
+    font-size: 18px;
+}
+
+.notificationItemContent {
+    min-width: 0;
+}
+
+.notificationItemHeading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 13px;
+}
+
+.notificationItemHeading h2 {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: #27343d;
+    font-size: 16px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notificationStatus {
+    flex: 0 0 auto;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.notificationStatus--pending {
+    background-color: #e6f4fb;
+    color: #297fa5;
+}
+
+.notificationStatus--sent {
+    background-color: #e8f6df;
+    color: #4d9728;
+}
+
+.notificationStatus--failed {
+    background-color: #fdebed;
+    color: #c94852;
+}
+
+.notificationStatus--cancelled {
+    background-color: #edf0f2;
+    color: #77848c;
+}
+
+.notificationDetails {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.notificationDetails p {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+    margin: 0;
+}
+
+.notificationDetails span {
+    color: #839098;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.notificationDetails strong {
+    overflow: hidden;
+    color: #43515a;
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notificationActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notificationAction {
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background-color: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.notificationAction:hover:not(:disabled),
+.notificationAction:focus-visible:not(:disabled) {
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.notificationEditButton {
+    border-color: #b9dfe7;
+    color: #31899c;
+}
+
+.notificationEditButton:hover:not(:disabled),
+.notificationEditButton:focus-visible:not(:disabled) {
+    background-color: #e9f6f8;
+}
+
+.notificationCancelButton {
+    border-color: #efc8cc;
+    color: #c94852;
+}
+
+.notificationCancelButton:hover:not(:disabled),
+.notificationCancelButton:focus-visible:not(:disabled) {
+    background-color: #fdebed;
+}
+
+.notificationAction:disabled {
+    border-color: #dce2e5;
+    color: #a8b1b6;
+    cursor: not-allowed;
+    opacity: 0.72;
+}
+
+.notificationsEmpty {
+    max-width: 1080px;
+    margin: 70px auto 0;
+    text-align: center;
+}
+
+.notificationsEmpty>i {
+    margin-bottom: 14px;
+    color: #8cbac5;
+    font-size: 38px;
+}
+
+.notificationsEmpty h2 {
+    margin: 0 0 7px;
+    color: #34434d;
+    font-size: 18px;
+}
+
+.notificationsEmpty p {
+    margin: 0;
+    color: #7b8991;
+}
+
+.notification-modal-open {
+    overflow: hidden;
+}
+
+.notificationEditBackdrop {
+    position: fixed;
+    z-index: 1100;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: rgba(10, 24, 34, 0.56);
+}
+
+.notificationEditBackdrop[hidden] {
+    display: none;
+}
+
+.notificationEditModal {
+    position: relative;
+    width: min(100%, 520px);
+    padding: 30px;
+    box-sizing: border-box;
+    border: 1px solid #cbd9df;
+    border-radius: 18px;
+    background-color: #ffffff;
+    box-shadow: 0 22px 58px rgba(22, 39, 50, 0.24);
+}
+
+.notificationEditClose {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf2f4;
+    color: #61717a;
+    cursor: pointer;
+}
+
+.notificationEditClose:hover,
+.notificationEditClose:focus-visible {
+    background-color: #e0e9ed;
+    color: #293740;
+    outline: none;
+}
+
+.notificationEditModal header {
+    padding-right: 38px;
+}
+
+.notificationEditModal h2 {
+    margin: 0 0 7px;
+    color: #26343d;
+    font-size: 22px;
+}
+
+.notificationEditModal header p {
+    margin: 0 0 24px;
+    color: #6f7e87;
+    font-size: 13px;
+}
+
+.notificationOffsetFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.notificationOffsetFields label {
+    display: grid;
+    gap: 8px;
+    color: #384750;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.notificationOffsetFields input,
+.notificationOffsetFields select {
+    width: 100%;
+    height: 46px;
+    padding: 9px 12px;
+    box-sizing: border-box;
+    border: 1px solid #b9c8cf;
+    border-radius: 10px;
+    outline: none;
+    background-color: #f7f9fa;
+    color: #26343d;
+    font: inherit;
+}
+
+.notificationOffsetFields input:focus,
+.notificationOffsetFields select:focus {
+    border-color: #54b9cd;
+    box-shadow: 0 0 0 3px rgba(84, 185, 205, 0.15);
+}
+
+.notificationDueSummary {
+    margin: 18px 0 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background-color: #eef6f8;
+    color: #64757e;
+    font-size: 12px;
+}
+
+.notificationDueSummary strong {
+    color: #31899c;
+}
+
+.notificationEditMessage {
+    min-height: 18px;
+    margin: 10px 0 0;
+    color: #c94852;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.notificationEditActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.notificationEditDismiss,
+.notificationEditSave {
+    min-height: 42px;
+    padding: 9px 18px;
+    border: 0;
+    border-radius: 22px;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.notificationEditDismiss {
+    background-color: #e9eef1;
+    color: #4d5d66;
+}
+
+.notificationEditSave {
+    min-width: 128px;
+    background-color: #69bd34;
+    box-shadow: 0 8px 18px rgba(105, 189, 52, 0.23);
+    color: #ffffff;
+}
+
+.notificationEditSave:disabled {
+    cursor: wait;
+    opacity: 0.68;
+}
+
+@media (max-width: 900px) {
+    .notificationItem {
+        grid-template-columns: 42px minmax(0, 1fr);
+    }
+
+    .notificationActions {
+        grid-column: 2;
+        justify-content: flex-end;
+    }
+
+    .notificationDetails {
+        grid-template-columns: 1fr;
+        gap: 9px;
+    }
+}
+
+@media (max-width: 620px) {
+    .notificationsPage {
+        padding: 24px 16px 36px;
+    }
+
+    .notificationsHeader {
+        display: grid;
+    }
+
+    .notificationsTotal {
+        justify-self: start;
+    }
+
+    .notificationItem {
+        grid-template-columns: 1fr;
+        padding: 16px;
+    }
+
+    .notificationItemIcon {
+        display: none;
+    }
+
+    .notificationActions {
+        grid-column: 1;
+        justify-content: stretch;
+    }
+
+    .notificationAction {
+        flex: 1 1 0;
+    }
+
+    .notificationOffsetFields {
+        grid-template-columns: 1fr;
+    }
+
+    .notificationEditModal {
+        padding: 26px 18px 20px;
+    }
+}
+
+.task-modal-open {
+    overflow: hidden;
+}
+
+.taskModalBackdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(20, 32, 40, 0.48);
+    box-sizing: border-box;
+}
+
+.taskModalBackdrop[hidden] {
+    display: none;
+}
+
+.taskModal {
+    position: relative;
+    width: min(572px, 100%);
+    min-height: 408px;
+    padding: 12px 16px 30px;
+    border: 1px solid #168df0;
+    border-radius: 28px;
+    background-color: #f2f2f2;
+    box-shadow: 0 22px 60px rgba(17, 41, 58, 0.3);
+    box-sizing: border-box;
+}
+
+.taskModalClose {
+    position: absolute;
+    z-index: 1;
+    top: 13px;
+    right: 19px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.78);
+    color: #5c6870;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.taskModalClose:hover,
+.taskModalClose:focus-visible {
+    background-color: #ffffff;
+    color: #1d2f3a;
+    outline: 2px solid rgba(22, 141, 240, 0.35);
+}
+
+#newTaskForm {
+    display: flex;
+    min-height: 364px;
+    flex-direction: column;
+}
+
+#taskModalText {
+    width: 100%;
+    height: 176px;
+    min-height: 130px;
+    margin: 0 0 10px;
+    padding: 28px 30px;
+    resize: vertical;
+    border: 0;
+    border-radius: 24px;
+    background-color: #ffffff;
+    color: #172027;
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1.45;
+    box-sizing: border-box;
+}
+
+#taskModalText::placeholder {
+    color: #172027;
+    opacity: 1;
+}
+
+#taskModalText:focus {
+    outline: 3px solid rgba(22, 141, 240, 0.3);
+}
+
+.taskModalOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 6px;
+}
+
+.taskOptionButton,
+.saveTaskButton {
+    min-height: 42px;
+    padding: 0 19px;
+    border: 0;
+    border-radius: 999px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.taskOptionButton {
+    background: linear-gradient(180deg, #168df0, #0784e9);
+    box-shadow: 0 5px 10px rgba(7, 132, 233, 0.2);
+}
+
+.taskOptionButton:hover,
+.taskOptionButton:focus-visible,
+.taskOptionButton[aria-pressed="true"] {
+    background: linear-gradient(180deg, #0878d3, #006ec4);
+    box-shadow: 0 7px 15px rgba(7, 132, 233, 0.3);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.taskOptionButton.has-reminders {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.28);
+}
+
+.taskDateSummary,
+.taskReminderSummary,
+.taskRepeatSummary {
+    min-height: 18px;
+    margin: 11px 12px 0;
+    color: #4f6572;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.taskReminderSummary,
+.taskRepeatSummary {
+    margin-top: 3px;
+}
+
+.taskOptionButton.has-repeat {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.28);
+}
+
+.taskModalMessage {
+    min-height: 18px;
+    margin: 8px 8px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.taskModalActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding: 0 6px;
+}
+
+.saveTaskButton {
+    min-width: 74px;
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+}
+
+.saveTaskButton:hover,
+.saveTaskButton:focus-visible {
+    background: linear-gradient(180deg, #24b95a, #169c44);
+    box-shadow: 0 8px 18px rgba(32, 185, 85, 0.3);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.saveTaskButton:disabled {
+    cursor: wait;
+    opacity: 0.7;
+    transform: none;
+}
+
+.dateTimeModalBackdrop {
+    position: fixed;
+    z-index: 1100;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.64);
+    box-sizing: border-box;
+}
+
+.dateTimeModalBackdrop[hidden] {
+    display: none;
+}
+
+.dateTimeModal {
+    position: relative;
+    width: min(560px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 26px 34px 28px;
+    overflow-y: auto;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.36);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.dateTimeModalClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.dateTimeModalClose:hover,
+.dateTimeModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.calendarHeader {
+    display: grid;
+    grid-template-columns: 42px 1fr 42px;
+    max-width: 320px;
+    margin: 4px auto 24px;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendarHeader h2 {
+    margin: 0;
+    color: #303f48;
+    font-size: 25px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.calendarNavButton {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #4e5e66;
+    font-family: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.calendarNavButton:hover,
+.calendarNavButton:focus-visible {
+    background-color: #eaf2f6;
+    color: #168df0;
+    outline: none;
+}
+
+.calendarWeekdays,
+.calendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.calendarWeekdays {
+    margin-bottom: 8px;
+}
+
+.calendarWeekdays span {
+    padding: 7px 0;
+    color: #26333b;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.calendarDay {
+    display: grid;
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #44535c;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.calendarDay:hover,
+.calendarDay:focus-visible {
+    background-color: #e8f2ff;
+    color: #087edc;
+    outline: none;
+    transform: scale(1.06);
+}
+
+.calendarDay.outsideMonth {
+    color: #b6bec3;
+}
+
+.calendarDay.today:not(.selected) {
+    box-shadow: inset 0 0 0 2px #77aef0;
+    color: #237dd1;
+    font-weight: 800;
+}
+
+.calendarDay.selected {
+    background-color: #72a8ee;
+    box-shadow: 0 6px 14px rgba(73, 137, 219, 0.28);
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.quickDateOptions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0 0;
+    padding: 18px 0;
+    border: 0;
+    border-top: 1px solid #e1e8ec;
+    border-bottom: 1px solid #e1e8ec;
+}
+
+.quickDateOptions label,
+.setTimeToggle label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #3e4e57;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.quickDateOptions input,
+.setTimeToggle input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: #168df0;
+}
+
+.setTimeSection {
+    padding: 18px 4px 0;
+    transition: opacity 0.2s ease;
+}
+
+.timeFieldLabel {
+    margin-left: 10px;
+}
+
+.setTimeSection.is-disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+}
+
+.setTimeSection.is-disabled .setTimeHeader,
+.setTimeSection.is-disabled .timePicker {
+    pointer-events: none;
+}
+
+.setTimeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.setTimeHeader h3 {
+    margin: 0;
+    color: #263842;
+    font-size: 18px;
+}
+
+.setTimeToggle {
+    display: flex;
+    gap: 14px;
+}
+
+.timePicker {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.timePicker label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #5a6971;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.timePicker input,
+.timePicker select {
+    min-width: 86px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.timePicker input:focus,
+.timePicker select:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.timePicker input:disabled,
+.timePicker select:disabled {
+    cursor: not-allowed;
+}
+
+.timeSeparator {
+    padding-bottom: 10px;
+    color: #52636d;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.dateTimeModalMessage {
+    min-height: 18px;
+    margin: 12px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.dateTimeModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.cancelDateTimeButton,
+.applyDateTimeButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelDateTimeButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyDateTimeButton {
+    background: linear-gradient(180deg, #168df0, #0784e9);
+    box-shadow: 0 6px 14px rgba(7, 132, 233, 0.22);
+    color: #ffffff;
+}
+
+.cancelDateTimeButton:hover,
+.cancelDateTimeButton:focus-visible,
+.applyDateTimeButton:hover,
+.applyDateTimeButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+.reminderModalBackdrop {
+    position: fixed;
+    z-index: 1120;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.68);
+    box-sizing: border-box;
+}
+
+.reminderModalBackdrop[hidden] {
+    display: none;
+}
+
+.reminderModal {
+    position: relative;
+    width: min(620px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 30px 34px 28px;
+    overflow-y: auto;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.38);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.reminderModalClose {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.reminderModalClose:hover,
+.reminderModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.reminderModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding-right: 36px;
+    color: #263842;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.reminderModalHeader h2 {
+    margin: 0;
+    font-size: inherit;
+}
+
+.reminderCountField {
+    display: inline-flex;
+}
+
+.reminderCountField select {
+    width: 66px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #b9cbd5;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.reminderCountField select:focus,
+.reminderPresetField select:focus,
+.customReminderFields input:focus,
+.customReminderFields select:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.reminderModalHint {
+    margin: 12px 0 20px;
+    color: #61737d;
+    font-size: 13px;
+    text-align: center;
+}
+
+.reminderList {
+    display: grid;
+    gap: 14px;
+}
+
+.reminderItem {
+    padding: 18px;
+    border: 1px solid #dce6eb;
+    border-radius: 18px;
+    background-color: #f5f9fb;
+}
+
+.reminderItem h3 {
+    margin: 0 0 13px;
+    color: #324751;
+    font-size: 15px;
+}
+
+.reminderPresetField {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    color: #455861;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.reminderPresetField select,
+.customReminderFields input,
+.customReminderFields select {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.customReminderFields {
+    display: grid;
+    grid-template-columns: minmax(100px, 0.7fr) minmax(130px, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+    margin-top: 13px;
+    padding: 13px;
+    border-radius: 12px;
+    background-color: #eaf2f6;
+}
+
+.customReminderFields[hidden] {
+    display: none;
+}
+
+.customReminderFields label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #61737d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.beforeDueText {
+    padding-bottom: 12px;
+    color: #52636d;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.reminderPreview {
+    min-height: 18px;
+    margin: 13px 2px 0;
+    color: #21864a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.reminderPreview.is-loading {
+    color: #5a7482;
+}
+
+.reminderPreview.is-error {
+    color: #b42318;
+}
+
+.reminderModalMessage {
+    min-height: 18px;
+    margin: 14px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.reminderModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.cancelReminderButton,
+.applyReminderButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelReminderButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyReminderButton {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+    color: #ffffff;
+}
+
+.cancelReminderButton:hover,
+.cancelReminderButton:focus-visible,
+.applyReminderButton:hover,
+.applyReminderButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+.applyReminderButton:disabled {
+    cursor: wait;
+    opacity: 0.68;
+}
+
+.repeatModalBackdrop {
+    position: fixed;
+    z-index: 1140;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background-color: rgba(14, 25, 33, 0.7);
+    box-sizing: border-box;
+}
+
+.repeatModalBackdrop[hidden],
+.customRepeatSection[hidden],
+.repeatOnWeek[hidden],
+.repeatOnMonth[hidden],
+.repeatEndDateSection[hidden],
+.repeatCountField[hidden] {
+    display: none;
+}
+
+.repeatModal {
+    position: relative;
+    width: min(680px, 100%);
+    max-height: calc(100vh - 48px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #d9e3e8;
+    border-radius: 30px;
+    background-color: #fbfdfd;
+    box-shadow: 0 26px 70px rgba(5, 23, 35, 0.4);
+    color: #263842;
+    box-sizing: border-box;
+}
+
+.repeatModalScroll {
+    max-height: calc(100vh - 50px);
+    padding: 30px 34px 28px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #168df0 #e7eff3;
+}
+
+.repeatModalScroll::-webkit-scrollbar {
+    width: 10px;
+}
+
+.repeatModalScroll::-webkit-scrollbar-track {
+    margin: 18px 0;
+    border-radius: 999px;
+    background-color: #e7eff3;
+}
+
+.repeatModalScroll::-webkit-scrollbar-thumb {
+    border: 2px solid #e7eff3;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #49aef1, #168df0);
+}
+
+.repeatModalScroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #69bd34, #54a82c);
+}
+
+.repeatModalScroll::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.repeatModalClose {
+    position: absolute;
+    z-index: 2;
+    top: 18px;
+    right: 20px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.repeatModalClose:hover,
+.repeatModalClose:focus-visible {
+    background-color: #dfeaf0;
+    color: #1e313d;
+    outline: 2px solid rgba(22, 141, 240, 0.28);
+}
+
+.repeatModalScroll>h2 {
+    margin: 0;
+    padding-right: 42px;
+    color: #263842;
+    font-size: 25px;
+    text-align: center;
+}
+
+.repeatModalHint {
+    margin: 8px 0 20px;
+    color: #61737d;
+    font-size: 13px;
+    text-align: center;
+}
+
+.repeatFrequencyOptions,
+.repeatEndOptions,
+.repeatOnWeek,
+.repeatOnMonth {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.repeatFrequencyOptions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.repeatFrequencyOptions label,
+.repeatEndOptions label,
+.repeatWeekDays label,
+.repeatMonthDays label {
+    position: relative;
+    cursor: pointer;
+}
+
+.repeatFrequencyOptions input,
+.repeatEndOptions input,
+.repeatWeekDays input,
+.repeatMonthDays input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.repeatFrequencyOptions span,
+.repeatEndOptions span {
+    display: grid;
+    min-height: 42px;
+    padding: 0 10px;
+    place-items: center;
+    border: 1px solid #c8d6de;
+    border-radius: 12px;
+    background-color: #f1f6f8;
+    color: #4c606b;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    box-sizing: border-box;
+    transition: 0.18s ease;
+}
+
+.repeatFrequencyOptions input:checked+span,
+.repeatEndOptions input:checked+span,
+.repeatWeekDays input:checked+span,
+.repeatMonthDays input:checked+span {
+    border-color: #168df0;
+    background-color: #168df0;
+    color: #ffffff;
+    box-shadow: 0 5px 12px rgba(22, 141, 240, 0.22);
+}
+
+.repeatFrequencyOptions input:focus-visible+span,
+.repeatEndOptions input:focus-visible+span,
+.repeatWeekDays input:focus-visible+span,
+.repeatMonthDays input:focus-visible+span {
+    outline: 3px solid rgba(22, 141, 240, 0.2);
+    outline-offset: 2px;
+}
+
+.customRepeatSection,
+.repeatEndsSection {
+    margin-top: 18px;
+    padding: 17px;
+    border: 1px solid #dce6eb;
+    border-radius: 18px;
+    background-color: #f5f9fb;
+}
+
+.customRepeatSection>h3,
+.repeatEndsSection>h3 {
+    margin: 0 0 12px;
+    color: #324751;
+    font-size: 15px;
+}
+
+.repeatEveryFields {
+    display: grid;
+    grid-template-columns: minmax(100px, 0.65fr) minmax(140px, 1fr);
+    gap: 10px;
+}
+
+.repeatEveryFields input,
+.repeatEveryFields select,
+.repeatCountField input {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #bccbd3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263842;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.repeatEveryFields input:focus,
+.repeatEveryFields select:focus,
+.repeatCountField input:focus {
+    border-color: #168df0;
+    outline: 3px solid rgba(22, 141, 240, 0.16);
+}
+
+.repeatOnWeek,
+.repeatOnMonth {
+    margin-top: 16px;
+}
+
+.repeatOnWeek legend,
+.repeatOnMonth legend {
+    margin-bottom: 10px;
+    color: #4c606b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.repeatWeekDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.repeatWeekDays span,
+.repeatMonthDays span {
+    display: grid;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #c8d6de;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: #52636d;
+    font-size: 12px;
+    font-weight: 700;
+    transition: 0.18s ease;
+}
+
+.repeatWeekDays span {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+    aspect-ratio: auto;
+}
+
+.repeatMonthDays {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.repeatEndOptions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.repeatEndDateSection {
+    width: min(100%, 380px);
+    margin: 16px auto 0;
+    padding: 12px;
+    border-radius: 15px;
+    background-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.repeatCalendarHeader {
+    display: grid;
+    grid-template-columns: 32px 1fr 32px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.repeatCalendarHeader h4 {
+    margin: 0;
+    color: #324751;
+    font-size: 15px;
+    text-align: center;
+}
+
+.repeatCalendarHeader button {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #edf3f6;
+    color: #52636d;
+    cursor: pointer;
+}
+
+.repeatCalendarHeader button:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+}
+
+.repeatCalendarWeekdays,
+.repeatCalendarDays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+}
+
+.repeatCalendarWeekdays span {
+    padding: 3px 0;
+    color: #71838d;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.repeatCalendarDay {
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: transparent;
+    color: #3f535e;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.repeatCalendarDay:hover:not(:disabled),
+.repeatCalendarDay:focus-visible {
+    background-color: #e7f3fd;
+    color: #0b78d0;
+    outline: none;
+}
+
+.repeatCalendarDay.outsideMonth {
+    color: #a9b5bb;
+}
+
+.repeatCalendarDay.selected {
+    background-color: #168df0;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.repeatCalendarDay:disabled {
+    color: #c6cfd4;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.repeatEndDateSummary {
+    min-height: 17px;
+    margin: 10px 0 0;
+    color: #21864a;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.repeatCountField {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 130px;
+    align-items: center;
+    gap: 12px;
+    margin-top: 15px;
+    color: #4c606b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.repeatModalMessage {
+    min-height: 18px;
+    margin: 13px 4px 0;
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.repeatModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.cancelRepeatButton,
+.applyRepeatButton {
+    min-width: 92px;
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cancelRepeatButton {
+    background-color: #e7edf0;
+    color: #52636d;
+}
+
+.applyRepeatButton {
+    background: linear-gradient(180deg, #2fca66, #20b955);
+    box-shadow: 0 6px 14px rgba(32, 185, 85, 0.22);
+    color: #ffffff;
+}
+
+.cancelRepeatButton:hover,
+.cancelRepeatButton:focus-visible,
+.applyRepeatButton:hover,
+.applyRepeatButton:focus-visible {
+    filter: brightness(0.96);
+    outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+@media (max-width: 1050px) {
+    .manageTasksLayout {
+        grid-template-columns: 1fr;
+    }
+
+    .taskCalendar {
+        width: min(100%, 340px);
+        justify-self: end;
+    }
+
+    .profileOverview {
+        grid-template-columns: 160px minmax(0, 1fr);
+        column-gap: 28px;
+        row-gap: 20px;
+    }
+
+    .profileFields {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+}
+
+@media (max-width: 620px) {
+    .avatarPickerBackdrop {
+        padding: 12px;
+    }
+
+    .avatarPickerModal {
+        max-height: calc(100vh - 24px);
+        padding: 26px 16px 22px;
+        border-radius: 22px;
+    }
+
+    .avatarPickerModal>h2 {
+        font-size: 20px;
+    }
+
+    .boringAvatarGrid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .avatarCropViewport {
+        width: 100%;
+        height: 260px;
+    }
+
+    .avatarCropRing {
+        width: min(220px, 65vw);
+        height: min(220px, 65vw);
+    }
+
+    .avatarZoomControl {
+        grid-template-columns: 34px minmax(0, 1fr) 34px;
+        column-gap: 12px;
+    }
+
+    .avatarZoomControl button {
+        width: 34px;
+        height: 34px;
+    }
+
+    .avatarPickerActions {
+        justify-content: center;
+    }
+
+    .taskCalendar {
+        width: 100%;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 8px 0;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem>i {
+        line-height: 32px;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem .info {
+        width: 100%;
+        padding-left: 48px;
+        justify-content: space-between;
+    }
+
+    .taskModalBackdrop {
+        padding: 14px;
+    }
+
+    .taskModal {
+        min-height: 390px;
+        padding: 12px 12px 24px;
+    }
+
+    #taskModalText {
+        height: 160px;
+        padding: 24px 20px;
+    }
+
+    .taskModalOptions {
+        gap: 8px;
+    }
+
+    .taskOptionButton {
+        min-height: 38px;
+        padding: 0 13px;
+        font-size: 13px;
+    }
+
+    .dateTimeModalBackdrop {
+        padding: 12px;
+    }
+
+    .dateTimeModal {
+        max-height: calc(100vh - 24px);
+        padding: 24px 16px;
+        border-radius: 22px;
+    }
+
+    .reminderModalBackdrop {
+        padding: 12px;
+    }
+
+    .reminderModal {
+        max-height: calc(100vh - 24px);
+        padding: 26px 16px 22px;
+        border-radius: 22px;
+    }
+
+    .reminderModalHeader {
+        justify-content: flex-start;
+        font-size: 20px;
+    }
+
+    .repeatModalBackdrop {
+        padding: 12px;
+    }
+
+    .repeatModal {
+        max-height: calc(100vh - 24px);
+        padding: 0;
+        border-radius: 22px;
+    }
+
+    .repeatModalScroll {
+        max-height: calc(100vh - 26px);
+        padding: 26px 16px 22px;
+    }
+
+    .repeatFrequencyOptions,
+    .repeatEndOptions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .repeatWeekDays {
+        gap: 4px;
+    }
+
+    .repeatWeekDays span,
+    .repeatMonthDays span {
+        font-size: 10px;
+    }
+
+    .repeatMonthDays {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .repeatCountField {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
+    .reminderPresetField {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
+    .customReminderFields {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .beforeDueText {
+        grid-column: 1 / -1;
+        padding: 0;
+    }
+
+    .calendarHeader {
+        margin-bottom: 16px;
+    }
+
+    .calendarHeader h2 {
+        font-size: 21px;
+    }
+
+    .calendarDay {
+        font-size: 14px;
+    }
+
+    .quickDateOptions {
+        flex-wrap: wrap;
+        gap: 10px 16px;
+    }
+
+    .setTimeHeader {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .timePicker {
+        justify-content: flex-start;
+        gap: 7px;
+    }
+
+    .timePicker input,
+    .timePicker select {
+        min-width: 74px;
+        padding: 0 8px;
+    }
+}
+
+body,
+.page,
+.pageHeader,
+.main,
+.main .nav,
+.main .nav .searchbox,
+.main .nav .searchbox input,
+.profileDropdown,
+.profileDropdown button,
+.main .view .content .list ul li {
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease,
+        color 0.25s ease;
+}
+
+html.dark-mode body {
+    background: linear-gradient(30deg, #0f172a, #164e63, #0f766e) fixed;
+    color: #dbe5ec;
+}
+
+html.dark-mode .page {
+    background-color: rgba(15, 23, 42, 0.88);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.55);
+}
+
+html.dark-mode .pageHeader {
+    background-color: #183f55;
+}
+
+html.dark-mode .notificationBadge {
+    border-color: #183f55;
+}
+
+html.dark-mode .profileDropdown {
+    border-color: #344351;
+    background-color: #18232d;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    color: #e4ebf0;
+}
+
+html.dark-mode .profileDropdown button {
+    color: #e4ebf0;
+}
+
+html.dark-mode .profileDropdown .profileDropdownLink {
+    color: #e4ebf0;
+}
+
+html.dark-mode .profileDropdown button:hover,
+html.dark-mode .profileDropdown button:focus-visible,
+html.dark-mode .profileDropdown .profileDropdownLink:hover,
+html.dark-mode .profileDropdown .profileDropdownLink:focus-visible {
+    background-color: #24333f;
+    outline: none;
+    border-radius: 9px;
+}
+
+html.dark-mode .profileDropdown button i {
+    color: #aab8c3;
+}
+
+html.dark-mode .profileDropdown .profileDropdownLink i {
+    color: #aab8c3;
+}
+
+html.dark-mode .profileDropdown .signOutButton {
+    border-top-color: #344351;
+    color: #ff6671;
+}
+
+html.dark-mode .profileDropdown .signOutButton i {
+    color: #ff6671;
+}
+
+html.dark-mode .main {
+    background-color: #111a23;
+}
+
+html.dark-mode .main .nav {
+    background-color: #18242e;
+}
+
+html.dark-mode .main .nav .searchbox,
+html.dark-mode .main .nav .searchbox input {
+    background-color: #24333f;
+    color: #e3ebf0;
+}
+
+html.dark-mode .main .nav .searchbox i {
+    color: #93a4b0;
+}
+
+html.dark-mode .main .nav .menu,
+html.dark-mode .main .nav .menu ul li a,
+html.dark-mode .main .nav .menu ul li button {
+    color: #c5d0d8;
+}
+
+html.dark-mode .main .nav .menu ul li.active a,
+html.dark-mode .main .nav .menu ul li.active button {
+    color: #69bd34;
+}
+
+html.dark-mode .main .nav .menu ul li:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark-mode .main .view .viewHeader {
+    border-bottom-color: #33424f;
+}
+
+html.dark-mode .main .view .viewHeader input {
+    border-color: #40515f;
+    background-color: #1d2a35;
+    color: #e5edf2;
+}
+
+html.dark-mode .main .view .viewHeader input::placeholder {
+    color: #91a2ae;
+}
+
+html.dark-mode .main .view .content .list ul {
+    color: #c7d2da;
+}
+
+html.dark-mode .main .view .content .list ul li {
+    border-color: #3b4a57;
+}
+
+html.dark-mode .main .view .content .list ul li.checked {
+    background-color: #1b2a34;
+}
+
+html.dark-mode .main .view .content .list ul li.emptyTask {
+    color: #91a2ae;
+}
+
+html.dark-mode .selectedTaskDateLabel {
+    color: #9babb4;
+}
+
+html.dark-mode .taskCalendar {
+    border-color: #40525f;
+    background-color: #18242e;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+html.dark-mode .taskCalendarHeader {
+    background-color: #287f91;
+}
+
+html.dark-mode .taskCalendarWeekdays span {
+    color: #9dabb4;
+}
+
+html.dark-mode .taskCalendarDay {
+    color: #c6d1d8;
+}
+
+html.dark-mode .taskCalendarDay.outside-month {
+    color: #596b76;
+}
+
+html.dark-mode .taskCalendarDay:hover,
+html.dark-mode .taskCalendarDay:focus-visible {
+    background-color: #263d49;
+    color: #8bdce4;
+}
+
+html.dark-mode .taskCalendarDay.today:not(.selected) {
+    background-color: #2a3a46;
+    color: #e3edf2;
+}
+
+html.dark-mode .taskCalendarDay.has-tasks:not(.selected) {
+    box-shadow: inset 0 0 0 2px #69bd34;
+    color: #9ddd76;
+}
+
+html.dark-mode .taskCalendarDay.selected {
+    background-color: #28aaa6;
+    color: #ffffff;
+}
+
+html.dark-mode .profilePage,
+html.dark-mode .profileField {
+    color: #d7e0e6;
+}
+
+html.dark-mode .profileMessageSuccess {
+    border-color: #4d7e39;
+    background-color: #203a27;
+    color: #bce7a9;
+}
+
+html.dark-mode .profileMessageError {
+    border-color: #7d4549;
+    background-color: #3a2428;
+    color: #ffb7bd;
+}
+
+html.dark-mode .profileOverview {
+    border-bottom-color: #4a5965;
+}
+
+html.dark-mode .profilePicture {
+    color: #9eacb6;
+}
+
+html.dark-mode .profilePicture img {
+    border-color: #33424f;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+html.dark-mode .profilePicture small {
+    color: #82939e;
+}
+
+html.dark-mode .avatarPickerBackdrop {
+    background-color: rgba(2, 10, 18, 0.82);
+}
+
+html.dark-mode .avatarPickerModal {
+    border-color: #3b5262;
+    background-color: #18242e;
+    color: #dce6ec;
+}
+
+html.dark-mode .avatarPickerClose,
+html.dark-mode .backToAvatarGallery {
+    background-color: #263642;
+    color: #d4e0e7;
+}
+
+html.dark-mode .avatarPickerModal>h2 {
+    color: #e8eff3;
+}
+
+html.dark-mode .avatarPickerHint,
+html.dark-mode .avatarCropHint,
+html.dark-mode .avatarZoomControl {
+    color: #aebdc6;
+}
+
+html.dark-mode .boringAvatarOption {
+    background-color: #263642;
+}
+
+html.dark-mode .boringAvatarOption.is-selected::after {
+    border-color: #18242e;
+}
+
+html.dark-mode .avatarCropViewport {
+    border-color: #334957;
+    background-color: #0f1b24;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .avatarZoomControl button {
+    border-color: #455664;
+    background-color: #263642;
+    color: #d4e0e7;
+}
+
+html.dark-mode .avatarZoomControl button:hover,
+html.dark-mode .avatarZoomControl button:focus-visible {
+    border-color: #258bdc;
+    background-color: #2d4352;
+    color: #83c6ff;
+}
+
+html.dark-mode .avatarZoomControl input::-webkit-slider-thumb {
+    border-color: #18242e;
+}
+
+html.dark-mode .avatarZoomControl input::-moz-range-thumb {
+    border-color: #18242e;
+}
+
+html.dark-mode .cancelAvatarButton {
+    background-color: #2a3a46;
+    color: #d5e0e6;
+}
+
+html.dark-mode .profileField input,
+html.dark-mode .profileField select {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+}
+
+html.dark-mode .profileField input[readonly] {
+    border-color: transparent;
+    background-color: #263642;
+    color: #aebbc4;
+}
+
+html.dark-mode .profileSecurity h2 {
+    color: #e4ebf0;
+}
+
+html.dark-mode .changePasswordPage {
+    color: #d7e0e6;
+}
+
+html.dark-mode .backToProfileLink {
+    color: #79c8dd;
+}
+
+html.dark-mode .backToProfileLink:hover,
+html.dark-mode .backToProfileLink:focus-visible {
+    color: #a2dfef;
+}
+
+html.dark-mode .changePasswordHeader {
+    border-bottom-color: #364956;
+}
+
+html.dark-mode .changePasswordHeader h1,
+html.dark-mode .changePasswordField {
+    color: #e4ebf0;
+}
+
+html.dark-mode .changePasswordHeader p {
+    color: #98a8b2;
+}
+
+html.dark-mode .changePasswordField input {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+}
+
+html.dark-mode .changePasswordToggle {
+    color: #98a8b2;
+}
+
+html.dark-mode .changePasswordToggle:hover,
+html.dark-mode .changePasswordToggle:focus-visible {
+    background-color: rgba(121, 200, 221, 0.12);
+    color: #a2dfef;
+}
+
+html.dark-mode .passwordRequirement input {
+    border-color: #687985;
+}
+
+html.dark-mode .passwordRequirement input:checked {
+    border-color: #69bd34;
+    background-color: #69bd34;
+}
+
+html.dark-mode .passwordRequirement {
+    color: #94a5af;
+}
+
+html.dark-mode .passwordRequirement.is-met {
+    color: #91d66b;
+}
+
+html.dark-mode .taskModalBackdrop {
+    background-color: rgba(2, 10, 18, 0.68);
+}
+
+html.dark-mode .taskModal {
+    border-color: #258bdc;
+    background-color: #18242e;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.52);
+}
+
+html.dark-mode .taskModalClose {
+    background-color: #263642;
+    color: #d7e1e8;
+}
+
+html.dark-mode #taskModalText {
+    background-color: #263642;
+    color: #edf3f7;
+}
+
+html.dark-mode #taskModalText::placeholder {
+    color: #bac7cf;
+}
+
+html.dark-mode .taskDateSummary,
+html.dark-mode .taskReminderSummary,
+html.dark-mode .taskRepeatSummary {
+    color: #b7c7d0;
+}
+
+html.dark-mode .dateTimeModalBackdrop {
+    background-color: rgba(2, 10, 18, 0.78);
+}
+
+html.dark-mode .dateTimeModal {
+    border-color: #3b5262;
+    background-color: #18242e;
+    color: #dce6ec;
+}
+
+html.dark-mode .dateTimeModalClose,
+html.dark-mode .calendarNavButton {
+    background-color: #263642;
+    color: #d4e0e7;
+}
+
+html.dark-mode .calendarHeader h2,
+html.dark-mode .calendarWeekdays span,
+html.dark-mode .setTimeHeader h3 {
+    color: #e8eff3;
+}
+
+html.dark-mode .calendarDay {
+    color: #cbd7de;
+}
+
+html.dark-mode .calendarDay.outsideMonth {
+    color: #61727d;
+}
+
+html.dark-mode .calendarDay:hover,
+html.dark-mode .calendarDay:focus-visible {
+    background-color: #253c4c;
+    color: #83c6ff;
+}
+
+html.dark-mode .calendarDay.selected {
+    background-color: #378edb;
+    color: #ffffff;
+}
+
+html.dark-mode .quickDateOptions {
+    border-color: #374957;
+}
+
+html.dark-mode .quickDateOptions label,
+html.dark-mode .setTimeToggle label,
+html.dark-mode .timePicker label {
+    color: #c9d5dc;
+}
+
+html.dark-mode .timePicker input,
+html.dark-mode .timePicker select {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+    color-scheme: dark;
+}
+
+html.dark-mode .cancelDateTimeButton {
+    background-color: #2a3a46;
+    color: #d5e0e6;
+}
+
+html.dark-mode .reminderModalBackdrop {
+    background-color: rgba(2, 10, 18, 0.8);
+}
+
+html.dark-mode .reminderModal {
+    border-color: #3b5262;
+    background-color: #18242e;
+    color: #dce6ec;
+}
+
+html.dark-mode .reminderModalClose {
+    background-color: #263642;
+    color: #d4e0e7;
+}
+
+html.dark-mode .reminderModalHeader,
+html.dark-mode .reminderItem h3 {
+    color: #e8eff3;
+}
+
+html.dark-mode .reminderModalHint,
+html.dark-mode .reminderPresetField,
+html.dark-mode .customReminderFields label,
+html.dark-mode .beforeDueText {
+    color: #c5d2d9;
+}
+
+html.dark-mode .reminderItem {
+    border-color: #374957;
+    background-color: #202f3a;
+}
+
+html.dark-mode .customReminderFields {
+    background-color: #263642;
+}
+
+html.dark-mode .reminderCountField select,
+html.dark-mode .reminderPresetField select,
+html.dark-mode .customReminderFields input,
+html.dark-mode .customReminderFields select {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+    color-scheme: dark;
+}
+
+html.dark-mode .cancelReminderButton {
+    background-color: #2a3a46;
+    color: #d5e0e6;
+}
+
+html.dark-mode .repeatModalBackdrop {
+    background-color: rgba(2, 10, 18, 0.82);
+}
+
+html.dark-mode .repeatModal {
+    border-color: #3b5262;
+    background-color: #18242e;
+    color: #dce6ec;
+}
+
+html.dark-mode .repeatModalScroll {
+    scrollbar-color: #258bdc #13212b;
+}
+
+html.dark-mode .repeatModalScroll::-webkit-scrollbar-track {
+    background-color: #13212b;
+}
+
+html.dark-mode .repeatModalScroll::-webkit-scrollbar-thumb {
+    border-color: #13212b;
+    background: linear-gradient(180deg, #349de9, #258bdc);
+}
+
+html.dark-mode .repeatModalScroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #69bd34, #54a82c);
+}
+
+html.dark-mode .repeatModalClose,
+html.dark-mode .repeatCalendarHeader button {
+    background-color: #263642;
+    color: #d4e0e7;
+}
+
+html.dark-mode .repeatModalScroll>h2,
+html.dark-mode .customRepeatSection>h3,
+html.dark-mode .repeatEndsSection>h3,
+html.dark-mode .repeatCalendarHeader h4 {
+    color: #e8eff3;
+}
+
+html.dark-mode .repeatModalHint,
+html.dark-mode .repeatOnWeek legend,
+html.dark-mode .repeatOnMonth legend,
+html.dark-mode .repeatCountField {
+    color: #c5d2d9;
+}
+
+html.dark-mode .repeatFrequencyOptions span,
+html.dark-mode .repeatEndOptions span {
+    border-color: #455664;
+    background-color: #202f3a;
+    color: #cbd7de;
+}
+
+html.dark-mode .repeatFrequencyOptions input:checked+span,
+html.dark-mode .repeatEndOptions input:checked+span,
+html.dark-mode .repeatWeekDays input:checked+span,
+html.dark-mode .repeatMonthDays input:checked+span {
+    border-color: #258bdc;
+    background-color: #258bdc;
+    color: #ffffff;
+}
+
+html.dark-mode .customRepeatSection,
+html.dark-mode .repeatEndsSection {
+    border-color: #374957;
+    background-color: #202f3a;
+}
+
+html.dark-mode .repeatEveryFields input,
+html.dark-mode .repeatEveryFields select,
+html.dark-mode .repeatCountField input {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+    color-scheme: dark;
+}
+
+html.dark-mode .repeatWeekDays span,
+html.dark-mode .repeatMonthDays span {
+    border-color: #455664;
+    background-color: #263642;
+    color: #cbd7de;
+}
+
+html.dark-mode .repeatEndDateSection {
+    background-color: #18242e;
+}
+
+html.dark-mode .repeatCalendarWeekdays span {
+    color: #93a5af;
+}
+
+html.dark-mode .repeatCalendarDay {
+    color: #cbd7de;
+}
+
+html.dark-mode .repeatCalendarDay.outsideMonth {
+    color: #61727d;
+}
+
+html.dark-mode .repeatCalendarDay:hover:not(:disabled),
+html.dark-mode .repeatCalendarDay:focus-visible {
+    background-color: #253c4c;
+    color: #83c6ff;
+}
+
+html.dark-mode .repeatCalendarDay.selected {
+    background-color: #378edb;
+    color: #ffffff;
+}
+
+html.dark-mode .repeatCalendarDay:disabled {
+    color: #53636e;
+}
+
+html.dark-mode .cancelRepeatButton {
+    background-color: #2a3a46;
+    color: #d5e0e6;
+}
+
+html.dark-mode .notificationsPage {
+    color: #d7e0e6;
+}
+
+html.dark-mode .notificationsHeader {
+    border-bottom-color: #364956;
+}
+
+html.dark-mode .notificationsHeader h1,
+html.dark-mode .notificationItemHeading h2,
+html.dark-mode .notificationsEmpty h2,
+html.dark-mode .notificationEditModal h2,
+html.dark-mode .notificationOffsetFields label {
+    color: #e4ebf0;
+}
+
+html.dark-mode .notificationsHeader>div>p:last-child,
+html.dark-mode .notificationsEmpty p,
+html.dark-mode .notificationEditModal header p {
+    color: #98a8b2;
+}
+
+html.dark-mode .notificationsTotal,
+html.dark-mode .notificationItemIcon {
+    background-color: #203842;
+    color: #79c8dd;
+}
+
+html.dark-mode .notificationItem {
+    border-color: #364956;
+    background-color: #18242e;
+    box-shadow: 0 9px 24px rgba(0, 0, 0, 0.2);
+}
+
+html.dark-mode .notificationDetails span {
+    color: #7f929d;
+}
+
+html.dark-mode .notificationDetails strong {
+    color: #c6d2d9;
+}
+
+html.dark-mode .notificationStatus--pending {
+    background-color: #1c3b4b;
+    color: #83c6e6;
+}
+
+html.dark-mode .notificationStatus--sent {
+    background-color: #253d27;
+    color: #91d66b;
+}
+
+html.dark-mode .notificationStatus--failed {
+    background-color: #45282e;
+    color: #f0949c;
+}
+
+html.dark-mode .notificationStatus--cancelled {
+    background-color: #2a3740;
+    color: #9aabb4;
+}
+
+html.dark-mode .notificationEditButton {
+    border-color: #386172;
+    color: #79c8dd;
+}
+
+html.dark-mode .notificationEditButton:hover:not(:disabled),
+html.dark-mode .notificationEditButton:focus-visible:not(:disabled) {
+    background-color: #203842;
+}
+
+html.dark-mode .notificationCancelButton {
+    border-color: #6e3d45;
+    color: #f0949c;
+}
+
+html.dark-mode .notificationCancelButton:hover:not(:disabled),
+html.dark-mode .notificationCancelButton:focus-visible:not(:disabled) {
+    background-color: #45282e;
+}
+
+html.dark-mode .notificationAction:disabled {
+    border-color: #3b4a54;
+    color: #687983;
+}
+
+html.dark-mode .notificationEditBackdrop {
+    background-color: rgba(2, 10, 18, 0.7);
+}
+
+html.dark-mode .notificationEditModal {
+    border-color: #364956;
+    background-color: #18242e;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.52);
+}
+
+html.dark-mode .notificationEditClose,
+html.dark-mode .notificationEditDismiss {
+    background-color: #293945;
+    color: #c8d4db;
+}
+
+html.dark-mode .notificationOffsetFields input,
+html.dark-mode .notificationOffsetFields select {
+    border-color: #455664;
+    background-color: #1d2a35;
+    color: #e4ebf0;
+    color-scheme: dark;
+}
+
+html.dark-mode .notificationDueSummary {
+    background-color: #20343f;
+    color: #9aabb4;
+}
+
+html.dark-mode .notificationDueSummary strong {
+    color: #79c8dd;
+}
+
+/* Messages follows the dashboard's existing header and list layout. */
+.main .view .notificationsPage {
+    min-height: 0;
+    padding: 0;
+    color: inherit;
+}
+
+.main .view .notificationsContent {
+    overflow-y: auto;
+}
+
+.main .view .notificationsPanel {
+    width: 100%;
+}
+
+.main .view .content .notificationsTitle {
+    display: block;
+    width: auto;
+    box-sizing: border-box;
+}
+
+.main .view .notificationsPageMessage {
+    min-height: 18px;
+    margin: 0 10px 4px;
+}
+
+.main .view .notificationsList {
+    display: block;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0 10px;
+    box-sizing: border-box;
+    gap: 0;
+}
+
+.main .view .content .notificationsList .notificationItem {
+    display: grid;
+    width: 100%;
+    height: auto;
+    min-height: 68px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 0;
+    border-top: 1px solid #d6dde1;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    line-height: normal;
+}
+
+.main .view .content .notificationsList .notificationItem:last-child {
+    border-bottom: 1px solid #d6dde1;
+}
+
+.main .view .content .notificationItemIcon {
+    width: 30px;
+    height: auto;
+    border-radius: 0;
+    background-color: transparent;
+    color: #54b9cd;
+    font-size: 17px;
+}
+
+.main .view .content .notificationItemHeading {
+    margin-bottom: 7px;
+}
+
+.main .view .content .notificationItemHeading h2 {
+    color: #414d54;
+    font-size: 14px;
+}
+
+.main .view .content .notificationDetails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 20px;
+}
+
+.main .view .content .notificationDetails p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.main .view .content .notificationDetails span {
+    color: #8a959b;
+    font-size: 10px;
+}
+
+.main .view .content .notificationDetails strong {
+    color: #606c73;
+    font-size: 11px;
+}
+
+.main .view .content .notificationActions {
+    display: flex;
+    grid-column: auto;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.main .view .content .notificationAction {
+    width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: 5px;
+}
+
+.main .view .content .notificationsEmpty {
+    width: 100%;
+    max-width: none;
+    min-height: 50px;
+    margin: 0;
+    padding-left: 10px;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+html.dark-mode .main .view .content .notificationsList .notificationItem {
+    border-color: #3b4c57;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+html.dark-mode .main .view .content .notificationItemHeading h2 {
+    color: #d7e0e6;
+}
+
+html.dark-mode .main .view .content .notificationDetails strong {
+    color: #aebcc4;
+}
+
+@media (max-width: 620px) {
+    .main .view .content .notificationsList .notificationItem {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .main .view .content .notificationItemIcon {
+        display: none;
+    }
+
+    .main .view .content .notificationActions {
+        grid-column: 2;
+    }
+
+    .main .view .content .notificationDetails {
+        display: grid;
+        gap: 5px;
+    }
+}

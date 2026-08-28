@@ -10,10 +10,12 @@ use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\ProfileService;
-use Exception;
+use Throwable;
 
 final class ProfileController
 {
+    private const DASHBOARD_LAYOUT = 'layouts/dashboard';
+
     public function __construct(
         private readonly ProfileService $profileService,
         private readonly UserRepository $userRepository
@@ -35,8 +37,9 @@ final class ProfileController
             profileErrors: [],
             profileSuccess: $profileSuccess
         );
+        $viewData['activeView'] = 'profile';
 
-        return Response::view('pages/profile', $viewData);
+        return Response::view(self::DASHBOARD_LAYOUT, $viewData);
     }
 
     public function update(Request $request): Response
@@ -44,8 +47,16 @@ final class ProfileController
         $userId = (int) ($_SESSION['user']['id'] ?? 0);
         $userProfile = $this->userRepository->getProfile($userId);
         $currentUser = $_SESSION['user'] ?? [];
+        $profileErrors = [];
 
-        $profileAction = $request->postString('profile_action');
+        if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
+            $profileErrors[] = 'Your session has expired. Please submit the form again.';
+        }
+
+        $avatarAction = $request->postString('profile_action');
+        $avatarChoiceValue = $request->postString('avatar_choice');
+        $avatarData = $request->postString('avatar_data');
+
         $profileInput = [
             'firstname' => $request->postString('firstname'),
             'lastname' => $request->postString('lastname'),
@@ -55,18 +66,6 @@ final class ProfileController
             'country' => $request->postString('country'),
             'avatar_url' => trim((string) ($userProfile->avatar_url ?? '')),
         ];
-
-        $avatarAction = $request->postString('avatar_action', 'unchanged');
-        $avatarChoiceValue = $request->postString('avatar_choice');
-        $avatarData = $request->postString('avatar_data');
-
-        $profileErrors = [];
-
-        if ($profileAction !== 'save') {
-            $profileErrors[] = 'Invalid profile request.';
-        } elseif (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
-            $profileErrors[] = 'Your session has expired. Please submit the form again.';
-        }
 
         $userTimezone = TimezoneHelper::getApplicationTimezone();
         $validationErrors = $this->profileService->validateProfile(
@@ -91,7 +90,7 @@ final class ProfileController
                 $_SESSION['profile_success'] = 'Your profile has been saved successfully.';
 
                 return Response::redirect('/profile');
-            } catch (Exception $exception) {
+            } catch (Throwable $exception) {
                 $profileErrors[] = $exception->getMessage();
             }
         }
@@ -105,26 +104,33 @@ final class ProfileController
             profileErrors: $profileErrors,
             profileSuccess: null
         );
+        $viewData['activeView'] = 'profile';
 
-        return Response::view('pages/profile', $viewData);
+        return Response::view(self::DASHBOARD_LAYOUT, $viewData);
     }
 
-    public function showChangePassword(): Response
+    public function changePassword(): Response
     {
-        return Response::view('pages/change-password', [
+        $currentUser = $_SESSION['user'] ?? [];
+        return Response::view(self::DASHBOARD_LAYOUT, [
+            'activeView' => 'change-password',
+            'currentUser' => $currentUser,
             'csrfToken' => CsrfMiddleware::getToken(),
         ]);
     }
 
-    public function showAccountSettings(): Response
+    public function accountSettings(): Response
     {
-        return Response::view('pages/account-settings', [
+        $currentUser = $_SESSION['user'] ?? [];
+        return Response::view(self::DASHBOARD_LAYOUT, [
+            'activeView' => 'account-settings',
+            'currentUser' => $currentUser,
             'csrfToken' => CsrfMiddleware::getToken(),
-            'currentUser' => $_SESSION['user'] ?? [],
         ]);
     }
 
     /**
+     * @param array<string, mixed> $currentUser
      * @param array<int, string> $profileErrors
      * @return array<string, mixed>
      */
@@ -134,19 +140,18 @@ final class ProfileController
         int $userId,
         array $profileErrors,
         ?string $profileSuccess
-    ): array{
-        $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
+    ): array {
         $profileData = $userProfile ?? (object) [];
-
+        $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
         $profileFirstName = trim((string) ($profileData->firstname ?? ''));
         $profileLastName = trim((string) ($profileData->lastname ?? ''));
         $hasFullName = $profileFirstName !== '' && $profileLastName !== '';
+
         $currentDisplayName = $hasFullName
             ? $profileFirstName . ' ' . $profileLastName
             : $currentUsername;
 
-        $savedAvatarUrl = trim((string) ($profileData->avatar_url ?? ''));
-        $avatarUrl = $this->resolveAvatarUrl($savedAvatarUrl);
+        $avatarUrl = $this->resolveAvatarUrl($profileData);
 
         $profileFields = [
             'firstname' => (string) ($profileData->firstname ?? ''),
@@ -160,28 +165,28 @@ final class ProfileController
         ];
 
         return [
-            'csrfToken' => CsrfMiddleware::getToken(),
+            'userId' => $userId,
+            'currentDisplayName' => $currentDisplayName,
+            'avatarUrl' => $avatarUrl,
             'profileFields' => $profileFields,
             'profileErrors' => $profileErrors,
             'profileSuccess' => $profileSuccess,
-            'avatarUrl' => $avatarUrl,
-            'currentDisplayName' => $currentDisplayName,
-            'currentUser' => $currentUser,
-            'currentUserId' => $userId,
-            'userProfile' => $userProfile,
+            'csrfToken' => CsrfMiddleware::getToken(),
+            'baseUrl' => '/',
         ];
     }
 
-    private function resolveAvatarUrl(string $savedAvatarUrl): string
+    private function resolveAvatarUrl(object $profileData): string
     {
+        $defaultAvatarUrl = '/assets/img/user-default-avatar.webp';
+        $savedAvatarUrl = trim((string) ($profileData->avatar_url ?? ''));
+
         if ($savedAvatarUrl === '') {
-            return '/assets/img/user-default-avatar.webp';
+            return $defaultAvatarUrl;
         }
 
-        if (preg_match('#^(?:https?://|data:)#i', $savedAvatarUrl)) {
-            return $savedAvatarUrl;
-        }
-
-        return '/' . ltrim($savedAvatarUrl, '/');
+        return preg_match('#^(?:https?://|data:)#i', $savedAvatarUrl)
+            ? $savedAvatarUrl
+            : '/' . ltrim($savedAvatarUrl, '/');
     }
 }

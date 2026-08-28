@@ -11,6 +11,8 @@ use PDO;
 
 final class TaskRepository
 {
+    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
     public function __construct(private readonly PDO $pdo) {}
 
     /**
@@ -45,15 +47,15 @@ final class TaskRepository
 
         $parameters = [
             ':user_id' => $userId,
-            ':start_at' => $start->format('Y-m-d H:i:s'),
-            ':end_at' => $end->format('Y-m-d H:i:s'),
+            ':start_at' => $start->format(self::DATETIME_FORMAT),
+            ':end_at' => $end->format(self::DATETIME_FORMAT),
         ];
 
         if ($showCompletedSince !== null) {
             $parameters[':completed_since'] = DateTimeImmutable::createFromInterface($showCompletedSince)
                 ->setTime(0, 0)
                 ->setTimezone(TimezoneHelper::getApplicationTimezone())
-                ->format('Y-m-d H:i:s');
+                ->format(self::DATETIME_FORMAT);
         }
 
         $stmt->execute($parameters);
@@ -78,7 +80,7 @@ final class TaskRepository
             $parameters[':completed_since'] = DateTimeImmutable::createFromInterface($showCompletedSince)
                 ->setTime(0, 0)
                 ->setTimezone(TimezoneHelper::getApplicationTimezone())
-                ->format('Y-m-d H:i:s');
+                ->format(self::DATETIME_FORMAT);
         }
 
         $stmt->execute($parameters);
@@ -194,8 +196,8 @@ final class TaskRepository
         );
         $stmt->execute([
             ':user_id' => $userId,
-            ':start_at' => $databaseStart->format('Y-m-d H:i:s'),
-            ':end_at' => $databaseEnd->format('Y-m-d H:i:s'),
+            ':start_at' => $databaseStart->format(self::DATETIME_FORMAT),
+            ':end_at' => $databaseEnd->format(self::DATETIME_FORMAT),
         ]);
 
         return (int) $stmt->fetchColumn();

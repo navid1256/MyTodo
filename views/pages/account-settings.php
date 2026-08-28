@@ -1,6 +1,6 @@
 <div class="accountSettingsPage">
     <header class="accountSettingsHeader dashboardSectionHeader">
-        <a class="dashboardBackButton" href="?view=home" data-dashboard-back aria-label="Back to previous page">
+        <a class="dashboardBackButton" href="/" data-dashboard-back aria-label="Back to previous page">
             <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
             <span>Back</span>
         </a>
