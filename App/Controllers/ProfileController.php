@@ -111,20 +111,36 @@ final class ProfileController
 
     public function changePassword(): Response
     {
+        $userId = (int) ($_SESSION['user']['id'] ?? 0);
         $currentUser = $_SESSION['user'] ?? [];
+        $userProfile = $this->userRepository->getProfile($userId);
+        $displayName = $this->resolveDisplayName($userProfile, $currentUser);
+        $avatarUrl = $this->resolveAvatarUrl($userProfile);
+
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'change-password',
             'currentUser' => $currentUser,
+            'userProfile' => $userProfile,
+            'currentDisplayName' => $displayName,
+            'avatarUrl' => $avatarUrl,
             'csrfToken' => CsrfMiddleware::getToken(),
         ]);
     }
 
     public function accountSettings(): Response
     {
+        $userId = (int) ($_SESSION['user']['id'] ?? 0);
         $currentUser = $_SESSION['user'] ?? [];
+        $userProfile = $this->userRepository->getProfile($userId);
+        $displayName = $this->resolveDisplayName($userProfile, $currentUser);
+        $avatarUrl = $this->resolveAvatarUrl($userProfile);
+
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'account-settings',
             'currentUser' => $currentUser,
+            'userProfile' => $userProfile,
+            'currentDisplayName' => $displayName,
+            'avatarUrl' => $avatarUrl,
             'csrfToken' => CsrfMiddleware::getToken(),
         ]);
     }
@@ -143,14 +159,7 @@ final class ProfileController
     ): array {
         $profileData = $userProfile ?? (object) [];
         $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
-        $profileFirstName = trim((string) ($profileData->firstname ?? ''));
-        $profileLastName = trim((string) ($profileData->lastname ?? ''));
-        $hasFullName = $profileFirstName !== '' && $profileLastName !== '';
-
-        $currentDisplayName = $hasFullName
-            ? $profileFirstName . ' ' . $profileLastName
-            : $currentUsername;
-
+        $currentDisplayName = $this->resolveDisplayName($profileData, $currentUser);
         $avatarUrl = $this->resolveAvatarUrl($profileData);
 
         $profileFields = [
@@ -176,7 +185,19 @@ final class ProfileController
         ];
     }
 
-    private function resolveAvatarUrl(object $profileData): string
+    private function resolveDisplayName(?object $profile, ?array $user): string
+    {
+        $firstName = trim((string) ($profile->firstname ?? ''));
+        $lastName = trim((string) ($profile->lastname ?? ''));
+
+        if ($firstName !== '' && $lastName !== '') {
+            return $firstName . ' ' . $lastName;
+        }
+
+        return (string) ($user['username'] ?? 'User');
+    }
+
+    private function resolveAvatarUrl(?object $profileData): string
     {
         $defaultAvatarUrl = '/assets/img/user-default-avatar.webp';
         $savedAvatarUrl = trim((string) ($profileData->avatar_url ?? ''));

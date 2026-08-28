@@ -12,7 +12,7 @@ $escapedCount = htmlspecialchars((string) $completedCount, ENT_QUOTES, 'UTF-8');
         <button class="button active" id="openTaskModal" type="button">
             Add New Task
         </button>
-        <a class="button completedButton" href="/activity" data-dashboard-link aria-label="View <?= $escapedCount ?> tasks completed today">
+        <a class="button completedButton" href="/activity?filter=today" data-dashboard-link aria-label="View <?= $escapedCount ?> tasks completed today">
             <span class="completedCount"><?= $escapedCount ?></span>
             <span>Completed</span>
         </a>

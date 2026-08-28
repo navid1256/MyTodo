@@ -45,7 +45,7 @@ if (!function_exists('renderSingleTaskItem')) {
             . "    <div class=\"info\">\n"
             . "        {$timeInfo}\n"
             . "        <a class=\"deleteTaskLink\" href=\"{$deleteUrl}\" aria-label=\"Delete task {$escapedTitle}\" onclick=\"return confirm('Are You Sure To Delete This Task ?\\n{$escapedTitle}')\">\n"
-            . "            <i class=\"fa-regular fa-trash-can\" aria-hidden=\"true\"></i>\n"
+            . "            <i class=\"fa-light fa-trash-can\" aria-hidden=\"true\"></i>\n"
             . "        </a>\n"
             . "    </div>\n"
             . "</li>\n";
