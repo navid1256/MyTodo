@@ -7,7 +7,7 @@ export function convertTo12Hour(hour24, minute) {
 }
 
 export function convertTo24Hour(hour12, minute, period) {
-    var normalizedHour = Number(hour12) % 12;
+    let normalizedHour = Number(hour12) % 12;
 
     if (period === 'PM') {
         normalizedHour += 12;
