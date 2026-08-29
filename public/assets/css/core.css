@@ -555,10 +555,6 @@ html.dark-mode .dashboardBackButton:focus-visible {
     color: #54b9cd;
 }
 
-.main .view .content .scheduledTaskList {
-    margin-top: 18px;
-}
-
 .main .view .content .list ul {
     width: 100%;
     padding-left: 10px;

@@ -14,7 +14,7 @@ $renderDate = isset($renderDate) && is_string($renderDate) ? $renderDate : date(
 $renderTimezone = isset($renderTimezone) && is_string($renderTimezone) ? $renderTimezone : 'Asia/Tehran';
 
 $pageStylesheets = [
-    'home' => null,
+    'home' => '/assets/css/pages/home.css',
     'manage-tasks' => '/assets/css/pages/manage-tasks.css',
     'activity' => '/assets/css/pages/activity.css',
     'messages' => '/assets/css/pages/messages.css',

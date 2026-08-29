@@ -1,0 +1,8 @@
+.main .view .content .list .title,
+.main .view .content .list ul {
+    box-sizing: border-box;
+}
+
+.main .view .content .list ul {
+    padding-inline: 10px;
+}
