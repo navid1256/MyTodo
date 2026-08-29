@@ -568,14 +568,25 @@ html.dark-mode .sentNotificationsPageHeaderIcon {
     display: flex;
     grid-column: auto;
     justify-content: flex-end;
-    gap: 5px;
+    gap: 10px;
 }
 
 .main .view .content .notificationAction {
-    width: 32px;
-    min-height: 32px;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
     padding: 0;
     border-radius: 5px;
+}
+
+.main .view .content .list ul li .notificationAction>i {
+    float: none;
+    width: auto;
+    height: auto;
+    margin: 0;
+    line-height: 1;
+    font-size: 15px;
+    vertical-align: middle;
 }
 
 .main .view .content .notificationsEmpty {

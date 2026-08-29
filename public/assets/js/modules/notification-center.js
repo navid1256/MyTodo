@@ -13,7 +13,7 @@ function formatOffset(value, unit) {
 }
 
 export function initNotificationCenter(signal) {
-    const page = document.querySelector('.notificationsPage');
+    const page = document.querySelector('.notificationsContent');
 
     if (!page) {
         return;
