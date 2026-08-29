@@ -10,7 +10,6 @@ use App\Middleware\CsrfMiddleware;
 use App\Services\AuthService;
 use InvalidArgumentException;
 use PDOException;
-use Throwable;
 
 final class AuthController
 {
@@ -95,7 +94,14 @@ final class AuthController
                 $_SESSION['auth_success'] = 'Your account has been created successfully. Please log in.';
 
                 return Response::redirect('/auth?action=login');
-            } catch (PDOException) {
+            } catch (PDOException $exception) {
+                error_log(sprintf(
+                    'Registration database error [%s]: %s in %s:%d',
+                    $exception->getCode(),
+                    $exception->getMessage(),
+                    $exception->getFile(),
+                    $exception->getLine()
+                ));
                 $authErrors[] = 'Registration could not be completed. Please try again.';
             }
         }
@@ -167,8 +173,6 @@ final class AuthController
             return ['status' => 200, 'body' => ['success' => true, 'message' => 'Your password has been changed successfully.']];
         } catch (InvalidArgumentException $exception) {
             return ['status' => 422, 'body' => ['success' => false, 'message' => $exception->getMessage()]];
-        } catch (Throwable) {
-            return ['status' => 500, 'body' => ['success' => false, 'message' => 'Your password could not be changed. Please try again.']];
         }
     }
 

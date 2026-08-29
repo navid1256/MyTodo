@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Exceptions\AvatarStorageException;
+use App\Exceptions\ProfileUpdateException;
 use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\ProfileService;
-use Throwable;
+use InvalidArgumentException;
 
 final class ProfileController
 {
@@ -90,7 +92,7 @@ final class ProfileController
                 $_SESSION['profile_success'] = 'Your profile has been saved successfully.';
 
                 return Response::redirect('/profile');
-            } catch (Throwable $exception) {
+            } catch (AvatarStorageException | InvalidArgumentException | ProfileUpdateException $exception) {
                 $profileErrors[] = $exception->getMessage();
             }
         }

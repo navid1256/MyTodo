@@ -14,7 +14,6 @@ use App\Services\ReminderService;
 use DateTimeImmutable;
 use DateTimeZone;
 use JsonException;
-use Throwable;
 
 final class ReminderController
 {
@@ -65,8 +64,6 @@ final class ReminderController
             return Response::json(['success' => true, 'reminders' => $previewItems]);
         } catch (TaskValidationException | ReminderValidationException $exception) {
             return Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
-        } catch (Throwable) {
-            return Response::json(['success' => false, 'message' => 'The reminder time could not be calculated.'], 500);
         }
     }
 

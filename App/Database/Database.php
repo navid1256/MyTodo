@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Database;
 
-use App\Http\Response;
+use App\Exceptions\DatabaseConnectionException;
 use PDO;
 use PDOException;
 
@@ -41,9 +41,11 @@ final class Database
                 $config['options']
             );
         } catch (PDOException $exception) {
-            error_log('Database connection failed: ' . $exception->getMessage());
-
-            Response::text('Database connection failed.', 500)->send();
+            throw new DatabaseConnectionException(
+                'Unable to connect to the database.',
+                0,
+                $exception
+            );
         }
     }
 }

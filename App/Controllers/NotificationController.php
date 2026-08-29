@@ -13,7 +13,6 @@ use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use InvalidArgumentException;
-use Throwable;
 
 final class NotificationController
 {
@@ -109,7 +108,7 @@ final class NotificationController
                         'offset_unit' => (string) $updatedReminder->offset_unit,
                     ],
                 ]);
-            } catch (Throwable $exception) {
+            } catch (NotificationNotFoundException | NotificationValidationException | InvalidArgumentException $exception) {
                 $response = $this->handleUpdateError($exception);
             }
         }
@@ -137,7 +136,7 @@ final class NotificationController
                 $response = Response::json(['success' => true]);
             } catch (NotificationNotFoundException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
-            } catch (Throwable $exception) {
+            } catch (NotificationValidationException | InvalidArgumentException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
             }
         }
@@ -158,13 +157,11 @@ final class NotificationController
         return null;
     }
 
-    private function handleUpdateError(Throwable $exception): Response
+    private function handleUpdateError(
+        NotificationNotFoundException | NotificationValidationException | InvalidArgumentException $exception
+    ): Response
     {
-        $statusCode = match (true) {
-            $exception instanceof NotificationNotFoundException => 404,
-            $exception instanceof NotificationValidationException || $exception instanceof InvalidArgumentException => 422,
-            default => 500,
-        };
+        $statusCode = $exception instanceof NotificationNotFoundException ? 404 : 422;
 
         return Response::json(['success' => false, 'message' => $exception->getMessage()], $statusCode);
     }
