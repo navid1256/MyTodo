@@ -12,7 +12,8 @@
     "minimum-stability": "stable",
     "require": {
         "hekmatinasser/verta": "^2.1",
-        "minishlink/web-push": "^11.0"
+        "minishlink/web-push": "^11.0",
+        "vlucas/phpdotenv": "^5.7"
     },
     "autoload": {
         "psr-4": {

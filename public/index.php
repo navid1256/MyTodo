@@ -6,13 +6,18 @@ use App\Application;
 use App\Database\Database;
 use App\Http\Request;
 use App\Http\SessionManager;
+use App\Config\EnvironmentLoader;
 
 $rootPath = dirname(__DIR__);
 
 require_once $rootPath . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
+EnvironmentLoader::load($rootPath);
+
 $appConfig = require_once $rootPath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'app.php';
 $databaseConfig = require_once $rootPath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'database.php';
+
+
 
 date_default_timezone_set($appConfig['timezone']);
 

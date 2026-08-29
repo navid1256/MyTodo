@@ -100,12 +100,14 @@ final class TaskService
     public function deleteTask(int $taskId, int $userId): bool
     {
         if ($taskId <= 0) {
-            return false;
+            throw new TaskNotFoundException('Invalid task.');
         }
 
-        $this->reminderService->deleteRemindersForTask($taskId);
+        if (!$this->taskRepository->delete($taskId, $userId)) {
+            throw new TaskNotFoundException('Task not found.');
+        }
 
-        return $this->taskRepository->delete($taskId, $userId);
+        return true;
     }
 
     /**
