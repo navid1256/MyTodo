@@ -49,8 +49,8 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
    - Create the MySQL database and import the schema
 
 4. **Set up web server**
-   - Point your web server to the project directory
-   - Access via `http://localhost/7Todo` (or your configured URL)
+   - Point the web server document root to the `public/` directory
+   - Access the application through the configured host or local development URL
 
 ## 📝 Usage
 
@@ -64,13 +64,15 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
 
 ```
 7Todo/
-├── assets/           # Frontend assets (CSS, JS, images)
-├── views/            # PHP templates and views
-├── libs/             # Library code and utilities
-├── bootstrap/        # Application initialization
+├── App/              # Controllers, services, repositories, HTTP, and domain helpers
+├── config/           # Application and database configuration
+├── Database/         # Database schema and migrations
+├── public/           # Web root, front controller, assets, and public uploads
+│   └── index.php     # Application front controller
+├── routes/           # Web and API route definitions
+├── tests/            # Automated tests
+├── views/            # Layouts, pages, components, and modals
 ├── vendor/           # Composer dependencies
-├── index.php         # Main entry point
-├── auth.php          # Authentication logic
 ├── composer.json     # Project metadata and dependencies
 └── README.md         # This file
 ```
