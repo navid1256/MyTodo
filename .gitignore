@@ -7,3 +7,7 @@ todo.md
 RoadToMVC.md
 progress.md
 .env
+.env.*
+!.env.example
+*.pem
+*.key

@@ -119,8 +119,6 @@ final class TaskController
                 ]);
             } catch (TaskNotFoundException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
-            } catch (Throwable $exception) {
-                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
             }
         }
 
@@ -144,8 +142,6 @@ final class TaskController
                 $response = Response::json(['success' => true]);
             } catch (TaskNotFoundException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
-            } catch (Throwable $exception) {
-                $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 500);
             }
         }
 
@@ -190,8 +186,6 @@ final class TaskController
             $response = Response::text('1', 200);
         } catch (TaskValidationException | ReminderValidationException $exception) {
             $response = Response::text($exception->getMessage(), 422);
-        } catch (Throwable $exception) {
-            $response = Response::text($exception->getMessage(), 500);
         }
 
         return $response;
