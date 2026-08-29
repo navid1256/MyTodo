@@ -1,5 +1,5 @@
 {
-  "phpserver.relativePath": ".",
+  "phpserver.relativePath": "public",
   "phpserver.phpPath": "C:\\xampp\\php\\php.exe",
   "phpserver.ip": "127.0.0.1",
   "phpserver.port": 8000
