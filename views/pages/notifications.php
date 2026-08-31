@@ -7,18 +7,22 @@ use App\Helpers\TimezoneHelper;
 /** @var array<int, object> $sentNotifications */
 /** @var array<int, object> $notifications */
 /** @var \Closure|null $formatNotificationDate */
+/** @var DateTimeZone|null $notificationTimezone */
 
 $notificationList = isset($sentNotifications) && is_array($sentNotifications)
     ? $sentNotifications
     : (isset($notifications) && is_array($notifications) ? $notifications : []);
 
-$userTimezone = TimezoneHelper::getApplicationTimezone();
-$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($userTimezone): string {
+$storageTimezone = TimezoneHelper::getApplicationTimezone();
+$userTimezone = $notificationTimezone ?? TimezoneHelper::getClientTimezone();
+$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($storageTimezone, $userTimezone): string {
     if ($dateTime === null || trim($dateTime) === '') {
         return 'Not available';
     }
 
-    return (new DateTimeImmutable($dateTime, $userTimezone))->format('M j, Y \a\t h:i A');
+    return (new DateTimeImmutable($dateTime, $storageTimezone))
+        ->setTimezone($userTimezone)
+        ->format('M j, Y \a\t h:i A');
 };
 ?>
 <section class="sentNotificationsPage" aria-labelledby="sentNotificationsPageTitle">

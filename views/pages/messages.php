@@ -9,6 +9,7 @@ use App\Helpers\TimezoneHelper;
 /** @var \Closure|null $formatNotificationDate */
 /** @var \Closure|null $formatNotificationOffset */
 /** @var string $csrfToken */
+/** @var DateTimeZone|null $notificationTimezone */
 
 $notifications = isset($notifications) && is_array($notifications) ? $notifications : [];
 $statusLabels = $notificationStatusLabels ?? [
@@ -19,13 +20,16 @@ $statusLabels = $notificationStatusLabels ?? [
 ];
 $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
 
-$userTimezone = TimezoneHelper::getApplicationTimezone();
-$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($userTimezone): string {
+$storageTimezone = TimezoneHelper::getApplicationTimezone();
+$userTimezone = $notificationTimezone ?? TimezoneHelper::getClientTimezone();
+$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($storageTimezone, $userTimezone): string {
     if ($dateTime === null || trim($dateTime) === '') {
         return 'Not available';
     }
 
-    return (new DateTimeImmutable($dateTime, $userTimezone))->format('M j, Y \a\t h:i A');
+    return (new DateTimeImmutable($dateTime, $storageTimezone))
+        ->setTimezone($userTimezone)
+        ->format('M j, Y \a\t h:i A');
 };
 
 $offsetFormatter = $formatNotificationOffset ?? static function (int $value, string $unit): string {

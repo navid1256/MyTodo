@@ -197,6 +197,7 @@ export function initNavigation(options) {
       const nextView = replaceDashboardView(payload.html);
       document.body.dataset.activeView = payload.activeView;
       document.body.dataset.renderTimezone = payload.renderTimezone || '';
+      document.body.dataset.timezonePersisted = payload.timezoneIsPersisted ? '1' : '0';
       document.body.dataset.renderDate = payload.renderDate || '';
       activateNavigationView(payload.activeView);
       updateNotificationBadge(payload.sentNotificationCount);

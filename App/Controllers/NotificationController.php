@@ -12,6 +12,8 @@ use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
+use App\Services\UserSettingsService;
+use DateTimeZone;
 use InvalidArgumentException;
 
 final class NotificationController
@@ -23,24 +25,26 @@ final class NotificationController
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly AuthService $authService,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserSettingsService $settingsService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return $this->notifications();
+        return $this->notifications($request);
     }
 
     /**
      * Display Sent Notifications Archive (Header Bell Icon -> /notifications)
      */
-    public function notifications(): Response
+    public function notifications(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
         $sentNotifications = $this->notificationService->getNotificationsForUser($userId, 'sent');
         $sentCount = $this->notificationService->countSentNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
+        $userTimezone = $this->resolveUserTimezone($request);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'notifications',
@@ -51,19 +55,22 @@ final class NotificationController
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
+            'renderTimezone' => $userTimezone->getName(),
+            'notificationTimezone' => $userTimezone,
         ]);
     }
 
     /**
      * Display Notifications Management Center (Sidebar Navigation -> /messages)
      */
-    public function messages(): Response
+    public function messages(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
         $allNotifications = $this->notificationService->getNotificationsForUser($userId);
         $sentCount = $this->notificationService->countSentNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
+        $userTimezone = $this->resolveUserTimezone($request);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'messages',
@@ -74,6 +81,8 @@ final class NotificationController
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
+            'renderTimezone' => $userTimezone->getName(),
+            'notificationTimezone' => $userTimezone,
         ]);
     }
 
@@ -176,6 +185,14 @@ final class NotificationController
         }
 
         return (string) ($user['username'] ?? 'User');
+    }
+
+    private function resolveUserTimezone(Request $request): DateTimeZone
+    {
+        return $this->settingsService->getTimezoneForUser(
+            $this->authService->getCurrentUserId(),
+            $request->cookieString('mytodo_timezone')
+        );
     }
 
     private function resolveAvatarUrl(?object $profile): string

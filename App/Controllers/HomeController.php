@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Helpers\TimezoneHelper;
+use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\TaskService;
+use App\Services\UserSettingsService;
 use DateTimeImmutable;
+use DateTimeZone;
 
 final class HomeController
 {
@@ -19,13 +21,18 @@ final class HomeController
         private readonly TaskService $taskService,
         private readonly NotificationService $notificationService,
         private readonly AuthService $authService,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserSettingsService $settingsService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
-        $clientTimezone = TimezoneHelper::getClientTimezone();
+        $settings = $this->settingsService->getForUser(
+            $userId,
+            $request->cookieString('mytodo_timezone')
+        );
+        $clientTimezone = new DateTimeZone($settings['timezone']);
         $today = new DateTimeImmutable('today', $clientTimezone);
         $tomorrow = $today->modify('+1 day');
 
@@ -46,6 +53,8 @@ final class HomeController
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderDate' => $today->format('Y-m-d'),
             'renderTimezone' => $clientTimezone->getName(),
+            'timezoneIsPersisted' => $settings['is_persisted'],
+            'taskTimezone' => $clientTimezone,
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
         ]);

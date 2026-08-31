@@ -6,12 +6,16 @@ declare(strict_types=1);
 /** @var string $csrfToken */
 /** @var string $renderDate */
 /** @var string $renderTimezone */
+/** @var bool $timezoneIsPersisted */
 /** @var int|null $sentNotificationCount */
 
 $activeView = isset($activeView) && is_string($activeView) ? $activeView : 'home';
 $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
 $renderDate = isset($renderDate) && is_string($renderDate) ? $renderDate : date('Y-m-d');
-$renderTimezone = isset($renderTimezone) && is_string($renderTimezone) ? $renderTimezone : 'Asia/Tehran';
+$renderTimezone = isset($renderTimezone) && is_string($renderTimezone)
+    ? $renderTimezone
+    : date_default_timezone_get();
+$timezoneIsPersisted = isset($timezoneIsPersisted) && $timezoneIsPersisted === true;
 
 $pageStylesheets = [
     'home' => '/assets/css/pages/home.css',
@@ -74,6 +78,7 @@ if ($isPartial) {
 <body
     data-active-view="<?= htmlspecialchars($activeView, ENT_QUOTES, 'UTF-8') ?>"
     data-render-timezone="<?= htmlspecialchars($renderTimezone, ENT_QUOTES, 'UTF-8') ?>"
+    data-timezone-persisted="<?= $timezoneIsPersisted ? '1' : '0' ?>"
     data-render-date="<?= htmlspecialchars($renderDate, ENT_QUOTES, 'UTF-8') ?>">
     <div class="page">
         <?php require_once dirname(__DIR__) . '/components/dashboard-header.php'; ?>
@@ -120,6 +125,7 @@ if ($isPartial) {
         'pageStylesheet' => $activePageStylesheet,
         'taskModalStylesheet' => $usesTaskModals ? '/assets/css/task-modal.css' : null,
         'renderTimezone' => $renderTimezone,
+        'timezoneIsPersisted' => $timezoneIsPersisted,
         'renderDate' => $renderDate,
         'sentNotificationCount' => $sentNotificationCount ?? 0,
     ], JSON_THROW_ON_ERROR);

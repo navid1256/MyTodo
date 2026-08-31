@@ -38,6 +38,7 @@ final class TaskRepository
     ): array {
         $start = DateTimeImmutable::createFromInterface($date)->setTime(0, 0);
         $end = $start->modify('+1 day');
+        $databaseTimezone = TimezoneHelper::getApplicationTimezone();
         $completionFilter = $showCompletedSince !== null
             ? ' AND (is_done = 0 OR completed_at >= :completed_since)'
             : '';
@@ -47,8 +48,8 @@ final class TaskRepository
 
         $parameters = [
             ':user_id' => $userId,
-            ':start_at' => $start->format(self::DATETIME_FORMAT),
-            ':end_at' => $end->format(self::DATETIME_FORMAT),
+            ':start_at' => $start->setTimezone($databaseTimezone)->format(self::DATETIME_FORMAT),
+            ':end_at' => $end->setTimezone($databaseTimezone)->format(self::DATETIME_FORMAT),
         ];
 
         if ($showCompletedSince !== null) {

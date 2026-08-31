@@ -7,7 +7,6 @@ namespace App\Controllers;
 use App\Exceptions\ReminderValidationException;
 use App\Exceptions\TaskNotFoundException;
 use App\Exceptions\TaskValidationException;
-use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
@@ -15,6 +14,7 @@ use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\TaskService;
+use App\Services\UserSettingsService;
 use DateTimeImmutable;
 use DateTimeZone;
 use JsonException;
@@ -30,16 +30,18 @@ final class TaskController
         private readonly TaskService $taskService,
         private readonly AuthService $authService,
         private readonly UserRepository $userRepository,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly UserSettingsService $settingsService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
         $tasks = $this->taskService->getTasksForUser($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
-        $clientToday = new DateTimeImmutable('today', TimezoneHelper::getClientTimezone());
+        $clientTimezone = $this->resolveUserTimezone($request);
+        $clientToday = new DateTimeImmutable('today', $clientTimezone);
         $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
         $sentCount = $this->notificationService->countSentNotifications($userId);
 
@@ -53,16 +55,19 @@ final class TaskController
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
+            'renderTimezone' => $clientTimezone->getName(),
+            'taskTimezone' => $clientTimezone,
         ]);
     }
 
-    public function showActivity(): Response
+    public function showActivity(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
         $completedTasks = $this->taskService->getCompletedTasks($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
-        $clientToday = new DateTimeImmutable('today', TimezoneHelper::getClientTimezone());
+        $clientTimezone = $this->resolveUserTimezone($request);
+        $clientToday = new DateTimeImmutable('today', $clientTimezone);
         $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
         $sentCount = $this->notificationService->countSentNotifications($userId);
 
@@ -76,6 +81,8 @@ final class TaskController
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
+            'renderTimezone' => $clientTimezone->getName(),
+            'activityTimezone' => $clientTimezone,
         ]);
     }
 
@@ -102,7 +109,7 @@ final class TaskController
         } else {
             try {
                 $updatedTask = $this->taskService->toggleTask($taskId, $this->authService->getCurrentUserId());
-                $clientToday = new DateTimeImmutable('today', TimezoneHelper::getClientTimezone());
+                $clientToday = new DateTimeImmutable('today', $this->resolveUserTimezone($request));
                 $completedCount = $this->taskService->countCompletedTasksForDate(
                     $this->authService->getCurrentUserId(),
                     $clientToday
@@ -193,9 +200,10 @@ final class TaskController
 
     private function resolveUserTimezone(Request $request): DateTimeZone
     {
-        $timezoneCookie = $request->cookieString('mytodo_timezone');
-
-        return TimezoneHelper::getClientTimezone($timezoneCookie !== '' ? $timezoneCookie : null);
+        return $this->settingsService->getTimezoneForUser(
+            $this->authService->getCurrentUserId(),
+            $request->cookieString('mytodo_timezone')
+        );
     }
 
     private function guardTextRequest(Request $request): ?Response

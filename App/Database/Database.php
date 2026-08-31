@@ -34,12 +34,15 @@ final class Database
                 $config['charset']
             );
 
-            return new PDO(
+            $pdo = new PDO(
                 $dsn,
                 $config['username'],
                 $config['password'],
                 $config['options']
             );
+            $pdo->exec("SET time_zone = '+00:00'");
+
+            return $pdo;
         } catch (PDOException $exception) {
             throw new DatabaseConnectionException(
                 'Unable to connect to the database.',

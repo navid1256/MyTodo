@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Exceptions\AvatarStorageException;
 use App\Exceptions\ProfileUpdateException;
+use App\Helpers\TimezoneHelper;
 use App\Helpers\AvatarHelper;
 use App\Repositories\UserRepository;
 use DateTimeImmutable;
@@ -129,7 +130,7 @@ final class ProfileService
         ?DateTimeZone $userTimezone = null
     ): array {
         $errors = [];
-        $tz = $userTimezone ?? new DateTimeZone('Asia/Tehran');
+        $tz = $userTimezone ?? TimezoneHelper::getClientTimezone();
 
         $textFields = [
             'firstname' => 'First name',

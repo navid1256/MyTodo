@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 /** @var array<int, object> $tasks */
+/** @var DateTimeZone $taskTimezone */
 
 $tasks = isset($tasks) && is_array($tasks) ? $tasks : [];
 
@@ -18,7 +19,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             <span class="selectedTaskDateLabel" id="selectedTaskDateLabel" hidden></span>
         </div>
         <ul id="manageTaskItems">
-            <?php renderTaskItems($tasks, 'manage-tasks', 'No tasks found.', false, true); ?>
+            <?php renderTaskItems($tasks, 'manage-tasks', 'No tasks found.', false, true, $taskTimezone); ?>
             <?php if (!empty($tasks)): ?>
                 <li class="emptyTask allTasksEmpty" id="allTasksEmpty" hidden>No tasks found.</li>
             <?php endif; ?>
