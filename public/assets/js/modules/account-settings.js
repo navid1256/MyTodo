@@ -31,8 +31,9 @@ function cacheSettings(settings) {
         window.localStorage.setItem(`${storagePrefix}language`, settings.language);
         window.localStorage.setItem(`${storagePrefix}calendar-system`, settings.calendar_system);
         window.localStorage.setItem(`${storagePrefix}timezone`, settings.timezone);
-    } catch (error) {
-        // The database remains the source of truth when browser storage is unavailable.
+        return true;
+    } catch {
+        return false;
     }
 }
 
@@ -51,10 +52,17 @@ async function persistSettings(form, selects, statusElement, signal) {
     try {
         const response = await saveAccountSettings(new FormData(form), signal);
 
-        cacheSettings(response.settings);
+        const settingsWereCached = cacheSettings(response.settings);
         updateTimezoneContext(response.settings.timezone);
         form.dataset.settingsPersisted = '1';
-        showStatus(statusElement, response.message || 'Account settings saved.');
+        const successMessage = response.message || 'Account settings saved.';
+
+        showStatus(
+            statusElement,
+            settingsWereCached
+                ? successMessage
+                : `${successMessage} Browser cache is unavailable.`
+        );
     } catch (error) {
         if (error.name !== 'AbortError') {
             showStatus(statusElement, error.message || 'The account settings could not be saved.', true);
