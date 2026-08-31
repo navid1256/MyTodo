@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Exceptions\ReminderValidationException;
+use App\Helpers\TimezoneHelper;
 use App\Repositories\ReminderRepository;
 use DateInterval;
 use DateTimeImmutable;
@@ -72,7 +73,9 @@ final class ReminderService
                 taskId: $taskId,
                 offsetValue: $reminder['offset_value'],
                 offsetUnit: $reminder['offset_unit'],
-                remindAt: $reminder['remind_at']->format('Y-m-d H:i:s')
+                remindAt: $reminder['remind_at']
+                    ->setTimezone(TimezoneHelper::getApplicationTimezone())
+                    ->format('Y-m-d H:i:s')
             );
         }
     }

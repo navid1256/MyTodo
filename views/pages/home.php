@@ -5,6 +5,7 @@ declare(strict_types=1);
 /** @var array<int, object> $todayTasks */
 /** @var array<int, object> $tomorrowTasks */
 /** @var array<int, object> $noDateTasks */
+/** @var DateTimeZone $taskTimezone */
 
 $todayTasks = isset($todayTasks) && is_array($todayTasks) ? $todayTasks : [];
 $tomorrowTasks = isset($tomorrowTasks) && is_array($tomorrowTasks) ? $tomorrowTasks : [];
@@ -19,7 +20,10 @@ require_once dirname(__DIR__) . '/components/task-items.php';
         <?php renderTaskItems(
             $noDateTasks,
             'home',
-            'No tasks without a date.'
+            'No tasks without a date.',
+            false,
+            false,
+            $taskTimezone
         ); ?>
     </ul>
 </div>
@@ -31,7 +35,9 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $todayTasks,
             'home',
             'No tasks due today.',
-            true
+            true,
+            false,
+            $taskTimezone
         ); ?>
     </ul>
 </div>
@@ -43,7 +49,9 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $tomorrowTasks,
             'home',
             'No tasks due tomorrow.',
-            true
+            true,
+            false,
+            $taskTimezone
         ); ?>
     </ul>
 </div>

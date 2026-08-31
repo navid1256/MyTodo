@@ -32,15 +32,15 @@
 
 .accountSettingsFields {
     display: grid;
-    width: min(100%, 510px);
+    width: min(100%, 650px);
     margin: 100px auto 0;
-    gap: 70px;
+    gap: 42px;
     justify-content: center;
 }
 
 .accountSettingsField {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 126px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     align-items: center;
     column-gap: 40px;
 }
@@ -51,7 +51,7 @@
 }
 
 .accountSettingsField select {
-    width: 126px;
+    width: 280px;
     height: 44px;
     padding: 0 14px;
     border: 1px solid #93a2aa;
@@ -61,6 +61,32 @@
     font: inherit;
     font-size: 16px;
     opacity: 1;
+}
+
+.accountSettingsField select:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.accountSettingsHint,
+.accountSettingsStatus {
+    grid-column: 1 / -1;
+    margin: -20px 0 0;
+    text-align: center;
+    font-size: 14px;
+}
+
+.accountSettingsHint {
+    color: #607d8b;
+}
+
+.accountSettingsStatus {
+    min-height: 20px;
+    color: #16823c;
+}
+
+.accountSettingsStatus.isError {
+    color: #c62828;
 }
 
 html.dark-mode .accountSettingsPage {
@@ -80,6 +106,18 @@ html.dark-mode .accountSettingsField select {
     background-color: #242321;
     color: #f7fafc;
     color-scheme: dark;
+}
+
+html.dark-mode .accountSettingsHint {
+    color: #a8c7d1;
+}
+
+html.dark-mode .accountSettingsStatus {
+    color: #5ee28b;
+}
+
+html.dark-mode .accountSettingsStatus.isError {
+    color: #ff7b83;
 }
 
 @media (max-width: 620px) {
@@ -116,5 +154,11 @@ html.dark-mode .accountSettingsField select {
 
     .accountSettingsField select {
         width: 100%;
+    }
+
+    .accountSettingsHint,
+    .accountSettingsStatus {
+        margin-top: 0;
+        text-align: left;
     }
 }

@@ -6,12 +6,12 @@ namespace App\Controllers;
 
 use App\Exceptions\AvatarStorageException;
 use App\Exceptions\ProfileUpdateException;
-use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\ProfileService;
+use App\Services\UserSettingsService;
 use InvalidArgumentException;
 
 final class ProfileController
@@ -20,7 +20,8 @@ final class ProfileController
 
     public function __construct(
         private readonly ProfileService $profileService,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserSettingsService $settingsService
     ) {}
 
     public function show(): Response
@@ -69,7 +70,10 @@ final class ProfileController
             'avatar_url' => trim((string) ($userProfile->avatar_url ?? '')),
         ];
 
-        $userTimezone = TimezoneHelper::getApplicationTimezone();
+        $userTimezone = $this->settingsService->getTimezoneForUser(
+            $userId,
+            $request->cookieString('mytodo_timezone')
+        );
         $validationErrors = $this->profileService->validateProfile(
             $profileInput,
             $avatarAction,
@@ -121,24 +125,6 @@ final class ProfileController
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'change-password',
-            'currentUser' => $currentUser,
-            'userProfile' => $userProfile,
-            'currentDisplayName' => $displayName,
-            'avatarUrl' => $avatarUrl,
-            'csrfToken' => CsrfMiddleware::getToken(),
-        ]);
-    }
-
-    public function accountSettings(): Response
-    {
-        $userId = (int) ($_SESSION['user']['id'] ?? 0);
-        $currentUser = $_SESSION['user'] ?? [];
-        $userProfile = $this->userRepository->getProfile($userId);
-        $displayName = $this->resolveDisplayName($userProfile, $currentUser);
-        $avatarUrl = $this->resolveAvatarUrl($userProfile);
-
-        return Response::view(self::DASHBOARD_LAYOUT, [
-            'activeView' => 'account-settings',
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
             'currentDisplayName' => $displayName,

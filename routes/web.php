@@ -7,6 +7,7 @@ use App\Controllers\HomeController;
 use App\Controllers\NotificationController;
 use App\Controllers\ProfileController;
 use App\Controllers\ReminderController;
+use App\Controllers\SettingsController;
 use App\Controllers\TaskController;
 use App\Http\Router;
 use App\Middleware\AuthMiddleware;
@@ -49,5 +50,5 @@ return static function (Router $router): void {
     $router->get('/profile', [ProfileController::class, 'show'], [AuthMiddleware::class]);
     $router->post('/profile', [ProfileController::class, 'update'], [AuthMiddleware::class]);
     $router->get('/change-password', [ProfileController::class, 'changePassword'], [AuthMiddleware::class]);
-    $router->get('/account-settings', [ProfileController::class, 'accountSettings'], [AuthMiddleware::class]);
+    $router->get('/account-settings', [SettingsController::class, 'show'], [AuthMiddleware::class]);
 };

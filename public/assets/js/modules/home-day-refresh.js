@@ -14,7 +14,9 @@ export function initHomeDayRefresh(signal) {
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const renderTimezone = document.body.dataset.renderTimezone || '';
 
-    if (browserTimezone && browserTimezone !== renderTimezone) {
+    const timezoneIsPersisted = document.body.dataset.timezonePersisted === '1';
+
+    if (!timezoneIsPersisted && browserTimezone && browserTimezone !== renderTimezone) {
         document.cookie = 'mytodo_timezone=' + encodeURIComponent(browserTimezone)
             + '; path=/; max-age=31536000; SameSite=Lax';
         window.location.reload();

@@ -48,7 +48,11 @@ final class TaskService
         $this->taskRepository->beginTransaction();
 
         try {
-            $formattedDueAt = $dueAt?->format('Y-m-d H:i:s');
+            $formattedDueAt = $dueAt === null
+                ? null
+                : DateTimeImmutable::createFromInterface($dueAt)
+                    ->setTimezone(TimezoneHelper::getApplicationTimezone())
+                    ->format('Y-m-d H:i:s');
             $taskId = $this->taskRepository->create(
                 userId: $userId,
                 title: trim($title),
