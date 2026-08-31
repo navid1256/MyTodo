@@ -28,7 +28,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `tasks` (
   `id` int(10) UNSIGNED NOT NULL,
-  `title` varchar(512) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `title` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
   `is_done` tinyint(1) NOT NULL DEFAULT 0,
   `completed_at` datetime DEFAULT NULL,
@@ -157,6 +157,12 @@ ALTER TABLE `users_info`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `tasks`
+--
+ALTER TABLE `tasks`
+  ADD CONSTRAINT `tasks_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `task_reminders`
