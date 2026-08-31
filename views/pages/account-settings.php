@@ -10,7 +10,7 @@
 
     <div class="accountSettingsFields" aria-label="Account settings preview">
         <div class="accountSettingsField">
-            <label for="dateTimeSetting">Date &amp; Time :</label>
+            <label for="dateTimeSetting">Calendar System :</label>
             <select id="dateTimeSetting" data-account-setting="date-system">
                 <option value="gregorian" selected>Gregorian</option>
                 <option value="jalali">Jalali</option>
