@@ -7,6 +7,7 @@ declare(strict_types=1);
 /** @var string $renderDate */
 /** @var string $renderTimezone */
 /** @var bool $timezoneIsPersisted */
+/** @var string $effectiveLanguage */
 /** @var int|null $sentNotificationCount */
 
 $activeView = isset($activeView) && is_string($activeView) ? $activeView : 'home';
@@ -16,6 +17,10 @@ $renderTimezone = isset($renderTimezone) && is_string($renderTimezone)
     ? $renderTimezone
     : date_default_timezone_get();
 $timezoneIsPersisted = isset($timezoneIsPersisted) && $timezoneIsPersisted === true;
+$effectiveLanguage = isset($effectiveLanguage) && in_array($effectiveLanguage, ['english', 'persian'], true)
+    ? $effectiveLanguage
+    : 'english';
+$htmlLanguage = $effectiveLanguage === 'persian' ? 'fa' : 'en';
 
 $pageStylesheets = [
     'home' => '/assets/css/pages/home.css',
@@ -47,7 +52,7 @@ if ($isPartial) {
 ?>
 <?php if (!$isPartial): ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= $htmlLanguage ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -79,6 +84,7 @@ if ($isPartial) {
     data-active-view="<?= htmlspecialchars($activeView, ENT_QUOTES, 'UTF-8') ?>"
     data-render-timezone="<?= htmlspecialchars($renderTimezone, ENT_QUOTES, 'UTF-8') ?>"
     data-timezone-persisted="<?= $timezoneIsPersisted ? '1' : '0' ?>"
+    data-effective-language="<?= $effectiveLanguage ?>"
     data-render-date="<?= htmlspecialchars($renderDate, ENT_QUOTES, 'UTF-8') ?>">
     <div class="page">
         <?php require_once dirname(__DIR__) . '/components/dashboard-header.php'; ?>
@@ -126,6 +132,7 @@ if ($isPartial) {
         'taskModalStylesheet' => $usesTaskModals ? '/assets/css/task-modal.css' : null,
         'renderTimezone' => $renderTimezone,
         'timezoneIsPersisted' => $timezoneIsPersisted,
+        'effectiveLanguage' => $effectiveLanguage,
         'renderDate' => $renderDate,
         'sentNotificationCount' => $sentNotificationCount ?? 0,
     ], JSON_THROW_ON_ERROR);

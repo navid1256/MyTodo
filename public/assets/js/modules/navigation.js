@@ -198,6 +198,8 @@ export function initNavigation(options) {
       document.body.dataset.activeView = payload.activeView;
       document.body.dataset.renderTimezone = payload.renderTimezone || '';
       document.body.dataset.timezonePersisted = payload.timezoneIsPersisted ? '1' : '0';
+      document.body.dataset.effectiveLanguage = payload.effectiveLanguage || 'english';
+      document.documentElement.lang = payload.effectiveLanguage === 'persian' ? 'fa' : 'en';
       document.body.dataset.renderDate = payload.renderDate || '';
       activateNavigationView(payload.activeView);
       updateNotificationBadge(payload.sentNotificationCount);

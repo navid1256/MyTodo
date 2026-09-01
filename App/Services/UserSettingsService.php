@@ -21,17 +21,24 @@ final class UserSettingsService
     /**
      * @return array{
      *     language: string,
+     *     effective_language: string,
      *     calendar_system: string,
      *     timezone: string,
      *     is_persisted: bool
      * }
      */
-    public function getForUser(int $userId, ?string $fallbackTimezone = null): array
-    {
-        $savedSettings = $this->settingsRepository->findByUserId($userId);
+    public function getForUser(
+        int $userId,
+        ?string $fallbackTimezone = null,
+        ?string $browserLanguages = null
+    ): array {
+        $savedSettings = $this->settingsRepository->findUserSettingsByUserId($userId);
         if ($savedSettings !== null) {
+            $language = (string) $savedSettings->language;
+
             return [
-                'language' => (string) $savedSettings->language,
+                'language' => $language,
+                'effective_language' => $this->resolveEffectiveLanguage($language, $browserLanguages),
                 'calendar_system' => (string) $savedSettings->calendar_system,
                 'timezone' => (string) $savedSettings->timezone,
                 'is_persisted' => true,
@@ -40,6 +47,10 @@ final class UserSettingsService
 
         return [
             'language' => self::DEFAULT_LANGUAGE,
+            'effective_language' => $this->resolveEffectiveLanguage(
+                self::DEFAULT_LANGUAGE,
+                $browserLanguages
+            ),
             'calendar_system' => self::DEFAULT_CALENDAR_SYSTEM,
             'timezone' => $this->resolveFallbackTimezone($fallbackTimezone),
             'is_persisted' => false,
@@ -47,13 +58,19 @@ final class UserSettingsService
     }
 
     /**
-     * @return array{language: string, calendar_system: string, timezone: string}
+     * @return array{
+     *     language: string,
+     *     effective_language: string,
+     *     calendar_system: string,
+     *     timezone: string
+     * }
      */
     public function save(
         int $userId,
         string $language,
         string $calendarSystem,
-        string $timezone
+        string $timezone,
+        ?string $browserLanguages = null
     ): array {
         if ($userId <= 0) {
             throw new UserSettingsValidationException('Authentication required.');
@@ -75,6 +92,7 @@ final class UserSettingsService
 
         return [
             'language' => $language,
+            'effective_language' => $this->resolveEffectiveLanguage($language, $browserLanguages),
             'calendar_system' => $calendarSystem,
             'timezone' => $timezone,
         ];
@@ -103,6 +121,40 @@ final class UserSettingsService
         return $timezone !== ''
             && strlen($timezone) <= 100
             && in_array($timezone, $this->getTimezoneOptions(), true);
+    }
+
+    public function resolveEffectiveLanguage(string $language, ?string $browserLanguages = null): string
+    {
+        if ($language === 'english' || $language === 'persian') {
+            return $language;
+        }
+
+        $preferredLanguage = 'english';
+        $highestQuality = -1.0;
+
+        foreach (explode(',', strtolower((string) $browserLanguages)) as $acceptedLanguage) {
+            [$languageTag, $parameters] = array_pad(explode(';', $acceptedLanguage, 2), 2, '');
+            $languageTag = trim($languageTag);
+            $quality = 1.0;
+
+            if (preg_match('/(?:^|;)\s*q=([01](?:\.\d{1,3})?)/', $parameters, $matches) === 1) {
+                $quality = (float) $matches[1];
+            }
+
+            if ($quality <= $highestQuality || $quality === 0.0) {
+                continue;
+            }
+
+            if ($languageTag === 'fa' || str_starts_with($languageTag, 'fa-')) {
+                $preferredLanguage = 'persian';
+                $highestQuality = $quality;
+            } elseif ($languageTag === 'en' || str_starts_with($languageTag, 'en-')) {
+                $preferredLanguage = 'english';
+                $highestQuality = $quality;
+            }
+        }
+
+        return $preferredLanguage;
     }
 
     private function resolveFallbackTimezone(?string $fallbackTimezone): string

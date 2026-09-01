@@ -30,7 +30,8 @@ final class HomeController
         $userId = $this->authService->getCurrentUserId();
         $settings = $this->settingsService->getForUser(
             $userId,
-            $request->cookieString('mytodo_timezone')
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
         );
         $clientTimezone = new DateTimeZone($settings['timezone']);
         $today = new DateTimeImmutable('today', $clientTimezone);
@@ -54,6 +55,7 @@ final class HomeController
             'renderDate' => $today->format('Y-m-d'),
             'renderTimezone' => $clientTimezone->getName(),
             'timezoneIsPersisted' => $settings['is_persisted'],
+            'effectiveLanguage' => $settings['effective_language'],
             'taskTimezone' => $clientTimezone,
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,

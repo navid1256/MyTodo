@@ -44,7 +44,8 @@ final class NotificationController
         $sentCount = $this->notificationService->countSentNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
-        $userTimezone = $this->resolveUserTimezone($request);
+        $settings = $this->resolveUserSettings($request);
+        $userTimezone = new DateTimeZone($settings['timezone']);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'notifications',
@@ -56,6 +57,7 @@ final class NotificationController
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $userTimezone->getName(),
+            'effectiveLanguage' => $settings['effective_language'],
             'notificationTimezone' => $userTimezone,
         ]);
     }
@@ -70,7 +72,8 @@ final class NotificationController
         $sentCount = $this->notificationService->countSentNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
-        $userTimezone = $this->resolveUserTimezone($request);
+        $settings = $this->resolveUserSettings($request);
+        $userTimezone = new DateTimeZone($settings['timezone']);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'messages',
@@ -82,6 +85,7 @@ final class NotificationController
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $userTimezone->getName(),
+            'effectiveLanguage' => $settings['effective_language'],
             'notificationTimezone' => $userTimezone,
         ]);
     }
@@ -187,11 +191,21 @@ final class NotificationController
         return (string) ($user['username'] ?? 'User');
     }
 
-    private function resolveUserTimezone(Request $request): DateTimeZone
+    /**
+     * @return array{
+     *     language: string,
+     *     effective_language: string,
+     *     calendar_system: string,
+     *     timezone: string,
+     *     is_persisted: bool
+     * }
+     */
+    private function resolveUserSettings(Request $request): array
     {
-        return $this->settingsService->getTimezoneForUser(
+        return $this->settingsService->getForUser(
             $this->authService->getCurrentUserId(),
-            $request->cookieString('mytodo_timezone')
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
         );
     }
 
