@@ -30,7 +30,8 @@ final class SettingsController
         $userProfile = $this->userRepository->getProfile($userId);
         $settings = $this->settingsService->getForUser(
             $userId,
-            $request->cookieString('mytodo_timezone')
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
         );
 
         return Response::view(self::DASHBOARD_LAYOUT, [
@@ -44,6 +45,7 @@ final class SettingsController
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $settings['timezone'],
             'timezoneIsPersisted' => $settings['is_persisted'],
+            'effectiveLanguage' => $settings['effective_language'],
         ]);
     }
 
@@ -61,7 +63,8 @@ final class SettingsController
                 $this->authService->getCurrentUserId(),
                 $request->postString('language'),
                 $request->postString('calendar_system'),
-                $request->postString('timezone')
+                $request->postString('timezone'),
+                $request->header('Accept-Language')
             );
 
             return Response::json([

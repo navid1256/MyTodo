@@ -45,6 +45,13 @@ function updateTimezoneContext(timezone) {
     document.body.dataset.timezonePersisted = '1';
 }
 
+function updateLanguageContext(effectiveLanguage) {
+    const normalizedLanguage = effectiveLanguage === 'persian' ? 'persian' : 'english';
+
+    document.documentElement.lang = normalizedLanguage === 'persian' ? 'fa' : 'en';
+    document.body.dataset.effectiveLanguage = normalizedLanguage;
+}
+
 async function persistSettings(form, selects, statusElement, signal) {
     setBusy(selects, true);
     showStatus(statusElement, 'Saving...');
@@ -54,6 +61,7 @@ async function persistSettings(form, selects, statusElement, signal) {
 
         const settingsWereCached = cacheSettings(response.settings);
         updateTimezoneContext(response.settings.timezone);
+        updateLanguageContext(response.settings.effective_language);
         form.dataset.settingsPersisted = '1';
         const successMessage = response.message || 'Account settings saved.';
 

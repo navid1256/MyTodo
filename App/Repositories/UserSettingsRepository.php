@@ -10,7 +10,7 @@ final class UserSettingsRepository
 {
     public function __construct(private readonly PDO $pdo) {}
 
-    public function findByUserId(int $userId): ?object
+    public function findUserSettingsByUserId(int $userId): ?object
     {
         $statement = $this->pdo->prepare(
             'SELECT language, calendar_system, timezone

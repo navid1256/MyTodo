@@ -40,7 +40,8 @@ final class TaskController
         $tasks = $this->taskService->getTasksForUser($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
-        $clientTimezone = $this->resolveUserTimezone($request);
+        $settings = $this->resolveUserSettings($request);
+        $clientTimezone = new DateTimeZone($settings['timezone']);
         $clientToday = new DateTimeImmutable('today', $clientTimezone);
         $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
         $sentCount = $this->notificationService->countSentNotifications($userId);
@@ -56,6 +57,7 @@ final class TaskController
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $clientTimezone->getName(),
+            'effectiveLanguage' => $settings['effective_language'],
             'taskTimezone' => $clientTimezone,
         ]);
     }
@@ -66,7 +68,8 @@ final class TaskController
         $completedTasks = $this->taskService->getCompletedTasks($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
-        $clientTimezone = $this->resolveUserTimezone($request);
+        $settings = $this->resolveUserSettings($request);
+        $clientTimezone = new DateTimeZone($settings['timezone']);
         $clientToday = new DateTimeImmutable('today', $clientTimezone);
         $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
         $sentCount = $this->notificationService->countSentNotifications($userId);
@@ -82,6 +85,7 @@ final class TaskController
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $clientTimezone->getName(),
+            'effectiveLanguage' => $settings['effective_language'],
             'activityTimezone' => $clientTimezone,
         ]);
     }
@@ -200,9 +204,26 @@ final class TaskController
 
     private function resolveUserTimezone(Request $request): DateTimeZone
     {
-        return $this->settingsService->getTimezoneForUser(
+        $settings = $this->resolveUserSettings($request);
+
+        return new DateTimeZone($settings['timezone']);
+    }
+
+    /**
+     * @return array{
+     *     language: string,
+     *     effective_language: string,
+     *     calendar_system: string,
+     *     timezone: string,
+     *     is_persisted: bool
+     * }
+     */
+    private function resolveUserSettings(Request $request): array
+    {
+        return $this->settingsService->getForUser(
             $this->authService->getCurrentUserId(),
-            $request->cookieString('mytodo_timezone')
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
         );
     }
 
