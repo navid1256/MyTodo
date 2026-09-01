@@ -8,7 +8,9 @@ declare(strict_types=1);
 /** @var string|null $profileSuccess */
 /** @var string $avatarUrl */
 /** @var string $currentDisplayName */
+/** @var string $calendarCssClass */
 /** @var int $userId */
+
 
 $profileErrors = isset($profileErrors) && is_array($profileErrors) ? $profileErrors : [];
 $profileSuccess = isset($profileSuccess) && is_string($profileSuccess) ? $profileSuccess : null;

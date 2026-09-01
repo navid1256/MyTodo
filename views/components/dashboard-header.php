@@ -47,7 +47,7 @@ $currentView = isset($activeView) && is_string($activeView) ? $activeView : 'hom
 $token = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
 ?>
 <div class="pageHeader">
-    <div class="title">Dashboard</div>
+    <div class="title">Task Manager</div>
     <div class="userArea">
         <a
             class="notificationButton"
