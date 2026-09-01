@@ -1,0 +1,10 @@
+{
+  "name": "mytodo",
+  "private": true,
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}
