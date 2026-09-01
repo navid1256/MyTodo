@@ -94,10 +94,47 @@ $profileFields = isset($profileFields) && is_array($profileFields) ? $profileFie
                 <span>Job Title :</span>
                 <input type="text" name="job_title" placeholder="Enter your job title" value="<?= htmlspecialchars($profileFields['job_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
             </label>
-            <label class="profileField">
-                <span>Date of Birth :</span>
-                <input type="date" name="date_of_birth" placeholder="Select your date of birth" value="<?= htmlspecialchars($profileFields['date_of_birth'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-            </label>
+            <div class="profileField profileBirthDateField">
+                <span id="profileBirthDateLabel">Date of Birth :</span>
+                <div class="profileBirthDatePicker <?= $calendarCssClass ?>" id="profileBirthDatePicker">
+                    <input
+                        id="profileBirthDate"
+                        type="hidden"
+                        name="date_of_birth"
+                        value="<?= htmlspecialchars($profileFields['date_of_birth'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                    <button
+                        class="profileBirthDateButton"
+                        id="profileBirthDateButton"
+                        type="button"
+                        aria-labelledby="profileBirthDateLabel profileBirthDateDisplay"
+                        aria-haspopup="dialog"
+                        aria-expanded="false">
+                        <span id="profileBirthDateDisplay">Select your date of birth</span>
+                        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+
+                    <section
+                        class="profileBirthDatePopover"
+                        id="profileBirthDatePopover"
+                        role="dialog"
+                        aria-label="Choose date of birth"
+                        hidden>
+                        <div class="profileBirthDateSelectors">
+                            <label class="srOnly" for="profileBirthMonth">Month</label>
+                            <select id="profileBirthMonth"></select>
+                            <label class="srOnly" for="profileBirthYear">Year</label>
+                            <select id="profileBirthYear"></select>
+                        </div>
+                        <div class="profileBirthDateWeekdays" id="profileBirthDateWeekdays" aria-hidden="true"></div>
+                        <div
+                            class="profileBirthDateDays"
+                            id="profileBirthDateDays"
+                            role="grid"
+                            aria-label="Date of birth calendar"></div>
+                        <p class="srOnly" id="profileBirthDateStatus" role="status" aria-live="polite"></p>
+                    </section>
+                </div>
+            </div>
             <label class="profileField">
                 <span>Gender :</span>
                 <select name="gender">

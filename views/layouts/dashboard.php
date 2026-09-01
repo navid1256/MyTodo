@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Helpers\ViteHelper;
+
 /** @var string $activeView */
 /** @var string $csrfToken */
 /** @var string $renderDate */
 /** @var string $renderTimezone */
 /** @var bool $timezoneIsPersisted */
 /** @var string $effectiveLanguage */
+/** @var string $calendarSystem */
 /** @var int|null $sentNotificationCount */
 
 $activeView = isset($activeView) && is_string($activeView) ? $activeView : 'home';
@@ -20,6 +23,12 @@ $timezoneIsPersisted = isset($timezoneIsPersisted) && $timezoneIsPersisted === t
 $effectiveLanguage = isset($effectiveLanguage) && in_array($effectiveLanguage, ['english', 'persian'], true)
     ? $effectiveLanguage
     : 'english';
+$calendarSystem = isset($calendarSystem) && $calendarSystem === 'jalali'
+    ? 'jalali'
+    : 'gregorian';
+$calendarCssClass = $calendarSystem === 'jalali'
+    ? 'jalaliCalendar'
+    : 'gregorianCalendar';
 $htmlLanguage = $effectiveLanguage === 'persian' ? 'fa' : 'en';
 
 $pageStylesheets = [
@@ -85,6 +94,7 @@ if ($isPartial) {
     data-render-timezone="<?= htmlspecialchars($renderTimezone, ENT_QUOTES, 'UTF-8') ?>"
     data-timezone-persisted="<?= $timezoneIsPersisted ? '1' : '0' ?>"
     data-effective-language="<?= $effectiveLanguage ?>"
+    data-calendar-system="<?= $calendarSystem ?>"
     data-render-date="<?= htmlspecialchars($renderDate, ENT_QUOTES, 'UTF-8') ?>">
     <div class="page">
         <?php require_once dirname(__DIR__) . '/components/dashboard-header.php'; ?>
@@ -117,7 +127,12 @@ if ($isPartial) {
 <?php if (!$isPartial): ?>
         </div>
     </div>
-    <script type="module" src="/assets/js/app.js"></script>
+    <?php if (ViteHelper::isDevelopment()): ?>
+        <script type="module" src="<?= ViteHelper::developmentAssetUrl('@vite/client') ?>"></script>
+        <script type="module" src="<?= ViteHelper::developmentAssetUrl('assets/js/app.js') ?>"></script>
+    <?php else: ?>
+        <script type="module" src="/assets/js/app.js"></script>
+    <?php endif; ?>
 </body>
 
 </html>
@@ -133,6 +148,7 @@ if ($isPartial) {
         'renderTimezone' => $renderTimezone,
         'timezoneIsPersisted' => $timezoneIsPersisted,
         'effectiveLanguage' => $effectiveLanguage,
+        'calendarSystem' => $calendarSystem,
         'renderDate' => $renderDate,
         'sentNotificationCount' => $sentNotificationCount ?? 0,
     ], JSON_THROW_ON_ERROR);

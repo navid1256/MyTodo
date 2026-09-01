@@ -58,6 +58,7 @@ final class NotificationController
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $userTimezone->getName(),
             'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
             'notificationTimezone' => $userTimezone,
         ]);
     }
@@ -86,6 +87,7 @@ final class NotificationController
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $userTimezone->getName(),
             'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
             'notificationTimezone' => $userTimezone,
         ]);
     }

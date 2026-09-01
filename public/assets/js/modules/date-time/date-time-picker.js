@@ -5,6 +5,12 @@ import {
     formatDateKey,
     parseDateKey
 } from '../../utils/date-utils.js';
+import {
+    formatCalendarDate,
+    getActiveCalendarSystem,
+    getCalendarMonthStart,
+    getCalendarNavigation
+} from '../../utils/calendar-core.js';
 
 import {
     convertTo12Hour,
@@ -43,6 +49,15 @@ export function initDateTimePicker() {
     let draftSelectedDate = null;
     let draftHasTime = true;
     let committedDateMode = 'unset';
+    const calendarNavigation = getCalendarNavigation();
+
+    if (previousCalendarMonthButton) {
+        previousCalendarMonthButton.setAttribute('aria-label', calendarNavigation.left.label);
+    }
+
+    if (nextCalendarMonthButton) {
+        nextCalendarMonthButton.setAttribute('aria-label', calendarNavigation.right.label);
+    }
 
     function setDateTimeModalMessage(message) {
         if (dateTimeModalMessage) {
@@ -126,7 +141,7 @@ export function initDateTimePicker() {
     function selectCalendarDate(date) {
         const dateWasEmpty = !draftSelectedDate;
         draftSelectedDate = startOfDay(date);
-        calendarViewDate = new Date(date.getFullYear(), date.getMonth(), 1);
+        calendarViewDate = getCalendarMonthStart(date, getActiveCalendarSystem());
 
         if (dateWasEmpty) {
             draftHasTime = true;
@@ -142,11 +157,7 @@ export function initDateTimePicker() {
         const today = new Date();
 
         if (!calendarViewDate) {
-            calendarViewDate = new Date(
-                today.getFullYear(),
-                today.getMonth(),
-                1
-            );
+            calendarViewDate = getCalendarMonthStart(today, getActiveCalendarSystem());
         }
 
         renderDateTimeCalendar({
@@ -210,10 +221,9 @@ export function initDateTimePicker() {
             setPickerTime(new Date().getHours(), new Date().getMinutes());
         }
 
-        calendarViewDate = new Date(
-            (draftSelectedDate || today).getFullYear(),
-            (draftSelectedDate || today).getMonth(),
-            1
+        calendarViewDate = getCalendarMonthStart(
+            draftSelectedDate || today,
+            getActiveCalendarSystem()
         );
         updateQuickDateSelection();
         updateTimeControls();
@@ -259,11 +269,7 @@ export function initDateTimePicker() {
         } else if (datesAreEqual(draftSelectedDate, tomorrow)) {
             dateLabel = 'Tomorrow';
         } else {
-            dateLabel = new Intl.DateTimeFormat('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            }).format(draftSelectedDate);
+            dateLabel = formatCalendarDate(draftSelectedDate, getActiveCalendarSystem());
         }
 
         if (draftHasTime) {
@@ -338,14 +344,14 @@ export function initDateTimePicker() {
 
     if (previousCalendarMonthButton) {
         previousCalendarMonthButton.addEventListener('click', function () {
-            calendarViewDate = changeCalendarMonth(calendarViewDate, -1);
+            calendarViewDate = changeCalendarMonth(calendarViewDate, calendarNavigation.left.offset);
             renderCalendar();
         });
     }
 
     if (nextCalendarMonthButton) {
         nextCalendarMonthButton.addEventListener('click', function () {
-            calendarViewDate = changeCalendarMonth(calendarViewDate, 1);
+            calendarViewDate = changeCalendarMonth(calendarViewDate, calendarNavigation.right.offset);
             renderCalendar();
         });
     }

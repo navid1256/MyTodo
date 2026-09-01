@@ -46,6 +46,7 @@ final class SettingsController
             'renderTimezone' => $settings['timezone'],
             'timezoneIsPersisted' => $settings['is_persisted'],
             'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
         ]);
     }
 
