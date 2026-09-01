@@ -10,7 +10,7 @@ $tasks = isset($tasks) && is_array($tasks) ? $tasks : [];
 require_once dirname(__DIR__) . '/components/task-items.php';
 ?>
 
-<div class="manageTasksLayout">
+<div class="manageTasksLayout <?= $calendarCssClass ?>">
     <section class="list manageTaskList" aria-labelledby="manageTaskListTitle">
         <div class="title manageTaskListTitle" id="manageTaskListTitle">
             <button class="allTasksFilter is-active" id="showAllTasksButton" type="button" aria-pressed="true">
@@ -29,7 +29,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
         </ul>
     </section>
 
-    <aside class="taskCalendar" id="taskCalendar" aria-labelledby="taskCalendarMonth">
+    <aside class="taskCalendar <?= $calendarCssClass ?>" id="taskCalendar" aria-labelledby="taskCalendarMonth">
         <div class="taskCalendarHeader">
             <button class="taskCalendarNav" id="previousTaskCalendarMonth" type="button" aria-label="Previous month">
                 <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>

@@ -58,6 +58,7 @@ final class TaskController
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $clientTimezone->getName(),
             'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
             'taskTimezone' => $clientTimezone,
         ]);
     }
@@ -86,6 +87,7 @@ final class TaskController
             'csrfToken' => CsrfMiddleware::getToken(),
             'renderTimezone' => $clientTimezone->getName(),
             'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
             'activityTimezone' => $clientTimezone,
         ]);
     }

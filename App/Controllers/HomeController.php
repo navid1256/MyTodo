@@ -56,6 +56,7 @@ final class HomeController
             'renderTimezone' => $clientTimezone->getName(),
             'timezoneIsPersisted' => $settings['is_persisted'],
             'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
             'taskTimezone' => $clientTimezone,
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,

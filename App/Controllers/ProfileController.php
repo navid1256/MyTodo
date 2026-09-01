@@ -44,6 +44,7 @@ final class ProfileController
             effectiveLanguage: $settings['effective_language']
         );
         $viewData['activeView'] = 'profile';
+        $viewData['calendarSystem'] = $settings['calendar_system'];
 
         return Response::view(self::DASHBOARD_LAYOUT, $viewData);
     }
@@ -113,6 +114,7 @@ final class ProfileController
             effectiveLanguage: $settings['effective_language']
         );
         $viewData['activeView'] = 'profile';
+        $viewData['calendarSystem'] = $settings['calendar_system'];
 
         return Response::view(self::DASHBOARD_LAYOUT, $viewData);
     }
@@ -134,6 +136,7 @@ final class ProfileController
             'avatarUrl' => $avatarUrl,
             'csrfToken' => CsrfMiddleware::getToken(),
             'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
         ]);
     }
 

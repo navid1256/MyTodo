@@ -95,7 +95,7 @@
                     </label>
                 </fieldset>
 
-                <div class="repeatEndDateSection" id="repeatEndDateSection" hidden>
+                <div class="repeatEndDateSection <?= $calendarCssClass ?>" id="repeatEndDateSection" hidden>
                     <div class="repeatCalendarHeader">
                         <button id="previousRepeatMonth" type="button" aria-label="Previous month">
                             <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
