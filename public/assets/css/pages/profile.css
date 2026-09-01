@@ -30,8 +30,8 @@
     font-size: 24px;
 }
 
-.profilePageHeader + .profileMessage,
-.profilePageHeader + .profileOverview {
+.profilePageHeader+.profileMessage,
+.profilePageHeader+.profileOverview {
     margin-top: 56px;
 }
 
@@ -584,7 +584,7 @@ html.dark-mode .profilePageHeaderIcon {
     z-index: 40;
     top: calc(100% + 8px);
     right: 0;
-    width: min(330px, 85vw);
+    width: min(360px, 85vw);
     padding: 14px;
     box-sizing: border-box;
     border: 1px solid #b8c6cd;

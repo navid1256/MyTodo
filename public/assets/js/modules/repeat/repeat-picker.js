@@ -57,7 +57,10 @@ export function initRepeatPicker() {
             return;
         }
 
-        repeatModal.hidden = true;
+        if (repeatModal.open) {
+            repeatModal.close();
+        }
+
         setMessage('');
 
         if (setTaskRepeatButton) {
@@ -77,7 +80,9 @@ export function initRepeatPicker() {
         lastTrigger = trigger || document.activeElement;
         repeatForm.populate(cloneRule(appliedRule) || createDefaultRule(getBaseDate()));
         setMessage('');
-        repeatModal.hidden = false;
+        if (!repeatModal.open) {
+            repeatModal.showModal();
+        }
 
         if (setTaskRepeatButton) {
             setTaskRepeatButton.setAttribute('aria-expanded', 'true');
@@ -116,6 +121,11 @@ export function initRepeatPicker() {
                 close();
             }
         });
+
+        repeatModal.addEventListener('cancel', function (event) {
+            event.preventDefault();
+            close();
+        });
     }
 
     if (applyRepeatButton) {
@@ -149,7 +159,7 @@ export function initRepeatPicker() {
     return {
         close,
         isOpen: function () {
-            return Boolean(repeatModal && !repeatModal.hidden);
+            return Boolean(repeatModal?.open);
         },
         validate: function () {
             return appliedRule ? validateRule(appliedRule, getTaskStartDate()) : '';
