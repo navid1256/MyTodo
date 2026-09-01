@@ -729,3 +729,7 @@ body,
         border-color 0.25s ease,
         color 0.25s ease;
 }
+
+html[lang="fa"] body {
+    font-family: "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}

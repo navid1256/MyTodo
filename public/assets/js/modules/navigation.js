@@ -1,3 +1,5 @@
+import { applyTranslations } from '../utils/i18n.js';
+
 const DASHBOARD_AJAX_VIEWS = ['home', 'activity', 'manage-tasks', 'messages'];
 
 export function getDashboardNavigationView(targetUrl, baseUrl) {
@@ -201,6 +203,8 @@ export function initNavigation(options) {
       document.body.dataset.effectiveLanguage = payload.effectiveLanguage || 'english';
       document.body.dataset.calendarSystem = payload.calendarSystem === 'jalali' ? 'jalali' : 'gregorian';
       document.documentElement.lang = payload.effectiveLanguage === 'persian' ? 'fa' : 'en';
+      document.documentElement.dir = payload.direction === 'rtl' ? 'rtl' : 'ltr';
+      applyTranslations(payload.translations);
       document.body.dataset.renderDate = payload.renderDate || '';
       activateNavigationView(payload.activeView);
       updateNotificationBadge(payload.sentNotificationCount);

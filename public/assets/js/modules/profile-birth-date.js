@@ -60,7 +60,10 @@ export function initProfileBirthDate(signal) {
     }
 
     function closePicker(shouldRestoreFocus = false) {
-        popover.hidden = true;
+        if (popover.open) {
+            popover.close();
+        }
+
         toggleButton.setAttribute('aria-expanded', 'false');
 
         if (shouldRestoreFocus) {
@@ -205,9 +208,14 @@ export function initProfileBirthDate(signal) {
     updateDisplay();
 
     toggleButton.addEventListener('click', () => {
-        const shouldOpen = popover.hidden;
+        const shouldOpen = !popover.open;
 
-        popover.hidden = !shouldOpen;
+        if (shouldOpen) {
+            popover.show();
+        } else {
+            popover.close();
+        }
+
         toggleButton.setAttribute('aria-expanded', String(shouldOpen));
 
         if (shouldOpen) {
@@ -219,13 +227,13 @@ export function initProfileBirthDate(signal) {
     yearSelect.addEventListener('change', changeViewMonth, { signal });
 
     document.addEventListener('click', (event) => {
-        if (!popover.hidden && !picker.contains(event.target)) {
+        if (popover.open && !picker.contains(event.target)) {
             closePicker();
         }
     }, { signal });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !popover.hidden) {
+        if (event.key === 'Escape' && popover.open) {
             closePicker(true);
         }
     }, { signal });

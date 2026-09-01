@@ -1,4 +1,5 @@
 import { saveAccountSettings } from '../services/account-service.js';
+import { applyTranslations } from '../utils/i18n.js';
 
 const storagePrefix = 'mytodo-account-setting-';
 
@@ -14,7 +15,7 @@ function hasOption(select, value) {
     return Array.from(select.options).some((option) => option.value === value);
 }
 
-function setBusy(form, selects, saveButton, idleButtonLabel, isBusy) {
+function setBusy(form, selects, saveButton, isBusy) {
     form.setAttribute('aria-busy', String(isBusy));
 
     selects.forEach((select) => {
@@ -22,7 +23,9 @@ function setBusy(form, selects, saveButton, idleButtonLabel, isBusy) {
     });
 
     saveButton.disabled = isBusy;
-    saveButton.textContent = isBusy ? 'Saving...' : idleButtonLabel;
+    saveButton.textContent = isBusy
+        ? (form.dataset.savingMessage || 'Saving...')
+        : (form.dataset.saveLabel || 'Save');
 }
 
 function showStatus(statusElement, message, isError = false) {
@@ -54,6 +57,7 @@ function updateLanguageContext(effectiveLanguage) {
     const normalizedLanguage = effectiveLanguage === 'persian' ? 'persian' : 'english';
 
     document.documentElement.lang = normalizedLanguage === 'persian' ? 'fa' : 'en';
+    document.documentElement.dir = normalizedLanguage === 'persian' ? 'rtl' : 'ltr';
     document.body.dataset.effectiveLanguage = normalizedLanguage;
 }
 
@@ -61,17 +65,37 @@ function updateCalendarContext(calendarSystem) {
     document.body.dataset.calendarSystem = calendarSystem === 'jalali' ? 'jalali' : 'gregorian';
 }
 
-async function persistSettings(form, selects, saveButton, idleButtonLabel, statusElement, signal) {
-    setBusy(form, selects, saveButton, idleButtonLabel, true);
-    showStatus(statusElement, 'Saving...');
+function updateTranslatedMessages(form, translations) {
+    if (!translations || typeof translations !== 'object') {
+        return;
+    }
+
+    form.dataset.saveLabel = translations['common.save'] || form.dataset.saveLabel;
+    form.dataset.savingMessage = translations['common.saving'] || form.dataset.savingMessage;
+    form.dataset.cacheUnavailableMessage = translations['settings.cache_unavailable']
+        || form.dataset.cacheUnavailableMessage;
+    form.dataset.saveFailedMessage = translations['settings.save_failed'] || form.dataset.saveFailedMessage;
+}
+
+async function persistSettings(form, selects, saveButton, statusElement, signal) {
+    const formData = new FormData(form);
+
+    setBusy(form, selects, saveButton, true);
+    showStatus(statusElement, form.dataset.savingMessage || 'Saving...');
 
     try {
-        const response = await saveAccountSettings(new FormData(form), signal);
+        const response = await saveAccountSettings(
+            formData,
+            signal,
+            form.dataset.saveFailedMessage || 'The account settings could not be saved.'
+        );
 
         const settingsWereCached = cacheSettings(response.settings);
         updateTimezoneContext(response.settings.timezone);
         updateLanguageContext(response.settings.effective_language);
         updateCalendarContext(response.settings.calendar_system);
+        applyTranslations(response.translations);
+        updateTranslatedMessages(form, response.translations);
         form.dataset.settingsPersisted = '1';
         const successMessage = response.message || 'Account settings saved.';
 
@@ -79,7 +103,7 @@ async function persistSettings(form, selects, saveButton, idleButtonLabel, statu
             statusElement,
             settingsWereCached
                 ? successMessage
-                : `${successMessage} Browser cache is unavailable.`
+                : `${successMessage} ${form.dataset.cacheUnavailableMessage || 'Browser cache is unavailable.'}`
         );
     } catch (error) {
         if (error.name !== 'AbortError') {
@@ -87,7 +111,7 @@ async function persistSettings(form, selects, saveButton, idleButtonLabel, statu
         }
     } finally {
         if (!signal.aborted) {
-            setBusy(form, selects, saveButton, idleButtonLabel, false);
+            setBusy(form, selects, saveButton, false);
         }
     }
 }
@@ -103,7 +127,6 @@ export function initAccountSettings(signal) {
 
     const selects = Array.from(form.querySelectorAll('[data-account-setting]'));
     const timezoneSelect = form.querySelector('[data-account-setting="timezone"]');
-    const idleButtonLabel = saveButton.textContent.trim() || 'Save';
     let activeRequestController = null;
 
     const saveCurrentSettings = async () => {
@@ -118,7 +141,6 @@ export function initAccountSettings(signal) {
             form,
             selects,
             saveButton,
-            idleButtonLabel,
             statusElement,
             requestController.signal
         );
