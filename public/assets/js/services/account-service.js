@@ -8,9 +8,9 @@ export async function changePassword(formData) {
     });
 }
 
-export async function saveAccountSettings(formData, signal) {
+export async function saveAccountSettings(formData, signal, errorMessage) {
     return sendJsonFormRequest('/api/settings', formData, {
         signal,
-        errorMessage: 'The account settings could not be saved.'
+        errorMessage: errorMessage || 'The account settings could not be saved.'
     });
 }

@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Exceptions\UserSettingsValidationException;
 use App\Http\Request;
 use App\Http\Response;
+use App\Localization\Translator;
 use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
@@ -15,8 +16,6 @@ use App\Services\UserSettingsService;
 final class SettingsController
 {
     private const DASHBOARD_LAYOUT = 'layouts/dashboard';
-    private const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please refresh the page and try again.';
-
     public function __construct(
         private readonly UserSettingsService $settingsService,
         private readonly AuthService $authService,
@@ -52,33 +51,51 @@ final class SettingsController
 
     public function update(Request $request): Response
     {
+        $userId = $this->authService->getCurrentUserId();
+        $currentSettings = $this->settingsService->getForUser(
+            $userId,
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
+        );
+        $currentTranslator = $this->createTranslator($currentSettings['effective_language']);
+
         if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
             return Response::json([
                 'success' => false,
-                'message' => self::SESSION_EXPIRED_MESSAGE,
+                'message' => $currentTranslator->translate('settings.validation.session_expired'),
             ], 403);
         }
 
         try {
             $settings = $this->settingsService->save(
-                $this->authService->getCurrentUserId(),
+                $userId,
                 $request->postString('language'),
                 $request->postString('calendar_system'),
                 $request->postString('timezone'),
                 $request->header('Accept-Language')
             );
+            $translator = $this->createTranslator($settings['effective_language']);
 
             return Response::json([
                 'success' => true,
-                'message' => 'Account settings saved.',
+                'message' => $translator->translate('settings.saved'),
                 'settings' => $settings,
+                'translations' => $translator->all(),
             ]);
         } catch (UserSettingsValidationException $exception) {
             return Response::json([
                 'success' => false,
-                'message' => $exception->getMessage(),
+                'message' => $currentTranslator->translate($exception->translationKey()),
             ], 422);
         }
+    }
+
+    private function createTranslator(string $effectiveLanguage): Translator
+    {
+        return new Translator(
+            $effectiveLanguage,
+            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'lang'
+        );
     }
 
     private function resolveDisplayName(?object $profile, ?array $user): string

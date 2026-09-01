@@ -115,12 +115,10 @@ $profileFields = isset($profileFields) && is_array($profileFields) ? $profileFie
                         <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
                     </button>
 
-                    <section
+                    <dialog
                         class="profileBirthDatePopover"
                         id="profileBirthDatePopover"
-                        role="dialog"
-                        aria-label="Choose date of birth"
-                        hidden>
+                        aria-label="Choose date of birth">
                         <div class="profileBirthDateSelectors">
                             <label class="srOnly" for="profileBirthMonth">Month</label>
                             <select id="profileBirthMonth"></select>
@@ -134,7 +132,7 @@ $profileFields = isset($profileFields) && is_array($profileFields) ? $profileFie
                             role="grid"
                             aria-label="Date of birth calendar"></div>
                         <p class="srOnly" id="profileBirthDateStatus" role="status" aria-live="polite"></p>
-                    </section>
+                    </dialog>
                 </div>
             </div>
             <label class="profileField">

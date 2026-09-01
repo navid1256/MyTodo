@@ -56,7 +56,7 @@
 
 .accountSettingsField label {
     font-size: 24px;
-    text-align: right;
+    text-align: end;
 }
 
 .accountSettingsField select {
@@ -194,7 +194,7 @@ html.dark-mode .accountSettingsStatus.isError {
     }
 
     .accountSettingsField label {
-        text-align: left;
+        text-align: start;
     }
 
     .accountSettingsField select {
@@ -204,7 +204,7 @@ html.dark-mode .accountSettingsStatus.isError {
     .accountSettingsHint,
     .accountSettingsStatus {
         margin-top: 0;
-        text-align: left;
+        text-align: start;
     }
 
     .accountSettingsActions {

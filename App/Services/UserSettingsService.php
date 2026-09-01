@@ -73,19 +73,19 @@ final class UserSettingsService
         ?string $browserLanguages = null
     ): array {
         if ($userId <= 0) {
-            throw new UserSettingsValidationException('Authentication required.');
+            throw new UserSettingsValidationException('settings.validation.authentication_required');
         }
 
         if (!in_array($language, self::ALLOWED_LANGUAGES, true)) {
-            throw new UserSettingsValidationException('Please select a valid language.');
+            throw new UserSettingsValidationException('settings.validation.invalid_language');
         }
 
         if (!in_array($calendarSystem, self::ALLOWED_CALENDAR_SYSTEMS, true)) {
-            throw new UserSettingsValidationException('Please select a valid calendar system.');
+            throw new UserSettingsValidationException('settings.validation.invalid_calendar');
         }
 
         if (!$this->isValidTimezone($timezone)) {
-            throw new UserSettingsValidationException('Please select a valid time zone.');
+            throw new UserSettingsValidationException('settings.validation.invalid_timezone');
         }
 
         $this->settingsRepository->upsert($userId, $language, $calendarSystem, $timezone);

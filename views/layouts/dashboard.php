@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Helpers\ViteHelper;
+use App\Localization\Translator;
 
 /** @var string $activeView */
 /** @var string $csrfToken */
@@ -29,7 +30,12 @@ $calendarSystem = isset($calendarSystem) && $calendarSystem === 'jalali'
 $calendarCssClass = $calendarSystem === 'jalali'
     ? 'jalaliCalendar'
     : 'gregorianCalendar';
-$htmlLanguage = $effectiveLanguage === 'persian' ? 'fa' : 'en';
+$translator = new Translator(
+    $effectiveLanguage,
+    dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'lang'
+);
+$htmlLanguage = $translator->locale();
+$htmlDirection = $translator->direction();
 
 $pageStylesheets = [
     'home' => '/assets/css/pages/home.css',
@@ -61,14 +67,14 @@ if ($isPartial) {
 ?>
 <?php if (!$isPartial): ?>
 <!DOCTYPE html>
-<html lang="<?= $htmlLanguage ?>">
+<html lang="<?= $htmlLanguage ?>" dir="<?= $htmlDirection ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-    <title>MyTodo</title>
+    <title><?= htmlspecialchars($translator->translate('app.name'), ENT_QUOTES, 'UTF-8') ?></title>
     <script>
         try {
             if (localStorage.getItem('mytodo-theme') === 'dark') {
@@ -148,6 +154,8 @@ if ($isPartial) {
         'renderTimezone' => $renderTimezone,
         'timezoneIsPersisted' => $timezoneIsPersisted,
         'effectiveLanguage' => $effectiveLanguage,
+        'direction' => $htmlDirection,
+        'translations' => $translator->all(),
         'calendarSystem' => $calendarSystem,
         'renderDate' => $renderDate,
         'sentNotificationCount' => $sentNotificationCount ?? 0,
