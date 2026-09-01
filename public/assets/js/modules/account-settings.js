@@ -14,10 +14,15 @@ function hasOption(select, value) {
     return Array.from(select.options).some((option) => option.value === value);
 }
 
-function setBusy(selects, isBusy) {
+function setBusy(form, selects, saveButton, idleButtonLabel, isBusy) {
+    form.setAttribute('aria-busy', String(isBusy));
+
     selects.forEach((select) => {
         select.disabled = isBusy;
     });
+
+    saveButton.disabled = isBusy;
+    saveButton.textContent = isBusy ? 'Saving...' : idleButtonLabel;
 }
 
 function showStatus(statusElement, message, isError = false) {
@@ -52,8 +57,12 @@ function updateLanguageContext(effectiveLanguage) {
     document.body.dataset.effectiveLanguage = normalizedLanguage;
 }
 
-async function persistSettings(form, selects, statusElement, signal) {
-    setBusy(selects, true);
+function updateCalendarContext(calendarSystem) {
+    document.body.dataset.calendarSystem = calendarSystem === 'jalali' ? 'jalali' : 'gregorian';
+}
+
+async function persistSettings(form, selects, saveButton, idleButtonLabel, statusElement, signal) {
+    setBusy(form, selects, saveButton, idleButtonLabel, true);
     showStatus(statusElement, 'Saving...');
 
     try {
@@ -62,6 +71,7 @@ async function persistSettings(form, selects, statusElement, signal) {
         const settingsWereCached = cacheSettings(response.settings);
         updateTimezoneContext(response.settings.timezone);
         updateLanguageContext(response.settings.effective_language);
+        updateCalendarContext(response.settings.calendar_system);
         form.dataset.settingsPersisted = '1';
         const successMessage = response.message || 'Account settings saved.';
 
@@ -77,7 +87,7 @@ async function persistSettings(form, selects, statusElement, signal) {
         }
     } finally {
         if (!signal.aborted) {
-            setBusy(selects, false);
+            setBusy(form, selects, saveButton, idleButtonLabel, false);
         }
     }
 }
@@ -85,13 +95,15 @@ async function persistSettings(form, selects, statusElement, signal) {
 export function initAccountSettings(signal) {
     const form = document.getElementById('accountSettingsForm');
     const statusElement = document.getElementById('accountSettingsStatus');
+    const saveButton = document.getElementById('accountSettingsSaveButton');
 
-    if (!form || !statusElement) {
+    if (!form || !statusElement || !saveButton) {
         return;
     }
 
     const selects = Array.from(form.querySelectorAll('[data-account-setting]'));
     const timezoneSelect = form.querySelector('[data-account-setting="timezone"]');
+    const idleButtonLabel = saveButton.textContent.trim() || 'Save';
     let activeRequestController = null;
 
     const saveCurrentSettings = async () => {
@@ -102,7 +114,14 @@ export function initAccountSettings(signal) {
         const requestController = new AbortController();
         activeRequestController = requestController;
 
-        await persistSettings(form, selects, statusElement, requestController.signal);
+        await persistSettings(
+            form,
+            selects,
+            saveButton,
+            idleButtonLabel,
+            statusElement,
+            requestController.signal
+        );
 
         if (activeRequestController === requestController) {
             activeRequestController = null;
@@ -115,8 +134,13 @@ export function initAccountSettings(signal) {
         }
     }, { once: true });
 
-    form.addEventListener('change', () => {
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
         saveCurrentSettings();
+    }, { signal });
+
+    form.addEventListener('change', () => {
+        showStatus(statusElement, '');
     }, { signal });
 
     if (form.dataset.settingsPersisted === '1' || !timezoneSelect) {
@@ -127,6 +151,4 @@ export function initAccountSettings(signal) {
     if (browserTimezone !== '' && hasOption(timezoneSelect, browserTimezone)) {
         timezoneSelect.value = browserTimezone;
     }
-
-    saveCurrentSettings();
 }
