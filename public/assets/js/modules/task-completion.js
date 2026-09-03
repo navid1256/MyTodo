@@ -1,5 +1,25 @@
 import { toggleTaskCompletion } from '../services/task-service.js';
 
+function updateTaskItem(toggleButton, task) {
+    const taskItem = toggleButton.closest('.taskItem');
+    const icon = toggleButton.querySelector('i');
+    const isDone = Boolean(task.is_done);
+
+    if (taskItem) {
+        taskItem.classList.toggle('checked', isDone);
+    }
+
+    toggleButton.setAttribute('aria-pressed', String(isDone));
+    toggleButton.setAttribute(
+        'aria-label',
+        isDone ? 'Mark task as incomplete' : 'Mark task as completed'
+    );
+
+    if (icon) {
+        icon.classList.toggle('fa-square-check', isDone);
+        icon.classList.toggle('fa-square', !isDone);
+    }
+}
 export function initTaskCompletion(signal) {
     const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfTokenMeta ? csrfTokenMeta.content : '';
@@ -10,26 +30,7 @@ export function initTaskCompletion(signal) {
             + '; path=/; max-age=31536000; SameSite=Lax';
     }
 
-    function updateTaskItem(toggleButton, task) {
-        const taskItem = toggleButton.closest('.taskItem');
-        const icon = toggleButton.querySelector('i');
-        const isDone = Boolean(task.is_done);
 
-        if (taskItem) {
-            taskItem.classList.toggle('checked', isDone);
-        }
-
-        toggleButton.setAttribute('aria-pressed', String(isDone));
-        toggleButton.setAttribute(
-            'aria-label',
-            isDone ? 'Mark task as incomplete' : 'Mark task as completed'
-        );
-
-        if (icon) {
-            icon.classList.toggle('fa-square-check', isDone);
-            icon.classList.toggle('fa-square', !isDone);
-        }
-    }
 
     function updateCompletedCount(count) {
         const completedCount = document.querySelector('.completedCount');

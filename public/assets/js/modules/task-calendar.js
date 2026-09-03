@@ -167,18 +167,23 @@ export function initTaskCalendar(signal) {
             const dayButton = document.createElement('button');
             const accessibleDate = formatAccessibleDate(calendarDate);
 
+            let taskLabel;
+
+            if (taskCount === 0) {
+                taskLabel = 'no tasks';
+            } else if (taskCount === 1) {
+                taskLabel = '1 task';
+            } else {
+                taskLabel = `${taskCount} tasks`;
+            }
+
             dayButton.type = 'button';
             dayButton.className = 'taskCalendarDay';
             dayButton.textContent = calendarDay.dayLabel;
             dayButton.dataset.date = dateKey;
             dayButton.setAttribute('role', 'gridcell');
             dayButton.setAttribute('aria-selected', String(datesAreEqual(calendarDate, selectedDate)));
-            dayButton.setAttribute(
-                'aria-label',
-                accessibleDate + (taskCount
-                    ? ', ' + taskCount + (taskCount === 1 ? ' task' : ' tasks')
-                    : ', no tasks')
-            );
+            dayButton.setAttribute('aria-label', `${accessibleDate}, ${taskLabel}`);
 
             if (calendarDay.isOutsideMonth) {
                 dayButton.classList.add('outside-month');
@@ -234,7 +239,7 @@ export function initTaskCalendar(signal) {
     }
 
     document.addEventListener('task:removed-from-manage', function (event) {
-        const taskId = Number(event.detail && event.detail.taskId);
+        const taskId = Number(event.detail?.taskId);
 
         if (!Number.isInteger(taskId) || taskId < 1) {
             return;

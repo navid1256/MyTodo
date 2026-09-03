@@ -194,7 +194,7 @@ export function initDateTimePicker() {
         }
 
         const today = startOfDay(new Date());
-        const storedDate = taskDueAt && taskDueAt.value
+        const storedDate = taskDueAt?.value
             ? parseDateKey(taskDueAt.value.slice(0, 10))
             : null;
 
@@ -205,7 +205,7 @@ export function initDateTimePicker() {
             draftHasTime = false;
         } else if (storedDate) {
             draftSelectedDate = storedDate;
-            draftHasTime = Boolean(taskHasTime && taskHasTime.value === '1');
+            draftHasTime = Boolean(taskHasTime?.value === '1');
 
             if (draftHasTime) {
                 setPickerTime(

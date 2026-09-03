@@ -17,6 +17,7 @@ import {
     getCalendarWeekdayNames,
     getCalendarYearMonth
 } from '../utils/calendar-core.js';
+import { translate } from '../utils/i18n.js';
 
 const MINIMUM_JALALI_YEAR = 1300;
 
@@ -52,12 +53,21 @@ export function initProfileBirthDate(signal) {
     }
 
     function updateDisplay() {
-        display.textContent = selectedDate
-            ? formatCalendarDate(selectedDate, calendarSystem)
-            : calendarSystem === CALENDAR_SYSTEM.JALALI
-                ? 'تاریخ تولد را انتخاب کنید'
-                : 'Select your date of birth';
+    if (selectedDate) {
+        display.textContent = formatCalendarDate(selectedDate, calendarSystem);
+        return;
     }
+
+    if (calendarSystem === CALENDAR_SYSTEM.JALALI) {
+        display.textContent = 'تاریخ تولد را انتخاب کنید';
+    } else {
+        display.textContent = translate(
+            'profile.birth_date.select',
+            {},
+            'Select your date of birth'
+        );
+    }
+}
 
     function closePicker(shouldRestoreFocus = false) {
         if (popover.open) {
@@ -139,7 +149,11 @@ export function initProfileBirthDate(signal) {
         if (status) {
             status.textContent = calendarSystem === CALENDAR_SYSTEM.JALALI
                 ? `${formatCalendarAccessibleDate(selectedDate, calendarSystem)} انتخاب شد.`
-                : `Selected ${formatCalendarAccessibleDate(selectedDate, calendarSystem)}.`;
+                : translate(
+                    'profile.birth_date.selected',
+                    { date: formatCalendarAccessibleDate(selectedDate, calendarSystem) },
+                    `Selected ${formatCalendarAccessibleDate(selectedDate, calendarSystem)}.`
+                );
         }
 
         closePicker(true);
@@ -196,11 +210,23 @@ export function initProfileBirthDate(signal) {
         renderDays();
     }
 
-    monthSelect.setAttribute('aria-label', calendarSystem === CALENDAR_SYSTEM.JALALI ? 'ماه' : 'Month');
-    yearSelect.setAttribute('aria-label', calendarSystem === CALENDAR_SYSTEM.JALALI ? 'سال' : 'Year');
+    monthSelect.setAttribute(
+        'aria-label',
+        calendarSystem === CALENDAR_SYSTEM.JALALI
+            ? 'ماه'
+            : translate('profile.birth_date.month', {}, 'Month')
+    );
+    yearSelect.setAttribute(
+        'aria-label',
+        calendarSystem === CALENDAR_SYSTEM.JALALI
+            ? 'سال'
+            : translate('profile.birth_date.year', {}, 'Year')
+    );
     popover.setAttribute(
         'aria-label',
-        calendarSystem === CALENDAR_SYSTEM.JALALI ? 'انتخاب تاریخ تولد' : 'Choose date of birth'
+        calendarSystem === CALENDAR_SYSTEM.JALALI
+            ? 'انتخاب تاریخ تولد'
+            : translate('profile.birth_date.dialog', {}, 'Choose date of birth')
     );
     populateSelectors();
     renderWeekdays();

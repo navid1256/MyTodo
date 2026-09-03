@@ -133,6 +133,10 @@ if ($isPartial) {
 <?php if (!$isPartial): ?>
         </div>
     </div>
+    <script id="appTranslations" type="application/json"><?= json_encode(
+        $translator->all(),
+        JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+    ) ?></script>
     <?php if (ViteHelper::isDevelopment()): ?>
         <script type="module" src="<?= ViteHelper::developmentAssetUrl('@vite/client') ?>"></script>
         <script type="module" src="<?= ViteHelper::developmentAssetUrl('assets/js/app.js') ?>"></script>
