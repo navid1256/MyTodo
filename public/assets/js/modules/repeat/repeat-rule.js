@@ -1,4 +1,4 @@
-import {formatDate, parseDateKey} from '../../utils/date-utils.js';
+import { formatDate, parseDateKey } from '../../utils/date-utils.js';
 
 const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -9,7 +9,7 @@ export function resolveMonthlyDay(year, monthIndex, monthDay, useLastDay) {
 }
 
 export function cloneRule(rule) {
-    return rule ? JSON.parse(JSON.stringify(rule)) : null;
+    return rule ? structuredClone(rule) : null;
 }
 
 export function createDefaultRule(baseDate) {
@@ -30,42 +30,98 @@ export function createDefaultRule(baseDate) {
 }
 
 export function validateRule(rule, startDate) {
+    const validations = [
+        () => validateStartDate(startDate),
+        () => validateCustomInterval(rule),
+        () => validateWeekDays(rule),
+        () => validateMonthDay(rule),
+        () => validateEndDate(rule, startDate),
+        () => validateEndCount(rule)
+    ];
+
+    for (const validate of validations) {
+        const error = validate();
+
+        if (error) {
+            return error;
+        }
+    }
+
+    return '';
+}
+
+function validateStartDate(startDate) {
     if (!startDate) {
         return 'Please set a task date before adding repeat settings.';
     }
 
-    if (rule.frequency === 'custom'
-        && (!Number.isInteger(rule.interval) || rule.interval < 1 || rule.interval > 999)) {
+    return '';
+}
+
+function validateCustomInterval(rule) {
+    if (
+        rule.frequency === 'custom'
+        && (!Number.isInteger(rule.interval)
+            || rule.interval < 1
+            || rule.interval > 999)
+    ) {
         return 'Repeat Every must be a whole number between 1 and 999.';
     }
 
+    return '';
+}
+
+function validateWeekDays(rule) {
     if (rule.unit === 'week' && rule.week_days.length === 0) {
         return 'Choose at least one weekday for the repeat schedule.';
     }
 
-    if (rule.unit === 'month') {
-        const isLastDay = rule.month_day_mode === 'last_day';
+    return '';
+}
 
-        if (!isLastDay && (!Number.isInteger(rule.month_day) || rule.month_day < 1 || rule.month_day > 31)) {
-            return 'Choose a valid day of the month.';
-        }
+function validateMonthDay(rule) {
+    if (rule.unit !== 'month') {
+        return '';
     }
 
-    if (rule.ends.type === 'date') {
-        const endDate = parseDateKey(rule.ends.date);
-
-        if (!endDate) {
-            return 'Please select an end date from the calendar.';
-        }
-
-        if (endDate <= startDate) {
-            return 'The repeat end date must be after the task date.';
-        }
-    }
+    const isLastDay = rule.month_day_mode === 'last_day';
 
     if (
+        !isLastDay
+        && (!Number.isInteger(rule.month_day)
+            || rule.month_day < 1
+            || rule.month_day > 31)
+    ) {
+        return 'Choose a valid day of the month.';
+    }
+
+    return '';
+}
+
+function validateEndDate(rule, startDate) {
+    if (rule.ends.type !== 'date') {
+        return '';
+    }
+
+    const endDate = parseDateKey(rule.ends.date);
+
+    if (!endDate) {
+        return 'Please select an end date from the calendar.';
+    }
+
+    if (endDate <= startDate) {
+        return 'The repeat end date must be after the task date.';
+    }
+
+    return '';
+}
+
+function validateEndCount(rule) {
+    if (
         rule.ends.type === 'count'
-        && (!Number.isInteger(rule.ends.count) || rule.ends.count < 1 || rule.ends.count > 9999)
+        && (!Number.isInteger(rule.ends.count)
+            || rule.ends.count < 1
+            || rule.ends.count > 9999)
     ) {
         return 'Repeat Counts must be a whole number between 1 and 9999.';
     }

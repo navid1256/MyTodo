@@ -1,3 +1,5 @@
+import { translate } from '../../utils/i18n.js';
+
 const MAX_SOURCE_FILE_SIZE = 10 * 1024 * 1024;
 const OUTPUT_SIZE = 512;
 const CANVAS_QUALITY = 0.9;
@@ -5,7 +7,7 @@ const MAXIMUM_ZOOM = 3;
 const ZOOM_BUTTON_STEP = 0.1;
 const ZOOM_WHEEL_STEP = 0.08;
 const ZOOM_SLIDER_LIMIT = 100;
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+const ALLOWED_FILE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
 
 function clamp(value, minimum, maximum) {
     return Math.min(Math.max(value, minimum), maximum);
@@ -83,7 +85,7 @@ export function createAvatarCropper(options) {
         naturalHeight = cropImage.naturalHeight;
 
         if (!naturalWidth || !naturalHeight) {
-            options.setMessage('The selected picture could not be loaded.');
+            options.setMessage(translate('profile.avatar.load_failed', {}, 'The selected picture could not be loaded.'));
             options.setApplyEnabled(false);
             return;
         }
@@ -111,12 +113,12 @@ export function createAvatarCropper(options) {
 
     function loadFile(file) {
         if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-            options.setMessage('Choose a JPEG, PNG, JPG or WebP picture.');
+            options.setMessage(translate('profile.avatar.invalid_type', {}, 'Choose a JPEG, PNG, JPG or WebP picture.'));
             return false;
         }
 
         if (file.size > MAX_SOURCE_FILE_SIZE) {
-            options.setMessage('The selected picture must not exceed 10 MB.');
+            options.setMessage(translate('profile.avatar.source_too_large', {}, 'The selected picture must not exceed 10 MB.'));
             return false;
         }
 
@@ -127,7 +129,7 @@ export function createAvatarCropper(options) {
 
         cropImage.onload = initialiseCropImage;
         cropImage.onerror = function () {
-            options.setMessage('The selected picture could not be loaded.');
+            options.setMessage(translate('profile.avatar.load_failed', {}, 'The selected picture could not be loaded.'));
             options.setApplyEnabled(false);
         };
         cropImage.src = sourceObjectUrl;
@@ -148,7 +150,11 @@ export function createAvatarCropper(options) {
         canvas.height = OUTPUT_SIZE;
 
         if (!context) {
-            throw new Error('Your browser could not prepare the profile picture.');
+            throw new Error(translate(
+                'profile.avatar.browser_prepare_failed',
+                {},
+                'Your browser could not prepare the profile picture.'
+            ));
         }
 
         context.imageSmoothingEnabled = true;

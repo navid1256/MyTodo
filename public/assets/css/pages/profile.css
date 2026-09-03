@@ -182,7 +182,7 @@ html.dark-mode .profilePageHeaderIcon {
 .avatarPickerClose {
     position: absolute;
     top: 18px;
-    right: 20px;
+    inset-inline-end: 20px;
     display: grid;
     width: 34px;
     height: 34px;
@@ -257,7 +257,7 @@ html.dark-mode .profilePageHeaderIcon {
 
 .boringAvatarOption.is-selected::after {
     position: absolute;
-    right: -2px;
+    inset-inline-end: -2px;
     bottom: -2px;
     display: grid;
     width: 24px;
@@ -507,7 +507,7 @@ html.dark-mode .profilePageHeaderIcon {
 }
 
 .profileField>span {
-    text-align: right;
+    text-align: end;
 }
 
 .profileField input,
@@ -557,7 +557,7 @@ html.dark-mode .profilePageHeaderIcon {
     color: #263342;
     font: inherit;
     font-weight: 400;
-    text-align: left;
+    text-align: start;
     cursor: pointer;
 }
 
@@ -583,8 +583,8 @@ html.dark-mode .profilePageHeaderIcon {
     position: absolute;
     z-index: 40;
     top: calc(100% + 8px);
-    right: 0;
-    left: auto;
+    inset-inline-end: 0;
+    inset-inline-start: auto;
     margin: 0;
     width: min(360px, 85vw);
     max-width: none;
@@ -749,7 +749,7 @@ html.dark-mode .profileBirthDateDay.selected {
 }
 
 .changePasswordButton {
-    margin-left: 92px;
+    margin-inline-start: 92px;
     background-color: #16b8d4;
     box-shadow: 0 8px 18px rgba(22, 184, 212, 0.25);
     text-decoration: none;

@@ -8,6 +8,7 @@ use App\Exceptions\AvatarStorageException;
 use App\Exceptions\ProfileUpdateException;
 use App\Http\Request;
 use App\Http\Response;
+use App\Localization\Translator;
 use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\ProfileService;
@@ -31,9 +32,13 @@ final class ProfileController
         $userProfile = $this->userRepository->getProfile($userId);
         $currentUser = $_SESSION['user'] ?? [];
         $settings = $this->resolveUserSettings($userId, $request);
+        $translator = $this->createTranslator($settings['effective_language']);
 
-        $profileSuccess = $_SESSION['profile_success'] ?? null;
+        $profileSuccessKey = $_SESSION['profile_success'] ?? null;
         unset($_SESSION['profile_success']);
+        $profileSuccess = is_string($profileSuccessKey)
+            ? $translator->translate($profileSuccessKey)
+            : null;
 
         $viewData = $this->buildProfileViewData(
             userProfile: $userProfile,
@@ -54,14 +59,15 @@ final class ProfileController
         $userId = (int) ($_SESSION['user']['id'] ?? 0);
         $userProfile = $this->userRepository->getProfile($userId);
         $currentUser = $_SESSION['user'] ?? [];
-        $profileErrors = [];
+        $profileErrorKeys = [];
         $settings = $this->resolveUserSettings($userId, $request);
+        $translator = $this->createTranslator($settings['effective_language']);
 
         if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
-            $profileErrors[] = 'Your session has expired. Please submit the form again.';
+            $profileErrorKeys[] = 'profile.validation.session_expired';
         }
 
-        $avatarAction = $request->postString('profile_action');
+        $avatarAction = $request->postString('avatar_action');
         $avatarChoiceValue = $request->postString('avatar_choice');
         $avatarData = $request->postString('avatar_data');
 
@@ -83,9 +89,9 @@ final class ProfileController
             $userTimezone
         );
 
-        $profileErrors = array_merge($profileErrors, $validationErrors);
+        $profileErrorKeys = array_merge($profileErrorKeys, $validationErrors);
 
-        if ($profileErrors === []) {
+        if ($profileErrorKeys === []) {
             try {
                 $this->profileService->updateProfile(
                     $userId,
@@ -95,13 +101,18 @@ final class ProfileController
                     $avatarData
                 );
 
-                $_SESSION['profile_success'] = 'Your profile has been saved successfully.';
+                $_SESSION['profile_success'] = 'profile.saved';
 
                 return Response::redirect('/profile');
             } catch (AvatarStorageException | InvalidArgumentException | ProfileUpdateException $exception) {
-                $profileErrors[] = $exception->getMessage();
+                $profileErrorKeys[] = $exception->getMessage();
             }
         }
+
+        $profileErrors = array_map(
+            static fn(string $translationKey): string => $translator->translate($translationKey),
+            $profileErrorKeys
+        );
 
         $mergedProfile = (object) array_merge((array) ($userProfile ?? []), $profileInput);
 
@@ -197,6 +208,14 @@ final class ProfileController
             $userId,
             $request->cookieString('mytodo_timezone'),
             $request->header('Accept-Language')
+        );
+    }
+
+    private function createTranslator(string $effectiveLanguage): Translator
+    {
+        return new Translator(
+            $effectiveLanguage,
+            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'lang'
         );
     }
 

@@ -1,4 +1,5 @@
 import { createBoringBeamAvatarDataUrl } from '../../vendor/boring-avatar.js';
+import { translate } from '../../utils/i18n.js';
 
 const AVATAR_OPTION_COUNT = 12;
 
@@ -28,7 +29,10 @@ export function createAvatarGallery(options) {
             button.dataset.avatarChoice = String(choice);
             button.setAttribute('role', 'radio');
             button.setAttribute('aria-checked', 'false');
-            button.setAttribute('aria-label', `Choose avatar ${choice}`);
+            button.setAttribute(
+                'aria-label',
+                translate('profile.avatar.choose_option', { choice }, `Choose avatar ${choice}`)
+            );
             image.src = imageUrl;
             image.alt = '';
             image.width = 76;

@@ -1,5 +1,6 @@
 import { createAvatarCropper } from './avatar-cropper.js';
 import { createAvatarGallery } from './avatar-gallery.js';
+import { translate } from '../../utils/i18n.js';
 
 export function initAvatarPicker() {
     const modal = document.getElementById('avatarPickerModal');
@@ -209,7 +210,7 @@ export function initAvatarPicker() {
                     avatarChoice.value = '';
                     avatarData.value = previewUrl;
                 } else {
-                    setMessage('Choose a profile picture first.');
+                    setMessage(translate('profile.avatar.choose_first', {}, 'Choose a profile picture first.'));
                     return;
                 }
 
@@ -218,12 +219,20 @@ export function initAvatarPicker() {
                 });
 
                 if (selectionStatus) {
-                    selectionStatus.textContent = 'New picture ready — click Save to keep it';
+                    selectionStatus.textContent = translate(
+                        'profile.avatar.ready',
+                        {},
+                        'New picture ready — click Save to keep it'
+                    );
                 }
 
                 closePicker(false);
             } catch (error) {
-                setMessage(error.message || 'The profile picture could not be prepared.');
+                setMessage(error.message || translate(
+                    'profile.avatar.prepare_failed',
+                    {},
+                    'The profile picture could not be prepared.'
+                ));
             }
         });
     }
