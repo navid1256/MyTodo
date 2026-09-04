@@ -1,9 +1,6 @@
-<div class="avatarPickerBackdrop" id="avatarPickerModal" hidden>
+<dialog class="avatarPickerBackdrop" id="avatarPickerModal" aria-labelledby="avatarPickerTitle">
     <section
-        class="avatarPickerModal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="avatarPickerTitle">
+        class="avatarPickerModal">
         <button
             class="avatarPickerClose"
             id="closeAvatarPicker"
@@ -44,4 +41,4 @@
             <button class="applyAvatarButton" id="applyAvatarSelection" type="button" data-i18n="profile.avatar.use_picture" disabled><?= htmlspecialchars($translator->translate('profile.avatar.use_picture'), ENT_QUOTES, 'UTF-8') ?></button>
         </div>
     </section>
-</div>
+</dialog>

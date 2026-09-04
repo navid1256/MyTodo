@@ -2,12 +2,9 @@
 /** @var string $calendarCssClass */
 /** @var \App\Localization\Translator $translator */
 ?>
-<div class="dateTimeModalBackdrop" id="dateTimeModal" hidden>
+<dialog class="dateTimeModalBackdrop" id="dateTimeModal" aria-labelledby="dateTimeModalTitle">
     <section
-        class="dateTimeModal <?= $calendarCssClass ?>"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="dateTimeModalTitle">
+        class="dateTimeModal <?= $calendarCssClass ?>">
         <button class="dateTimeModalClose" id="closeDateTimeModal" type="button" data-i18n-aria-label="date_time.close" aria-label="<?= htmlspecialchars($translator->translate('date_time.close'), ENT_QUOTES, 'UTF-8') ?>">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
@@ -91,4 +88,4 @@
             <button class="applyDateTimeButton" id="applyDateTimeButton" type="button" data-i18n="common.apply"><?= htmlspecialchars($translator->translate('common.apply'), ENT_QUOTES, 'UTF-8') ?></button>
         </div>
     </section>
-</div>
+</dialog>

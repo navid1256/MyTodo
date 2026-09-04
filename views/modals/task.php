@@ -3,12 +3,9 @@
 /** @var string $csrfToken */
 /** @var \App\Localization\Translator $translator */
 ?>
-<div class="taskModalBackdrop" id="taskModal" hidden>
+<dialog class="taskModalBackdrop" id="taskModal" aria-labelledby="taskModalTitle">
     <section
-        class="taskModal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="taskModalTitle">
+        class="taskModal">
         <h2 class="srOnly" id="taskModalTitle" data-i18n="task.add_new"><?= htmlspecialchars($translator->translate('task.add_new'), ENT_QUOTES, 'UTF-8') ?></h2>
         <button class="taskModalClose" id="closeTaskModal" type="button" data-i18n-aria-label="task.modal.close" aria-label="<?= htmlspecialchars($translator->translate('task.modal.close'), ENT_QUOTES, 'UTF-8') ?>">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
@@ -71,4 +68,4 @@
             </div>
         </form>
     </section>
-</div>
+</dialog>

@@ -144,7 +144,9 @@ export function initAvatarPicker() {
             restoreOpenSnapshot();
         }
 
-        modal.hidden = true;
+        if (modal.open) {
+            modal.close();
+        }
         document.body.classList.remove('avatar-picker-open');
         setMessage('');
         avatarCropper.reset();
@@ -154,7 +156,9 @@ export function initAvatarPicker() {
     function openPicker() {
         captureOpenSnapshot();
         showGallery();
-        modal.hidden = false;
+        if (!modal.open) {
+            modal.showModal();
+        }
         document.body.classList.add('avatar-picker-open');
 
         window.requestAnimationFrame(function () {
@@ -243,9 +247,8 @@ export function initAvatarPicker() {
         }
     });
 
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !modal.hidden) {
-            closePicker(true);
-        }
+    modal.addEventListener('cancel', function (event) {
+        event.preventDefault();
+        closePicker(true);
     });
 }

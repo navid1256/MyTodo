@@ -7,15 +7,25 @@
     z-index: 1000;
     inset: 0;
     display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
     align-items: center;
     justify-content: center;
+    margin: 0;
     padding: 24px;
+    border: 0;
     background-color: rgba(20, 32, 40, 0.48);
     box-sizing: border-box;
 }
 
-.taskModalBackdrop[hidden] {
+.taskModalBackdrop:not([open]) {
     display: none;
+}
+
+.taskModalBackdrop::backdrop {
+    background: transparent;
 }
 
 .taskModal {
@@ -191,16 +201,26 @@
     z-index: 1100;
     inset: 0;
     display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
     align-items: center;
     justify-content: center;
+    margin: 0;
     padding: 24px;
     overflow-y: auto;
+    border: 0;
     background-color: rgba(14, 25, 33, 0.64);
     box-sizing: border-box;
 }
 
-.dateTimeModalBackdrop[hidden] {
+.dateTimeModalBackdrop:not([open]) {
     display: none;
+}
+
+.dateTimeModalBackdrop::backdrop {
+    background: transparent;
 }
 
 .dateTimeModal {
@@ -509,16 +529,26 @@
     z-index: 1120;
     inset: 0;
     display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
     align-items: center;
     justify-content: center;
+    margin: 0;
     padding: 24px;
     overflow-y: auto;
+    border: 0;
     background-color: rgba(14, 25, 33, 0.68);
     box-sizing: border-box;
 }
 
-.reminderModalBackdrop[hidden] {
+.reminderModalBackdrop:not([open]) {
     display: none;
+}
+
+.reminderModalBackdrop::backdrop {
+    background: transparent;
 }
 
 .reminderModal {

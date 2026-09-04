@@ -313,15 +313,25 @@ html.dark-mode .sentNotificationsPageHeaderIcon {
     z-index: 1100;
     inset: 0;
     display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
     align-items: center;
     justify-content: center;
+    margin: 0;
     padding: 20px;
+    border: 0;
     box-sizing: border-box;
     background-color: rgba(10, 24, 34, 0.56);
 }
 
-.notificationEditBackdrop[hidden] {
+.notificationEditBackdrop:not([open]) {
     display: none;
+}
+
+.notificationEditBackdrop::backdrop {
+    background: transparent;
 }
 
 .notificationEditModal {

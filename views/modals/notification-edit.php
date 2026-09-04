@@ -3,8 +3,8 @@
 /** @var string $csrfToken */
 /** @var \App\Localization\Translator $translator */
 ?>
-<div class="notificationEditBackdrop" id="notificationEditModal" hidden>
-    <section class="notificationEditModal" role="dialog" aria-modal="true" aria-labelledby="notificationEditTitle">
+<dialog class="notificationEditBackdrop" id="notificationEditModal" aria-labelledby="notificationEditTitle">
+    <section class="notificationEditModal">
         <button class="notificationEditClose" id="closeNotificationEdit" type="button" data-i18n-aria-label="notifications.editor.close" aria-label="<?= htmlspecialchars($translator->translate('notifications.editor.close'), ENT_QUOTES, 'UTF-8') ?>">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
@@ -37,4 +37,4 @@
             </div>
         </form>
     </section>
-</div>
+</dialog>

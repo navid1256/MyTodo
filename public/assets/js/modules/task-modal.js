@@ -1,6 +1,6 @@
 import { createTask } from '../services/task-service.js';
 
-export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker, signal) {
+export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     // متغیرهای Task Modal
     const taskModal = document.getElementById('taskModal');
     const openTaskModalButton = document.getElementById('openTaskModal');
@@ -25,7 +25,9 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker, sign
         }
 
         lastTaskModalTrigger = trigger || document.activeElement;
-        taskModal.hidden = false;
+        if (!taskModal.open) {
+            taskModal.showModal();
+        }
         document.body.classList.add('task-modal-open');
         setTaskModalMessage('');
 
@@ -51,7 +53,9 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker, sign
             repeatPicker.close(false);
         }
 
-        taskModal.hidden = true;
+        if (taskModal.open) {
+            taskModal.close();
+        }
         document.body.classList.remove('task-modal-open');
         setTaskModalMessage('');
 
@@ -75,6 +79,11 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker, sign
             if (event.target === taskModal) {
                 closeTaskModal();
             }
+        });
+
+        taskModal.addEventListener('cancel', function (event) {
+            event.preventDefault();
+            closeTaskModal();
         });
     }
 
@@ -116,22 +125,6 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker, sign
                 });
         });
     }
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key !== 'Escape') {
-            return;
-        }
-
-        if (repeatPicker && repeatPicker.isOpen()) {
-            repeatPicker.close();
-        } else if (reminderPicker && reminderPicker.isOpen()) {
-            reminderPicker.close();
-        } else if (dateTimePicker && dateTimePicker.isOpen()) {
-            dateTimePicker.close();
-        } else if (taskModal && !taskModal.hidden) {
-            closeTaskModal();
-        }
-    }, signal ? { signal } : undefined);
 
 }
 

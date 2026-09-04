@@ -91,7 +91,9 @@ export function initNotificationCenter(signal) {
         taskTitle.textContent = button.dataset.taskTitle;
         taskDue.textContent = button.dataset.taskDue;
         setModalMessage('');
-        modal.hidden = false;
+        if (!modal.open) {
+            modal.showModal();
+        }
         document.body.classList.add('notification-modal-open');
         window.requestAnimationFrame(function () {
             offsetValue.focus();
@@ -100,7 +102,9 @@ export function initNotificationCenter(signal) {
     }
 
     function closeEditor() {
-        modal.hidden = true;
+        if (modal.open) {
+            modal.close();
+        }
         document.body.classList.remove('notification-modal-open');
         setModalMessage('');
 
@@ -196,9 +200,8 @@ export function initNotificationCenter(signal) {
             closeEditor();
         }
     });
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !modal.hidden) {
-            closeEditor();
-        }
+    modal.addEventListener('cancel', function (event) {
+        event.preventDefault();
+        closeEditor();
     }, signal ? { signal } : undefined);
 }
