@@ -274,8 +274,8 @@ span.created-at {
 }
 
 .main .nav .menu .title {
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 800;
+    font-size: 16px;
     text-transform: uppercase;
 }
 
@@ -478,6 +478,7 @@ html.dark-mode .dashboardBackButton:focus-visible {
     gap: 8px;
     padding: 0px 18px;
     margin-right: 22px;
+    margin-left: 22px;
     text-decoration: none;
 }
 
@@ -732,6 +733,65 @@ body,
 
 html[dir="rtl"] .dashboardBackButton i {
     transform: scaleX(-1);
+}
+
+html[dir="rtl"] .pageHeader .title {
+    float: right;
+    text-align: right;
+}
+
+html[dir="rtl"] .pageHeader .userArea {
+    float: left;
+}
+
+html[dir="rtl"] .profileDropdown {
+    right: auto;
+    left: -15px;
+}
+
+html[dir="rtl"] .profileDropdown button,
+html[dir="rtl"] .profileDropdown .profileDropdownLink {
+    text-align: right;
+}
+
+html[dir="rtl"] .profileDropdown .signOutButton {
+    padding-right: 26px;
+    padding-left: 20px;
+}
+
+html[dir="rtl"] .main .nav {
+    float: right;
+}
+
+html[dir="rtl"] .main .nav .menu,
+html[dir="rtl"] .main .nav .menu ul li a,
+html[dir="rtl"] .main .nav .menu ul li button {
+    text-align: right;
+}
+
+html[dir="rtl"] .main .view {
+    margin-right: 200px;
+    margin-left: 0;
+}
+
+html[dir="rtl"] .main .view .viewHeader .functions {
+    float: left;
+}
+
+html[dir="rtl"] .main .view .viewHeader .functions .button {
+    float: left;
+}
+
+html[dir="rtl"] .calendarHeader,
+html[dir="rtl"] .repeatCalendarHeader,
+html[dir="rtl"] .taskCalendarHeader {
+    direction: ltr;
+}
+
+html[dir="rtl"] .calendarHeader h2,
+html[dir="rtl"] .repeatCalendarHeader h4,
+html[dir="rtl"] .taskCalendarHeader h2 {
+    direction: rtl;
 }
 
 html[lang="fa"] body {

@@ -130,6 +130,7 @@
     border-radius: 6px;
     background-color: #f7fafb;
     box-shadow: 0 8px 22px rgba(33, 73, 91, 0.12);
+    margin-right: 10px;
 }
 
 .taskCalendarHeader {
