@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Exceptions\ReminderValidationException;
 use App\Exceptions\TaskValidationException;
+use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
@@ -54,6 +55,10 @@ final class ReminderController
             $dueAt = $this->parseDueAt($dueAtValue, $timezone);
             $reminders = $this->parseRemindersJson($remindersJson);
 
+            if ($dueAt === null && $dueAtValue !== '') {
+                throw new TaskValidationException('Please select a valid task date and time.');
+            }
+
             $prepared = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
             $previewItems = array_map(static function (array $item): array {
                 /** @var DateTimeImmutable $remindAt */
@@ -75,22 +80,7 @@ final class ReminderController
 
     private function parseDueAt(string $dueAtValue, DateTimeZone $timezone): ?DateTimeImmutable
     {
-        if ($dueAtValue === '') {
-            return null;
-        }
-
-        $dueAt = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $dueAtValue, $timezone);
-        $dateErrors = DateTimeImmutable::getLastErrors();
-
-        if (
-            !$dueAt
-            || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
-            || $dueAt->format('Y-m-d\TH:i') !== $dueAtValue
-        ) {
-            throw new TaskValidationException('Please select a valid task date and time.');
-        }
-
-        return $dueAt;
+        return TimezoneHelper::parseCanonicalDateTime($dueAtValue, $timezone);
     }
 
     /**
