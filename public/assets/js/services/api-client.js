@@ -1,3 +1,5 @@
+import { translate } from '../utils/i18n.js';
+
 export async function sendFormRequest(urlOrFormData, formDataOrOptions = {}, maybeOptions = {}) {
     let url = '/tasks/create';
     let formData;
@@ -53,7 +55,7 @@ export async function sendFormRequest(urlOrFormData, formDataOrOptions = {}, may
 
 export async function sendJsonFormRequest(urlOrFormData, formDataOrOptions = {}, maybeOptions = {}) {
     const options = typeof urlOrFormData === 'string' ? (maybeOptions || {}) : (formDataOrOptions || {});
-    const fallbackMessage = options.errorMessage || 'The request failed.';
+    const fallbackMessage = options.errorMessage || translate('common.request_failed', {}, 'The request failed.');
     const requestOptions = {
         ...options,
         acceptJson: true

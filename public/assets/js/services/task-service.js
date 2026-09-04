@@ -2,12 +2,13 @@ import {
     sendFormRequest,
     sendJsonFormRequest
 } from './api-client.js';
+import { translate } from '../utils/i18n.js';
 
 export async function createTask(formData) {
     const response = await sendFormRequest(formData);
 
     if (!response.ok || response.text.trim() !== '1') {
-        throw new Error(response.text || 'The task could not be saved.');
+        throw new Error(response.text || translate('task.save_failed', {}, 'The task could not be saved.'));
     }
 
     return response.text;
@@ -20,7 +21,7 @@ export async function toggleTaskCompletion(taskId, csrfToken) {
     formData.set('task_id', String(taskId));
 
     return sendJsonFormRequest(formData, {
-        errorMessage: 'The task status could not be updated.'
+        errorMessage: translate('task.toggle_failed', {}, 'The task status could not be updated.')
     });
 }
 
@@ -34,7 +35,7 @@ export async function previewTaskReminders(data, signal) {
 
     const responseData = await sendJsonFormRequest(formData, {
         signal,
-        errorMessage: 'The reminder time could not be calculated.'
+        errorMessage: translate('reminder.preview.request_failed', {}, 'The reminder time could not be calculated.')
     });
 
     return responseData.reminders;

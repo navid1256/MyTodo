@@ -16,6 +16,7 @@ import {
     getCalendarNavigation,
     getCalendarWeekdayNames
 } from '../utils/calendar-core.js';
+import { translate } from '../utils/i18n.js';
 
 export function initTaskCalendar(signal) {
     const taskCalendar = document.getElementById('taskCalendar');
@@ -101,8 +102,8 @@ export function initTaskCalendar(signal) {
 
         if (calendarStatus) {
             calendarStatus.textContent = taskItems.length === 1
-                ? 'Showing all 1 task.'
-                : 'Showing all ' + taskItems.length + ' tasks.';
+                ? translate('manage.showing_all_one', {}, 'Showing all 1 task.')
+                : translate('manage.showing_all', { count: taskItems.length }, 'Showing all {count} tasks.');
         }
     }
 
@@ -132,8 +133,8 @@ export function initTaskCalendar(signal) {
 
         if (calendarStatus) {
             calendarStatus.textContent = visibleTaskCount === 1
-                ? 'Showing 1 task for ' + formatAccessibleDate(selectedDate) + '.'
-                : 'Showing ' + visibleTaskCount + ' tasks for ' + formatAccessibleDate(selectedDate) + '.';
+                ? translate('manage.showing_date_one', { date: formatAccessibleDate(selectedDate) }, 'Showing 1 task for {date}.')
+                : translate('manage.showing_date', { count: visibleTaskCount, date: formatAccessibleDate(selectedDate) }, 'Showing {count} tasks for {date}.');
         }
     }
 

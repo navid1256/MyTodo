@@ -10,6 +10,7 @@ import {
     formatDateKey,
     startOfDay
 } from './date-utils.js';
+import { translate } from './i18n.js';
 
 export const CALENDAR_SYSTEM = Object.freeze({
     GREGORIAN: 'gregorian',
@@ -206,11 +207,11 @@ export function getCalendarNavigation() {
     return {
         left: {
             offset: -1,
-            label: 'Previous month'
+            label: translate('common.previous_month', {}, 'Previous month')
         },
         right: {
             offset: 1,
-            label: 'Next month'
+            label: translate('common.next_month', {}, 'Next month')
         }
     };
 }

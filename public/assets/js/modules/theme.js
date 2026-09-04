@@ -1,3 +1,5 @@
+import { translate } from '../utils/i18n.js';
+
 export function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
@@ -11,8 +13,8 @@ export function initTheme() {
         }
 
         if (themeLabel) {
-            const darkModeLabel = themeToggle?.dataset.darkModeLabel || 'Dark Mode';
-            const lightModeLabel = themeToggle?.dataset.lightModeLabel || 'Light Mode';
+            const darkModeLabel = themeToggle?.dataset.darkModeLabel || translate('theme.dark_mode', {}, 'Dark Mode');
+            const lightModeLabel = themeToggle?.dataset.lightModeLabel || translate('theme.light_mode', {}, 'Light Mode');
 
             themeLabel.textContent = isDarkMode ? lightModeLabel : darkModeLabel;
         }

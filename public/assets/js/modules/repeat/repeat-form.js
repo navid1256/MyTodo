@@ -1,3 +1,5 @@
+import { translate } from '../../utils/i18n.js';
+
 export function createRepeatForm(options) {
     const customRepeatSection = document.getElementById('customRepeatSection');
     const repeatInterval = document.getElementById('repeatInterval');
@@ -74,13 +76,13 @@ export function createRepeatForm(options) {
         }
 
         if (selectedValue === 'last') {
-            repeatMonthHint.textContent = 'This task will repeat on the last day of every month.';
+            repeatMonthHint.textContent = translate('repeat.hint.last_day', {}, 'This task will repeat on the last day of every month.');
             repeatMonthHint.hidden = false;
             return;
         }
 
         if (Number(selectedValue) >= 29) {
-            repeatMonthHint.textContent = 'For shorter months, this task will repeat on the last day of the month.';
+            repeatMonthHint.textContent = translate('repeat.hint.short_months', {}, 'For shorter months, this task will repeat on the last day of the month.');
             repeatMonthHint.hidden = false;
             return;
         }
