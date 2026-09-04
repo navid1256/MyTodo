@@ -187,7 +187,9 @@ export function initReminderPicker(signal) {
         }
 
         reminderPreview.cancel();
-        reminderModal.hidden = true;
+        if (reminderModal.open) {
+            reminderModal.close();
+        }
         setReminderModalMessage('');
 
         if (setTaskReminderButton) {
@@ -225,7 +227,9 @@ export function initReminderPicker(signal) {
         renderReminderList();
         setTaskModalMessage('');
         setReminderModalMessage('');
-        reminderModal.hidden = false;
+        if (!reminderModal.open) {
+            reminderModal.showModal();
+        }
 
         if (setTaskReminderButton) {
             setTaskReminderButton.setAttribute('aria-expanded', 'true');
@@ -290,6 +294,11 @@ export function initReminderPicker(signal) {
                 closeReminderModal();
             }
         });
+
+        reminderModal.addEventListener('cancel', function (event) {
+            event.preventDefault();
+            closeReminderModal();
+        });
     }
 
     if (reminderCount) {
@@ -312,10 +321,10 @@ export function initReminderPicker(signal) {
             committedReminders = [];
             updateCommittedReminderSummary();
 
-            if (reminderModal && !reminderModal.hidden) {
+            if (reminderModal?.open) {
                 closeReminderModal(false);
             }
-        } else if (reminderModal && !reminderModal.hidden) {
+        } else if (reminderModal?.open) {
             reminderPreview.schedule();
         }
     }, signal ? { signal } : undefined);
@@ -324,7 +333,7 @@ export function initReminderPicker(signal) {
 
     return {
         isOpen: function () {
-            return Boolean(reminderModal && !reminderModal.hidden);
+            return Boolean(reminderModal?.open);
         },
         close: function (shouldRestoreFocus) {
             closeReminderModal(shouldRestoreFocus);

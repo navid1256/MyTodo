@@ -39,7 +39,7 @@ function initDashboardView() {
     const dateTimePicker = initDateTimePicker();
     const reminderPicker = initReminderPicker(signal);
     const repeatPicker = initRepeatPicker();
-    initTaskModal(dateTimePicker, reminderPicker, repeatPicker, signal);
+    initTaskModal(dateTimePicker, reminderPicker, repeatPicker);
 }
 
 initTheme();

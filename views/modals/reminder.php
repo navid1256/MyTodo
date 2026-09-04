@@ -1,10 +1,7 @@
           <?php /** @var \App\Localization\Translator $translator */ ?>
-          <div class="reminderModalBackdrop" id="reminderModal" hidden>
+          <dialog class="reminderModalBackdrop" id="reminderModal" aria-labelledby="reminderModalTitle">
               <section
-                  class="reminderModal"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="reminderModalTitle">
+                  class="reminderModal">
                   <button class="reminderModalClose" id="closeReminderModal" type="button" data-i18n-aria-label="reminder.modal.close" aria-label="<?= htmlspecialchars($translator->translate('reminder.modal.close'), ENT_QUOTES, 'UTF-8') ?>">
                       <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                   </button>
@@ -33,4 +30,4 @@
                       <button class="applyReminderButton" id="applyReminderButton" type="button" data-i18n="common.apply"><?= htmlspecialchars($translator->translate('common.apply'), ENT_QUOTES, 'UTF-8') ?></button>
                   </div>
               </section>
-          </div>
+          </dialog>

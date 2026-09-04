@@ -174,7 +174,9 @@ export function initDateTimePicker() {
             return;
         }
 
-        dateTimeModal.hidden = true;
+        if (dateTimeModal.open) {
+            dateTimeModal.close();
+        }
         setDateTimeModalMessage('');
 
         if (setTaskDateButton) {
@@ -229,7 +231,9 @@ export function initDateTimePicker() {
         updateTimeControls();
         renderCalendar();
         setDateTimeModalMessage('');
-        dateTimeModal.hidden = false;
+        if (!dateTimeModal.open) {
+            dateTimeModal.showModal();
+        }
 
         if (setTaskDateButton) {
             setTaskDateButton.setAttribute('aria-expanded', 'true');
@@ -340,6 +344,11 @@ export function initDateTimePicker() {
                 closeDateTimeModal();
             }
         });
+
+        dateTimeModal.addEventListener('cancel', function (event) {
+            event.preventDefault();
+            closeDateTimeModal();
+        });
     }
 
     if (previousCalendarMonthButton) {
@@ -418,7 +427,7 @@ export function initDateTimePicker() {
 
     return {
         isOpen: function () {
-            return Boolean(dateTimeModal && !dateTimeModal.hidden);
+            return Boolean(dateTimeModal?.open);
         },
         close: function (shouldRestoreFocus) {
             closeDateTimeModal(shouldRestoreFocus);

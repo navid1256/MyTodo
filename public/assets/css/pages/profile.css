@@ -151,17 +151,27 @@ html.dark-mode .profilePageHeaderIcon {
     z-index: 1200;
     inset: 0;
     display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
     align-items: center;
     justify-content: center;
+    margin: 0;
     padding: 24px;
+    border: 0;
     background-color: rgba(14, 25, 33, 0.7);
     box-sizing: border-box;
 }
 
-.avatarPickerBackdrop[hidden],
+.avatarPickerBackdrop:not([open]),
 .avatarGalleryPanel[hidden],
 .avatarCropPanel[hidden] {
     display: none;
+}
+
+.avatarPickerBackdrop::backdrop {
+    background: transparent;
 }
 
 .avatarPickerModal {
