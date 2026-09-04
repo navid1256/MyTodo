@@ -15,12 +15,13 @@ require_once dirname(__DIR__) . '/components/task-items.php';
 ?>
 
 <div class="list">
-    <div class="title">No Date</div>
+    <div class="title" data-i18n="home.no_date"><?= htmlspecialchars($translator->translate('home.no_date'), ENT_QUOTES, 'UTF-8') ?></div>
     <ul>
         <?php renderTaskItems(
             $noDateTasks,
             'home',
-            'No tasks without a date.',
+            'home.empty_no_date',
+            $translator,
             false,
             false,
             $taskTimezone
@@ -29,12 +30,13 @@ require_once dirname(__DIR__) . '/components/task-items.php';
 </div>
 
 <div class="list scheduledTaskList">
-    <div class="title">Today</div>
+    <div class="title" data-i18n="home.today"><?= htmlspecialchars($translator->translate('home.today'), ENT_QUOTES, 'UTF-8') ?></div>
     <ul>
         <?php renderTaskItems(
             $todayTasks,
             'home',
-            'No tasks due today.',
+            'home.empty_today',
+            $translator,
             true,
             false,
             $taskTimezone
@@ -43,12 +45,13 @@ require_once dirname(__DIR__) . '/components/task-items.php';
 </div>
 
 <div class="list scheduledTaskList">
-    <div class="title">Tomorrow</div>
+    <div class="title" data-i18n="home.tomorrow"><?= htmlspecialchars($translator->translate('home.tomorrow'), ENT_QUOTES, 'UTF-8') ?></div>
     <ul>
         <?php renderTaskItems(
             $tomorrowTasks,
             'home',
-            'No tasks due tomorrow.',
+            'home.empty_tomorrow',
+            $translator,
             true,
             false,
             $taskTimezone
