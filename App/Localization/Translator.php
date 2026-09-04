@@ -69,7 +69,7 @@ final class Translator
             return [];
         }
 
-        $translations = require_once $path;
+        $translations = require $path;
 
         if (!is_array($translations)) {
             return [];
