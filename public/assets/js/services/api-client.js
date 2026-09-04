@@ -74,7 +74,13 @@ export async function sendJsonFormRequest(urlOrFormData, formDataOrOptions = {},
     }
 
     if (!response.ok || !responseData.success) {
-        throw new Error(responseData.message || fallbackMessage);
+        const requestError = new Error(responseData.message || fallbackMessage);
+
+        if (typeof responseData.code === 'string') {
+            requestError.code = responseData.code;
+        }
+
+        throw requestError;
     }
 
     return responseData;

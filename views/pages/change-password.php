@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Localization\Translator;
+
 /** @var string $csrfToken */
+/** @var Translator $translator */
 ?>
 
 <section class="changePasswordPage" aria-labelledby="changePasswordTitle">
@@ -17,19 +22,19 @@
 
     <a class="backToProfileLink" href="/profile">
         <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
-        <span>Back to My Profile</span>
+        <span data-i18n="password.back_to_profile"><?= htmlspecialchars($translator->translate('password.back_to_profile'), ENT_QUOTES, 'UTF-8') ?></span>
     </a>
 
     <header class="changePasswordHeader">
-        <h1 id="changePasswordTitle">Change Password</h1>
-        <p>Enter your current password and choose a secure new password.</p>
+        <h1 id="changePasswordTitle" data-i18n="password.title"><?= htmlspecialchars($translator->translate('password.title'), ENT_QUOTES, 'UTF-8') ?></h1>
+        <p data-i18n="password.description"><?= htmlspecialchars($translator->translate('password.description'), ENT_QUOTES, 'UTF-8') ?></p>
     </header>
 
     <form class="changePasswordForm" id="changePasswordForm" action="/auth/change-password" method="POST">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
         <div class="changePasswordField">
-            <label for="currentPassword">Current Password :</label>
+            <label for="currentPassword" data-i18n="password.current"><?= htmlspecialchars($translator->translate('password.current'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="changePasswordInput">
                 <input
                     id="currentPassword"
@@ -37,8 +42,17 @@
                     type="password"
                     required
                     autocomplete="current-password"
-                    placeholder="Enter your current password">
-                <button class="changePasswordToggle" type="button" data-password-target="currentPassword" aria-label="Show current password" aria-pressed="false">
+                    data-i18n-placeholder="password.current_placeholder"
+                    placeholder="<?= htmlspecialchars($translator->translate('password.current_placeholder'), ENT_QUOTES, 'UTF-8') ?>">
+                <button
+                    class="changePasswordToggle"
+                    type="button"
+                    data-password-target="currentPassword"
+                    data-show-label-key="password.show_current"
+                    data-hide-label-key="password.hide_current"
+                    data-i18n-aria-label="password.show_current"
+                    aria-label="<?= htmlspecialchars($translator->translate('password.show_current'), ENT_QUOTES, 'UTF-8') ?>"
+                    aria-pressed="false">
                     <svg class="changePasswordIcon changePasswordIconClosed" aria-hidden="true">
                         <use href="#change-password-eye-closed"></use>
                     </svg>
@@ -50,7 +64,7 @@
         </div>
 
         <div class="changePasswordField">
-            <label for="newPassword">New Password :</label>
+            <label for="newPassword" data-i18n="password.new"><?= htmlspecialchars($translator->translate('password.new'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="changePasswordInput">
                 <input
                     id="newPassword"
@@ -61,8 +75,17 @@
                     maxlength="72"
                     autocomplete="new-password"
                     aria-describedby="passwordRequirements"
-                    placeholder="Enter your new password">
-                <button class="changePasswordToggle" type="button" data-password-target="newPassword" aria-label="Show new password" aria-pressed="false">
+                    data-i18n-placeholder="password.new_placeholder"
+                    placeholder="<?= htmlspecialchars($translator->translate('password.new_placeholder'), ENT_QUOTES, 'UTF-8') ?>">
+                <button
+                    class="changePasswordToggle"
+                    type="button"
+                    data-password-target="newPassword"
+                    data-show-label-key="password.show_new"
+                    data-hide-label-key="password.hide_new"
+                    data-i18n-aria-label="password.show_new"
+                    aria-label="<?= htmlspecialchars($translator->translate('password.show_new'), ENT_QUOTES, 'UTF-8') ?>"
+                    aria-pressed="false">
                     <svg class="changePasswordIcon changePasswordIconClosed" aria-hidden="true">
                         <use href="#change-password-eye-closed"></use>
                     </svg>
@@ -74,7 +97,7 @@
         </div>
 
         <div class="changePasswordField">
-            <label for="confirmNewPassword">Confirm New Password :</label>
+            <label for="confirmNewPassword" data-i18n="password.confirmation"><?= htmlspecialchars($translator->translate('password.confirmation'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="changePasswordInput">
                 <input
                     id="confirmNewPassword"
@@ -85,8 +108,17 @@
                     maxlength="72"
                     autocomplete="new-password"
                     aria-describedby="passwordConfirmationMessage"
-                    placeholder="Confirm your new password">
-                <button class="changePasswordToggle" type="button" data-password-target="confirmNewPassword" aria-label="Show password confirmation" aria-pressed="false">
+                    data-i18n-placeholder="password.confirmation_placeholder"
+                    placeholder="<?= htmlspecialchars($translator->translate('password.confirmation_placeholder'), ENT_QUOTES, 'UTF-8') ?>">
+                <button
+                    class="changePasswordToggle"
+                    type="button"
+                    data-password-target="confirmNewPassword"
+                    data-show-label-key="password.show_confirmation"
+                    data-hide-label-key="password.hide_confirmation"
+                    data-i18n-aria-label="password.show_confirmation"
+                    aria-label="<?= htmlspecialchars($translator->translate('password.show_confirmation'), ENT_QUOTES, 'UTF-8') ?>"
+                    aria-pressed="false">
                     <svg class="changePasswordIcon changePasswordIconClosed" aria-hidden="true">
                         <use href="#change-password-eye-closed"></use>
                     </svg>
@@ -97,18 +129,18 @@
             </div>
         </div>
 
-        <div class="passwordRequirements" id="passwordRequirements" aria-label="Password requirements">
+        <div class="passwordRequirements" id="passwordRequirements" data-i18n-aria-label="password.requirements" aria-label="<?= htmlspecialchars($translator->translate('password.requirements'), ENT_QUOTES, 'UTF-8') ?>">
             <label class="passwordRequirement" data-password-requirement="length">
                 <input type="checkbox" disabled>
-                <span>At least 8 characters</span>
+                <span data-i18n="password.requirement.length"><?= htmlspecialchars($translator->translate('password.requirement.length'), ENT_QUOTES, 'UTF-8') ?></span>
             </label>
             <label class="passwordRequirement" data-password-requirement="number">
                 <input type="checkbox" disabled>
-                <span>Include numbers</span>
+                <span data-i18n="password.requirement.number"><?= htmlspecialchars($translator->translate('password.requirement.number'), ENT_QUOTES, 'UTF-8') ?></span>
             </label>
             <label class="passwordRequirement" data-password-requirement="special">
                 <input type="checkbox" disabled>
-                <span>Include a special character</span>
+                <span data-i18n="password.requirement.special"><?= htmlspecialchars($translator->translate('password.requirement.special'), ENT_QUOTES, 'UTF-8') ?></span>
             </label>
         </div>
 
@@ -116,7 +148,7 @@
         <output class="changePasswordMessage" id="changePasswordMessage" aria-live="polite"></output>
 
         <div class="changePasswordActions">
-            <button class="confirmPasswordButton" id="confirmPasswordButton" type="submit">Confirm</button>
+            <button class="confirmPasswordButton" id="confirmPasswordButton" type="submit" data-i18n="password.confirm"><?= htmlspecialchars($translator->translate('password.confirm'), ENT_QUOTES, 'UTF-8') ?></button>
         </div>
     </form>
 </section>

@@ -144,23 +144,23 @@ final class AuthService
     public function validateNewPassword(string $newPassword, string $confirmation): void
     {
         if (mb_strlen($newPassword) < 8) {
-            throw new InvalidArgumentException('New password must contain at least 8 characters.');
+            throw new InvalidArgumentException('password.validation.too_short');
         }
 
         if (strlen($newPassword) > 72) {
-            throw new InvalidArgumentException('New password must not exceed 72 bytes.');
+            throw new InvalidArgumentException('password.validation.too_long');
         }
 
         if (!preg_match('/\p{N}/u', $newPassword)) {
-            throw new InvalidArgumentException('New password must include at least one number.');
+            throw new InvalidArgumentException('password.validation.number_required');
         }
 
         if (!preg_match('/[^\p{L}\p{N}\s]/u', $newPassword)) {
-            throw new InvalidArgumentException('New password must include at least one special character.');
+            throw new InvalidArgumentException('password.validation.special_required');
         }
 
         if (!hash_equals($newPassword, $confirmation)) {
-            throw new InvalidArgumentException('New password confirmation does not match.');
+            throw new InvalidArgumentException('password.validation.confirmation_mismatch');
         }
     }
 
