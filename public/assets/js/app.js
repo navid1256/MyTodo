@@ -1,3 +1,6 @@
+import '@fontsource/vazirmatn/arabic-400.css';
+import '@fontsource/vazirmatn/arabic-600.css';
+
 import { initTheme } from './modules/theme.js';
 import { initNavigation } from './modules/navigation.js';
 import { initProfileMenu } from './modules/profile-menu.js';
@@ -13,6 +16,7 @@ import { initTaskCompletion } from './modules/task-completion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
 import { initAccountSettings } from './modules/account-settings.js';
+import { initProfileBirthDate } from './modules/profile-birth-date.js';
 
 let dashboardViewController = null;
 
@@ -30,6 +34,7 @@ function initDashboardView() {
     initHomeDayRefresh(signal);
     initActivityFilter(signal);
     initAccountSettings(signal);
+    initProfileBirthDate(signal);
 
     const dateTimePicker = initDateTimePicker();
     const reminderPicker = initReminderPicker(signal);

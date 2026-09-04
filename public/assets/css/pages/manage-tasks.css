@@ -143,8 +143,8 @@
 
 .taskCalendarHeader h2 {
     margin: 0;
-    font-size: 15px;
-    font-weight: 800;
+    font-size: 17px;
+    font-weight: 700;
     text-align: center;
 }
 
@@ -242,6 +242,18 @@
     box-shadow: 0 5px 12px rgba(40, 200, 194, 0.35);
     color: #ffffff;
     font-weight: 800;
+}
+
+.manageTasksLayout.jalaliCalendar .taskCalendarHeader,
+.manageTasksLayout.jalaliCalendar .taskCalendarWeekdays,
+.manageTasksLayout.jalaliCalendar .taskCalendarDays,
+.manageTasksLayout.jalaliCalendar .selectedTaskDateLabel {
+    font-family: "Vazirmatn", sans-serif;
+}
+
+.manageTasksLayout.jalaliCalendar .taskCalendarHeader,
+.manageTasksLayout.jalaliCalendar .taskCalendarWeekdays {
+    font-weight: 600;
 }
 
 @media (max-width: 1050px) {

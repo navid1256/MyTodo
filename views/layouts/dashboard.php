@@ -2,16 +2,40 @@
 
 declare(strict_types=1);
 
+use App\Helpers\ViteHelper;
+use App\Localization\Translator;
+
 /** @var string $activeView */
 /** @var string $csrfToken */
 /** @var string $renderDate */
 /** @var string $renderTimezone */
+/** @var bool $timezoneIsPersisted */
+/** @var string $effectiveLanguage */
+/** @var string $calendarSystem */
 /** @var int|null $sentNotificationCount */
 
 $activeView = isset($activeView) && is_string($activeView) ? $activeView : 'home';
 $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
 $renderDate = isset($renderDate) && is_string($renderDate) ? $renderDate : date('Y-m-d');
-$renderTimezone = isset($renderTimezone) && is_string($renderTimezone) ? $renderTimezone : 'Asia/Tehran';
+$renderTimezone = isset($renderTimezone) && is_string($renderTimezone)
+    ? $renderTimezone
+    : date_default_timezone_get();
+$timezoneIsPersisted = isset($timezoneIsPersisted) && $timezoneIsPersisted === true;
+$effectiveLanguage = isset($effectiveLanguage) && in_array($effectiveLanguage, ['english', 'persian'], true)
+    ? $effectiveLanguage
+    : 'english';
+$calendarSystem = isset($calendarSystem) && $calendarSystem === 'jalali'
+    ? 'jalali'
+    : 'gregorian';
+$calendarCssClass = $calendarSystem === 'jalali'
+    ? 'jalaliCalendar'
+    : 'gregorianCalendar';
+$translator = new Translator(
+    $effectiveLanguage,
+    dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'lang'
+);
+$htmlLanguage = $translator->locale();
+$htmlDirection = $translator->direction();
 
 $pageStylesheets = [
     'home' => '/assets/css/pages/home.css',
@@ -43,14 +67,14 @@ if ($isPartial) {
 ?>
 <?php if (!$isPartial): ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= $htmlLanguage ?>" dir="<?= $htmlDirection ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-    <title>MyTodo Dashboard</title>
+    <title><?= htmlspecialchars($translator->translate('app.name'), ENT_QUOTES, 'UTF-8') ?></title>
     <script>
         try {
             if (localStorage.getItem('mytodo-theme') === 'dark') {
@@ -74,6 +98,9 @@ if ($isPartial) {
 <body
     data-active-view="<?= htmlspecialchars($activeView, ENT_QUOTES, 'UTF-8') ?>"
     data-render-timezone="<?= htmlspecialchars($renderTimezone, ENT_QUOTES, 'UTF-8') ?>"
+    data-timezone-persisted="<?= $timezoneIsPersisted ? '1' : '0' ?>"
+    data-effective-language="<?= $effectiveLanguage ?>"
+    data-calendar-system="<?= $calendarSystem ?>"
     data-render-date="<?= htmlspecialchars($renderDate, ENT_QUOTES, 'UTF-8') ?>">
     <div class="page">
         <?php require_once dirname(__DIR__) . '/components/dashboard-header.php'; ?>
@@ -106,7 +133,16 @@ if ($isPartial) {
 <?php if (!$isPartial): ?>
         </div>
     </div>
-    <script type="module" src="/assets/js/app.js"></script>
+    <script id="appTranslations" type="application/json"><?= json_encode(
+        $translator->all(),
+        JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+    ) ?></script>
+    <?php if (ViteHelper::isDevelopment()): ?>
+        <script type="module" src="<?= ViteHelper::developmentAssetUrl('@vite/client') ?>"></script>
+        <script type="module" src="<?= ViteHelper::developmentAssetUrl('assets/js/app.js') ?>"></script>
+    <?php else: ?>
+        <script type="module" src="/assets/js/app.js"></script>
+    <?php endif; ?>
 </body>
 
 </html>
@@ -120,6 +156,11 @@ if ($isPartial) {
         'pageStylesheet' => $activePageStylesheet,
         'taskModalStylesheet' => $usesTaskModals ? '/assets/css/task-modal.css' : null,
         'renderTimezone' => $renderTimezone,
+        'timezoneIsPersisted' => $timezoneIsPersisted,
+        'effectiveLanguage' => $effectiveLanguage,
+        'direction' => $htmlDirection,
+        'translations' => $translator->all(),
+        'calendarSystem' => $calendarSystem,
         'renderDate' => $renderDate,
         'sentNotificationCount' => $sentNotificationCount ?? 0,
     ], JSON_THROW_ON_ERROR);

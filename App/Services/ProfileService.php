@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Exceptions\AvatarStorageException;
 use App\Exceptions\ProfileUpdateException;
+use App\Helpers\TimezoneHelper;
 use App\Helpers\AvatarHelper;
 use App\Repositories\UserRepository;
 use DateTimeImmutable;
@@ -23,7 +24,7 @@ final class ProfileService
         $directory = $rootPath . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'avatars';
 
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new AvatarStorageException('The avatar storage directory could not be created.');
+            throw new AvatarStorageException('profile.storage.directory_failed');
         }
 
         return $directory;
@@ -41,7 +42,7 @@ final class ProfileService
         $absolutePath = $directory . DIRECTORY_SEPARATOR . $fileName;
 
         if (file_put_contents($absolutePath, $contents, LOCK_EX) === false) {
-            throw new AvatarStorageException('The profile picture could not be saved.');
+            throw new AvatarStorageException('profile.storage.save_failed');
         }
 
         return 'storage/avatars/' . $fileName;
@@ -51,7 +52,7 @@ final class ProfileService
     {
         if ($action === 'boring') {
             if ($choice < 1 || $choice > 12) {
-                throw new InvalidArgumentException('Please choose a valid avatar.');
+                throw new InvalidArgumentException('profile.validation.invalid_avatar');
             }
 
             $seed = sprintf('user-%d:avatar-%d', $userId, $choice);
@@ -61,22 +62,22 @@ final class ProfileService
         }
 
         if ($action !== 'upload') {
-            throw new InvalidArgumentException('Please choose a valid profile picture option.');
+            throw new InvalidArgumentException('profile.validation.invalid_avatar_option');
         }
 
         if (strlen($dataUrl) > 2_500_000) {
-            throw new InvalidArgumentException('The cropped profile picture is too large.');
+            throw new InvalidArgumentException('profile.validation.cropped_avatar_too_large');
         }
 
         if (!preg_match('#^data:image/(jpeg|png|webp);base64,#i', $dataUrl)) {
-            throw new InvalidArgumentException('The cropped profile picture is invalid.');
+            throw new InvalidArgumentException('profile.validation.invalid_cropped_avatar');
         }
 
         $encodedImage = substr($dataUrl, strpos($dataUrl, ',') + 1);
         $imageContents = base64_decode($encodedImage, true);
 
         if ($imageContents === false || strlen($imageContents) > 1_800_000) {
-            throw new InvalidArgumentException('The cropped profile picture is invalid or too large.');
+            throw new InvalidArgumentException('profile.validation.invalid_or_large_cropped_avatar');
         }
 
         $imageInfo = @getimagesizefromstring($imageContents);
@@ -87,11 +88,11 @@ final class ProfileService
         ];
 
         if (!$imageInfo || !isset($allowedMimeTypes[$imageInfo['mime']])) {
-            throw new InvalidArgumentException('Only JPEG, PNG, and WebP profile pictures are allowed.');
+            throw new InvalidArgumentException('profile.validation.invalid_avatar_type');
         }
 
         if ((int) $imageInfo[0] !== 512 || (int) $imageInfo[1] !== 512) {
-            throw new InvalidArgumentException('The cropped profile picture must be 512 by 512 pixels.');
+            throw new InvalidArgumentException('profile.validation.invalid_avatar_dimensions');
         }
 
         return $this->writeAvatarFile($userId, $imageContents, $allowedMimeTypes[$imageInfo['mime']]);
@@ -129,18 +130,18 @@ final class ProfileService
         ?DateTimeZone $userTimezone = null
     ): array {
         $errors = [];
-        $tz = $userTimezone ?? new DateTimeZone('Asia/Tehran');
+        $tz = $userTimezone ?? TimezoneHelper::getClientTimezone();
 
         $textFields = [
-            'firstname' => 'First name',
-            'lastname' => 'Last name',
-            'job_title' => 'Job title',
-            'country' => 'Country',
+            'firstname' => 'profile.validation.first_name_too_long',
+            'lastname' => 'profile.validation.last_name_too_long',
+            'job_title' => 'profile.validation.job_title_too_long',
+            'country' => 'profile.validation.country_too_long',
         ];
 
-        foreach ($textFields as $field => $label) {
+        foreach ($textFields as $field => $translationKey) {
             if (isset($profileInput[$field]) && mb_strlen($profileInput[$field]) > 100) {
-                $errors[] = "{$label} must not exceed 100 characters.";
+                $errors[] = $translationKey;
             }
         }
 
@@ -148,7 +149,7 @@ final class ProfileService
             isset($profileInput['gender'])
             && !in_array($profileInput['gender'], ['', 'male', 'female', 'other'], true)
         ) {
-            $errors[] = 'Please select a valid gender option.';
+            $errors[] = 'profile.validation.invalid_gender';
         }
 
         $this->validateBirthDate($profileInput['date_of_birth'] ?? '', $tz, $errors);
@@ -174,9 +175,9 @@ final class ProfileService
             || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
             || $birthDate->format('Y-m-d') !== $birthDateValue
         ) {
-            $errors[] = 'Please enter a valid date of birth.';
+            $errors[] = 'profile.validation.invalid_birth_date';
         } elseif ($birthDate > new DateTimeImmutable('today', $tz)) {
-            $errors[] = 'Date of birth cannot be in the future.';
+            $errors[] = 'profile.validation.future_birth_date';
         }
     }
 
@@ -188,10 +189,10 @@ final class ProfileService
         if ($avatarAction === 'boring') {
             $choice = (int) $avatarChoiceValue;
             if ($choice < 1 || $choice > 12) {
-                $errors[] = 'Please choose a valid boring avatar option.';
+                $errors[] = 'profile.validation.invalid_boring_avatar';
             }
         } elseif (!in_array($avatarAction, ['unchanged', 'upload'], true)) {
-            $errors[] = 'Please select a valid avatar action.';
+            $errors[] = 'profile.validation.invalid_avatar_action';
         }
     }
 
@@ -206,7 +207,7 @@ final class ProfileService
         string $avatarData = ''
     ): void {
         if ($userId <= 0) {
-            throw new InvalidArgumentException('Invalid user ID.');
+            throw new InvalidArgumentException('profile.validation.invalid_user');
         }
 
         $newAvatarPath = '';
@@ -222,7 +223,7 @@ final class ProfileService
                 $this->deleteAvatar($newAvatarPath);
             }
 
-            throw new ProfileUpdateException('Your profile could not be saved. Please try again.', 0, $exception);
+            throw new ProfileUpdateException('profile.update_failed', 0, $exception);
         }
     }
 }

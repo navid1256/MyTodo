@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Database;
 
-use App\Http\Response;
+use App\Exceptions\DatabaseConnectionException;
 use PDO;
 use PDOException;
 
@@ -34,16 +34,21 @@ final class Database
                 $config['charset']
             );
 
-            return new PDO(
+            $pdo = new PDO(
                 $dsn,
                 $config['username'],
                 $config['password'],
                 $config['options']
             );
-        } catch (PDOException $exception) {
-            error_log('Database connection failed: ' . $exception->getMessage());
+            $pdo->exec("SET time_zone = '+00:00'");
 
-            Response::text('Database connection failed.', 500)->send();
+            return $pdo;
+        } catch (PDOException $exception) {
+            throw new DatabaseConnectionException(
+                'Unable to connect to the database.',
+                0,
+                $exception
+            );
         }
     }
 }

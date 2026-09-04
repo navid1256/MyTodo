@@ -47,10 +47,8 @@ export function initReminderPicker(signal) {
 
     function hasDueDateAndTime() {
         return Boolean(
-            taskDueAt
-            && taskDueAt.value
-            && taskHasTime
-            && taskHasTime.value === '1'
+            taskDueAt?.value
+            && taskHasTime?.value === '1'
         );
     }
 

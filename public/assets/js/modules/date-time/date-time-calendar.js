@@ -1,9 +1,15 @@
 import {
-    addDays,
     datesAreEqual,
-    formatDateKey,
     parseDateKey
 } from '../../utils/date-utils.js';
+import {
+    CALENDAR_SYSTEM,
+    changeCalendarMonth as changeMonth,
+    getActiveCalendarSystem,
+    getCalendarGrid,
+    getCalendarMonthLabel,
+    getCalendarWeekdayNames
+} from '../../utils/calendar-core.js';
 
 export function renderDateTimeCalendar(options) {
     const calendarDays = options.calendarDays;
@@ -11,18 +17,14 @@ export function renderDateTimeCalendar(options) {
     const viewDate = options.viewDate;
     const selectedDate = options.selectedDate;
     const onSelect = options.onSelect;
+    const calendarSystem = getActiveCalendarSystem();
+    const calendarWeekdays = calendarDays.previousElementSibling;
 
     if (!calendarDays || !calendarMonthLabel || !viewDate) {
         return;
     }
 
-    const viewYear = viewDate.getFullYear();
-    const viewMonth = viewDate.getMonth();
-    const firstDayOfMonth = new Date(viewYear, viewMonth, 1);
-    const firstGridDate = addDays(
-        firstDayOfMonth,
-        -firstDayOfMonth.getDay()
-    );
+    const calendarGrid = getCalendarGrid(viewDate, calendarSystem);
     let todayDate = new Date();
     todayDate = new Date(
         todayDate.getFullYear(),
@@ -30,36 +32,38 @@ export function renderDateTimeCalendar(options) {
         todayDate.getDate()
     );
 
-    calendarMonthLabel.textContent = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        year: 'numeric'
-    }).format(firstDayOfMonth);
+    calendarMonthLabel.textContent = getCalendarMonthLabel(viewDate, calendarSystem);
+    calendarDays.dir = calendarSystem === CALENDAR_SYSTEM.JALALI ? 'rtl' : 'ltr';
+
+    if (calendarWeekdays?.classList.contains('calendarWeekdays')) {
+        calendarWeekdays.dir = calendarDays.dir;
+        getCalendarWeekdayNames(calendarSystem).forEach((weekdayName, index) => {
+            if (calendarWeekdays.children[index]) {
+                calendarWeekdays.children[index].textContent = weekdayName;
+            }
+        });
+    }
 
     calendarDays.textContent = '';
 
-    for (let dayIndex = 0; dayIndex < 42; dayIndex += 1) {
-        const calendarDate = addDays(firstGridDate, dayIndex);
+    calendarGrid.forEach((calendarDay) => {
+        const calendarDate = calendarDay.date;
         const dayButton = document.createElement('button');
         const isSelected = datesAreEqual(calendarDate, selectedDate);
 
         dayButton.type = 'button';
         dayButton.className = 'calendarDay';
-        dayButton.textContent = String(calendarDate.getDate());
-        dayButton.dataset.date = formatDateKey(calendarDate);
+        dayButton.textContent = calendarDay.dayLabel;
+        dayButton.dataset.date = calendarDay.dateKey;
         dayButton.setAttribute('role', 'gridcell');
         dayButton.setAttribute('aria-selected', String(isSelected));
 
         dayButton.setAttribute(
             'aria-label',
-            new Intl.DateTimeFormat('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            }).format(calendarDate)
+            calendarDay.accessibleLabel
         );
 
-        if (calendarDate.getMonth() !== viewMonth) {
+        if (calendarDay.isOutsideMonth) {
             dayButton.classList.add('outsideMonth');
         }
 
@@ -80,13 +84,9 @@ export function renderDateTimeCalendar(options) {
         });
 
         calendarDays.appendChild(dayButton);
-    }
+    });
 }
 
 export function changeCalendarMonth(viewDate, offset) {
-    return new Date(
-        viewDate.getFullYear(),
-        viewDate.getMonth() + offset,
-        1
-    );
+    return changeMonth(viewDate, offset, getActiveCalendarSystem());
 }

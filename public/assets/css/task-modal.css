@@ -754,21 +754,31 @@
     z-index: 1140;
     inset: 0;
     display: flex;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
     align-items: center;
     justify-content: center;
+    margin: 0;
     padding: 24px;
     overflow-y: auto;
+    border: 0;
     background-color: rgba(14, 25, 33, 0.7);
     box-sizing: border-box;
 }
 
-.repeatModalBackdrop[hidden],
+.repeatModalBackdrop:not([open]),
 .customRepeatSection[hidden],
 .repeatOnWeek[hidden],
 .repeatOnMonth[hidden],
 .repeatEndDateSection[hidden],
 .repeatCountField[hidden] {
     display: none;
+}
+
+.repeatModalBackdrop::backdrop {
+    background: transparent;
 }
 
 .repeatModal {
@@ -1222,6 +1232,23 @@
 .applyRepeatButton:focus-visible {
     filter: brightness(0.96);
     outline: 2px solid rgba(22, 141, 240, 0.24);
+}
+
+.dateTimeModal.jalaliCalendar .calendarHeader,
+.dateTimeModal.jalaliCalendar .calendarWeekdays,
+.dateTimeModal.jalaliCalendar .calendarDays,
+.repeatEndDateSection.jalaliCalendar .repeatCalendarHeader,
+.repeatEndDateSection.jalaliCalendar .repeatCalendarWeekdays,
+.repeatEndDateSection.jalaliCalendar .repeatCalendarDays,
+.repeatEndDateSection.jalaliCalendar .repeatEndDateSummary {
+    font-family: "Vazirmatn", sans-serif;
+}
+
+.dateTimeModal.jalaliCalendar .calendarHeader h2,
+.dateTimeModal.jalaliCalendar .calendarWeekdays,
+.repeatEndDateSection.jalaliCalendar .repeatCalendarHeader h4,
+.repeatEndDateSection.jalaliCalendar .repeatCalendarWeekdays {
+    font-weight: 600;
 }
 
 @media (max-width: 620px) {

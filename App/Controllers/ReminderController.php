@@ -11,10 +11,10 @@ use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
 use App\Services\AuthService;
 use App\Services\ReminderService;
+use App\Services\UserSettingsService;
 use DateTimeImmutable;
 use DateTimeZone;
 use JsonException;
-use Throwable;
 
 final class ReminderController
 {
@@ -23,7 +23,8 @@ final class ReminderController
 
     public function __construct(
         private readonly ReminderService $reminderService,
-        private readonly AuthService $authService
+        private readonly AuthService $authService,
+        private readonly UserSettingsService $settingsService
     ) {}
 
     public function preview(Request $request): Response
@@ -46,7 +47,11 @@ final class ReminderController
             $hasTime = $request->postString('has_time') === '1';
             $remindersJson = $request->postString('reminders', '[]');
 
-            $dueAt = $this->parseDueAt($dueAtValue);
+            $timezone = $this->settingsService->getTimezoneForUser(
+                $this->authService->getCurrentUserId(),
+                $request->cookieString('mytodo_timezone')
+            );
+            $dueAt = $this->parseDueAt($dueAtValue, $timezone);
             $reminders = $this->parseRemindersJson($remindersJson);
 
             $prepared = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
@@ -65,18 +70,15 @@ final class ReminderController
             return Response::json(['success' => true, 'reminders' => $previewItems]);
         } catch (TaskValidationException | ReminderValidationException $exception) {
             return Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
-        } catch (Throwable) {
-            return Response::json(['success' => false, 'message' => 'The reminder time could not be calculated.'], 500);
         }
     }
 
-    private function parseDueAt(string $dueAtValue): ?DateTimeImmutable
+    private function parseDueAt(string $dueAtValue, DateTimeZone $timezone): ?DateTimeImmutable
     {
         if ($dueAtValue === '') {
             return null;
         }
 
-        $timezone = new DateTimeZone('Asia/Tehran');
         $dueAt = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $dueAtValue, $timezone);
         $dateErrors = DateTimeImmutable::getLastErrors();
 

@@ -51,6 +51,10 @@ export function matchesActivityFilter(dateKey, filter, todayKey) {
     return false;
 }
 
+function normalizeFilter(filter) {
+    return ACTIVITY_FILTERS.has(filter) ? filter : 'all';
+}
+
 export function initActivityFilter(signal) {
     const filterSelect = document.getElementById('activityFilter');
     const dateGroups = document.querySelectorAll('[data-completed-date]');
@@ -59,10 +63,6 @@ export function initActivityFilter(signal) {
 
     if (!filterSelect || !todayKey) {
         return;
-    }
-
-    function normalizeFilter(filter) {
-        return ACTIVITY_FILTERS.has(filter) ? filter : 'all';
     }
 
     function applyFilter(filter) {

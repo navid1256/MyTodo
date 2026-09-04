@@ -11,7 +11,10 @@ export function initTheme() {
         }
 
         if (themeLabel) {
-            themeLabel.textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
+            const darkModeLabel = themeToggle?.dataset.darkModeLabel || 'Dark Mode';
+            const lightModeLabel = themeToggle?.dataset.lightModeLabel || 'Light Mode';
+
+            themeLabel.textContent = isDarkMode ? lightModeLabel : darkModeLabel;
         }
 
         if (themeIcon) {

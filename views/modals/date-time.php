@@ -1,6 +1,6 @@
 <div class="dateTimeModalBackdrop" id="dateTimeModal" hidden>
     <section
-        class="dateTimeModal"
+        class="dateTimeModal <?= $calendarCssClass ?>"
         role="dialog"
         aria-modal="true"
         aria-labelledby="dateTimeModalTitle">

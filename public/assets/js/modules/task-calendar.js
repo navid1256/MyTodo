@@ -1,9 +1,21 @@
 import {
-    addDays,
     datesAreEqual,
     formatDateKey,
+    parseDateKey,
     startOfDay
 } from '../utils/date-utils.js';
+import {
+    CALENDAR_SYSTEM,
+    changeCalendarMonth,
+    formatCalendarAccessibleDate,
+    formatCalendarDate,
+    getActiveCalendarSystem,
+    getCalendarGrid,
+    getCalendarMonthLabel,
+    getCalendarMonthStart,
+    getCalendarNavigation,
+    getCalendarWeekdayNames
+} from '../utils/calendar-core.js';
 
 export function initTaskCalendar(signal) {
     const taskCalendar = document.getElementById('taskCalendar');
@@ -22,9 +34,21 @@ export function initTaskCalendar(signal) {
         return;
     }
 
+    const calendarWeekdays = taskCalendar.querySelector('.taskCalendarWeekdays');
+
     const today = startOfDay(new Date());
-    let calendarViewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const calendarSystem = getActiveCalendarSystem();
+    const calendarNavigation = getCalendarNavigation();
+    let calendarViewDate = getCalendarMonthStart(today, calendarSystem);
     let selectedDate = null;
+
+    if (previousMonthButton) {
+        previousMonthButton.setAttribute('aria-label', calendarNavigation.left.label);
+    }
+
+    if (nextMonthButton) {
+        nextMonthButton.setAttribute('aria-label', calendarNavigation.right.label);
+    }
     function getTaskCountsByDate() {
         return taskItems.reduce(function (counts, taskItem) {
             const taskDate = taskItem.dataset.taskDate;
@@ -40,12 +64,7 @@ export function initTaskCalendar(signal) {
     let taskCountsByDate = getTaskCountsByDate();
 
     function formatAccessibleDate(date) {
-        return new Intl.DateTimeFormat('en-US', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        }).format(date);
+        return formatCalendarAccessibleDate(date, calendarSystem);
     }
 
     function updateListHeader(date) {
@@ -58,13 +77,7 @@ export function initTaskCalendar(signal) {
 
         if (selectedDateLabel) {
             selectedDateLabel.hidden = isShowingAllTasks;
-            selectedDateLabel.textContent = date
-                ? new Intl.DateTimeFormat('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                }).format(date)
-                : '';
+            selectedDateLabel.textContent = date ? formatCalendarDate(date, calendarSystem) : '';
         }
     }
 
@@ -126,44 +139,53 @@ export function initTaskCalendar(signal) {
 
     function selectCalendarDate(date) {
         filterTasksByDate(date);
-        calendarViewDate = new Date(date.getFullYear(), date.getMonth(), 1);
+        calendarViewDate = getCalendarMonthStart(date, calendarSystem);
         renderCalendar();
     }
 
     function renderCalendar() {
-        const viewYear = calendarViewDate.getFullYear();
-        const viewMonth = calendarViewDate.getMonth();
-        const firstDayOfMonth = new Date(viewYear, viewMonth, 1);
-        const daysFromMonday = (firstDayOfMonth.getDay() + 6) % 7;
-        const firstGridDate = addDays(firstDayOfMonth, -daysFromMonday);
+        const calendarGrid = getCalendarGrid(calendarViewDate, calendarSystem, 1);
 
-        calendarMonthLabel.textContent = new Intl.DateTimeFormat('en-US', {
-            month: 'long',
-            year: 'numeric'
-        }).format(firstDayOfMonth);
+        calendarMonthLabel.textContent = getCalendarMonthLabel(calendarViewDate, calendarSystem);
+        calendarDays.dir = calendarSystem === CALENDAR_SYSTEM.JALALI ? 'rtl' : 'ltr';
+
+        if (calendarWeekdays) {
+            calendarWeekdays.dir = calendarDays.dir;
+            getCalendarWeekdayNames(calendarSystem, 1).forEach((weekdayName, index) => {
+                if (calendarWeekdays.children[index]) {
+                    calendarWeekdays.children[index].textContent = weekdayName;
+                }
+            });
+        }
+
         calendarDays.textContent = '';
 
-        for (let dayIndex = 0; dayIndex < 42; dayIndex += 1) {
-            const calendarDate = addDays(firstGridDate, dayIndex);
-            const dateKey = formatDateKey(calendarDate);
+        calendarGrid.forEach((calendarDay) => {
+            const calendarDate = calendarDay.date;
+            const dateKey = calendarDay.dateKey;
             const taskCount = taskCountsByDate[dateKey] || 0;
             const dayButton = document.createElement('button');
             const accessibleDate = formatAccessibleDate(calendarDate);
 
+            let taskLabel;
+
+            if (taskCount === 0) {
+                taskLabel = 'no tasks';
+            } else if (taskCount === 1) {
+                taskLabel = '1 task';
+            } else {
+                taskLabel = `${taskCount} tasks`;
+            }
+
             dayButton.type = 'button';
             dayButton.className = 'taskCalendarDay';
-            dayButton.textContent = String(calendarDate.getDate());
+            dayButton.textContent = calendarDay.dayLabel;
             dayButton.dataset.date = dateKey;
             dayButton.setAttribute('role', 'gridcell');
             dayButton.setAttribute('aria-selected', String(datesAreEqual(calendarDate, selectedDate)));
-            dayButton.setAttribute(
-                'aria-label',
-                accessibleDate + (taskCount
-                    ? ', ' + taskCount + (taskCount === 1 ? ' task' : ' tasks')
-                    : ', no tasks')
-            );
+            dayButton.setAttribute('aria-label', `${accessibleDate}, ${taskLabel}`);
 
-            if (calendarDate.getMonth() !== viewMonth) {
+            if (calendarDay.isOutsideMonth) {
                 dayButton.classList.add('outside-month');
             }
 
@@ -180,19 +202,22 @@ export function initTaskCalendar(signal) {
             }
 
             dayButton.addEventListener('click', function (event) {
-                const parts = event.currentTarget.dataset.date.split('-').map(Number);
-                selectCalendarDate(new Date(parts[0], parts[1] - 1, parts[2]));
+                const selected = parseDateKey(event.currentTarget.dataset.date);
+
+                if (selected) {
+                    selectCalendarDate(selected);
+                }
             });
             calendarDays.appendChild(dayButton);
-        }
+        });
     }
 
     if (previousMonthButton) {
         previousMonthButton.addEventListener('click', function () {
-            calendarViewDate = new Date(
-                calendarViewDate.getFullYear(),
-                calendarViewDate.getMonth() - 1,
-                1
+            calendarViewDate = changeCalendarMonth(
+                calendarViewDate,
+                calendarNavigation.left.offset,
+                calendarSystem
             );
             renderCalendar();
         });
@@ -200,10 +225,10 @@ export function initTaskCalendar(signal) {
 
     if (nextMonthButton) {
         nextMonthButton.addEventListener('click', function () {
-            calendarViewDate = new Date(
-                calendarViewDate.getFullYear(),
-                calendarViewDate.getMonth() + 1,
-                1
+            calendarViewDate = changeCalendarMonth(
+                calendarViewDate,
+                calendarNavigation.right.offset,
+                calendarSystem
             );
             renderCalendar();
         });
@@ -214,7 +239,7 @@ export function initTaskCalendar(signal) {
     }
 
     document.addEventListener('task:removed-from-manage', function (event) {
-        const taskId = Number(event.detail && event.detail.taskId);
+        const taskId = Number(event.detail?.taskId);
 
         if (!Number.isInteger(taskId) || taskId < 1) {
             return;

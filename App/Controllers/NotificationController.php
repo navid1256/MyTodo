@@ -12,8 +12,9 @@ use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
+use App\Services\UserSettingsService;
+use DateTimeZone;
 use InvalidArgumentException;
-use Throwable;
 
 final class NotificationController
 {
@@ -24,24 +25,27 @@ final class NotificationController
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly AuthService $authService,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserSettingsService $settingsService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return $this->notifications();
+        return $this->notifications($request);
     }
 
     /**
      * Display Sent Notifications Archive (Header Bell Icon -> /notifications)
      */
-    public function notifications(): Response
+    public function notifications(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
         $sentNotifications = $this->notificationService->getNotificationsForUser($userId, 'sent');
         $sentCount = $this->notificationService->countSentNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
+        $settings = $this->resolveUserSettings($request);
+        $userTimezone = new DateTimeZone($settings['timezone']);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'notifications',
@@ -52,19 +56,25 @@ final class NotificationController
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
+            'renderTimezone' => $userTimezone->getName(),
+            'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
+            'notificationTimezone' => $userTimezone,
         ]);
     }
 
     /**
      * Display Notifications Management Center (Sidebar Navigation -> /messages)
      */
-    public function messages(): Response
+    public function messages(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
         $allNotifications = $this->notificationService->getNotificationsForUser($userId);
         $sentCount = $this->notificationService->countSentNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
+        $settings = $this->resolveUserSettings($request);
+        $userTimezone = new DateTimeZone($settings['timezone']);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'messages',
@@ -75,6 +85,10 @@ final class NotificationController
             'currentUser' => $currentUser,
             'userProfile' => $userProfile,
             'csrfToken' => CsrfMiddleware::getToken(),
+            'renderTimezone' => $userTimezone->getName(),
+            'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
+            'notificationTimezone' => $userTimezone,
         ]);
     }
 
@@ -109,7 +123,7 @@ final class NotificationController
                         'offset_unit' => (string) $updatedReminder->offset_unit,
                     ],
                 ]);
-            } catch (Throwable $exception) {
+            } catch (NotificationNotFoundException | NotificationValidationException | InvalidArgumentException $exception) {
                 $response = $this->handleUpdateError($exception);
             }
         }
@@ -137,7 +151,7 @@ final class NotificationController
                 $response = Response::json(['success' => true]);
             } catch (NotificationNotFoundException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
-            } catch (Throwable $exception) {
+            } catch (NotificationValidationException | InvalidArgumentException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
             }
         }
@@ -158,13 +172,11 @@ final class NotificationController
         return null;
     }
 
-    private function handleUpdateError(Throwable $exception): Response
+    private function handleUpdateError(
+        NotificationNotFoundException | NotificationValidationException | InvalidArgumentException $exception
+    ): Response
     {
-        $statusCode = match (true) {
-            $exception instanceof NotificationNotFoundException => 404,
-            $exception instanceof NotificationValidationException || $exception instanceof InvalidArgumentException => 422,
-            default => 500,
-        };
+        $statusCode = $exception instanceof NotificationNotFoundException ? 404 : 422;
 
         return Response::json(['success' => false, 'message' => $exception->getMessage()], $statusCode);
     }
@@ -179,6 +191,24 @@ final class NotificationController
         }
 
         return (string) ($user['username'] ?? 'User');
+    }
+
+    /**
+     * @return array{
+     *     language: string,
+     *     effective_language: string,
+     *     calendar_system: string,
+     *     timezone: string,
+     *     is_persisted: bool
+     * }
+     */
+    private function resolveUserSettings(Request $request): array
+    {
+        return $this->settingsService->getForUser(
+            $this->authService->getCurrentUserId(),
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
+        );
     }
 
     private function resolveAvatarUrl(?object $profile): string

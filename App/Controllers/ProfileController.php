@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Helpers\TimezoneHelper;
+use App\Exceptions\AvatarStorageException;
+use App\Exceptions\ProfileUpdateException;
 use App\Http\Request;
 use App\Http\Response;
+use App\Localization\Translator;
 use App\Middleware\CsrfMiddleware;
 use App\Repositories\UserRepository;
 use App\Services\ProfileService;
-use Throwable;
+use App\Services\UserSettingsService;
+use DateTimeZone;
+use InvalidArgumentException;
 
 final class ProfileController
 {
@@ -18,26 +22,34 @@ final class ProfileController
 
     public function __construct(
         private readonly ProfileService $profileService,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserSettingsService $settingsService
     ) {}
 
-    public function show(): Response
+    public function show(Request $request): Response
     {
         $userId = (int) ($_SESSION['user']['id'] ?? 0);
         $userProfile = $this->userRepository->getProfile($userId);
         $currentUser = $_SESSION['user'] ?? [];
+        $settings = $this->resolveUserSettings($userId, $request);
+        $translator = $this->createTranslator($settings['effective_language']);
 
-        $profileSuccess = $_SESSION['profile_success'] ?? null;
+        $profileSuccessKey = $_SESSION['profile_success'] ?? null;
         unset($_SESSION['profile_success']);
+        $profileSuccess = is_string($profileSuccessKey)
+            ? $translator->translate($profileSuccessKey)
+            : null;
 
         $viewData = $this->buildProfileViewData(
             userProfile: $userProfile,
             currentUser: $currentUser,
             userId: $userId,
             profileErrors: [],
-            profileSuccess: $profileSuccess
+            profileSuccess: $profileSuccess,
+            effectiveLanguage: $settings['effective_language']
         );
         $viewData['activeView'] = 'profile';
+        $viewData['calendarSystem'] = $settings['calendar_system'];
 
         return Response::view(self::DASHBOARD_LAYOUT, $viewData);
     }
@@ -47,13 +59,15 @@ final class ProfileController
         $userId = (int) ($_SESSION['user']['id'] ?? 0);
         $userProfile = $this->userRepository->getProfile($userId);
         $currentUser = $_SESSION['user'] ?? [];
-        $profileErrors = [];
+        $profileErrorKeys = [];
+        $settings = $this->resolveUserSettings($userId, $request);
+        $translator = $this->createTranslator($settings['effective_language']);
 
         if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
-            $profileErrors[] = 'Your session has expired. Please submit the form again.';
+            $profileErrorKeys[] = 'profile.validation.session_expired';
         }
 
-        $avatarAction = $request->postString('profile_action');
+        $avatarAction = $request->postString('avatar_action');
         $avatarChoiceValue = $request->postString('avatar_choice');
         $avatarData = $request->postString('avatar_data');
 
@@ -67,7 +81,7 @@ final class ProfileController
             'avatar_url' => trim((string) ($userProfile->avatar_url ?? '')),
         ];
 
-        $userTimezone = TimezoneHelper::getApplicationTimezone();
+        $userTimezone = new DateTimeZone($settings['timezone']);
         $validationErrors = $this->profileService->validateProfile(
             $profileInput,
             $avatarAction,
@@ -75,9 +89,9 @@ final class ProfileController
             $userTimezone
         );
 
-        $profileErrors = array_merge($profileErrors, $validationErrors);
+        $profileErrorKeys = array_merge($profileErrorKeys, $validationErrors);
 
-        if ($profileErrors === []) {
+        if ($profileErrorKeys === []) {
             try {
                 $this->profileService->updateProfile(
                     $userId,
@@ -87,13 +101,18 @@ final class ProfileController
                     $avatarData
                 );
 
-                $_SESSION['profile_success'] = 'Your profile has been saved successfully.';
+                $_SESSION['profile_success'] = 'profile.saved';
 
                 return Response::redirect('/profile');
-            } catch (Throwable $exception) {
-                $profileErrors[] = $exception->getMessage();
+            } catch (AvatarStorageException | InvalidArgumentException | ProfileUpdateException $exception) {
+                $profileErrorKeys[] = $exception->getMessage();
             }
         }
+
+        $profileErrors = array_map(
+            static fn(string $translationKey): string => $translator->translate($translationKey),
+            $profileErrorKeys
+        );
 
         $mergedProfile = (object) array_merge((array) ($userProfile ?? []), $profileInput);
 
@@ -102,20 +121,23 @@ final class ProfileController
             currentUser: $currentUser,
             userId: $userId,
             profileErrors: $profileErrors,
-            profileSuccess: null
+            profileSuccess: null,
+            effectiveLanguage: $settings['effective_language']
         );
         $viewData['activeView'] = 'profile';
+        $viewData['calendarSystem'] = $settings['calendar_system'];
 
         return Response::view(self::DASHBOARD_LAYOUT, $viewData);
     }
 
-    public function changePassword(): Response
+    public function changePassword(Request $request): Response
     {
         $userId = (int) ($_SESSION['user']['id'] ?? 0);
         $currentUser = $_SESSION['user'] ?? [];
         $userProfile = $this->userRepository->getProfile($userId);
         $displayName = $this->resolveDisplayName($userProfile, $currentUser);
         $avatarUrl = $this->resolveAvatarUrl($userProfile);
+        $settings = $this->resolveUserSettings($userId, $request);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'change-password',
@@ -124,24 +146,8 @@ final class ProfileController
             'currentDisplayName' => $displayName,
             'avatarUrl' => $avatarUrl,
             'csrfToken' => CsrfMiddleware::getToken(),
-        ]);
-    }
-
-    public function accountSettings(): Response
-    {
-        $userId = (int) ($_SESSION['user']['id'] ?? 0);
-        $currentUser = $_SESSION['user'] ?? [];
-        $userProfile = $this->userRepository->getProfile($userId);
-        $displayName = $this->resolveDisplayName($userProfile, $currentUser);
-        $avatarUrl = $this->resolveAvatarUrl($userProfile);
-
-        return Response::view(self::DASHBOARD_LAYOUT, [
-            'activeView' => 'account-settings',
-            'currentUser' => $currentUser,
-            'userProfile' => $userProfile,
-            'currentDisplayName' => $displayName,
-            'avatarUrl' => $avatarUrl,
-            'csrfToken' => CsrfMiddleware::getToken(),
+            'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
         ]);
     }
 
@@ -155,7 +161,8 @@ final class ProfileController
         array $currentUser,
         int $userId,
         array $profileErrors,
-        ?string $profileSuccess
+        ?string $profileSuccess,
+        string $effectiveLanguage
     ): array {
         $profileData = $userProfile ?? (object) [];
         $currentUsername = trim((string) ($currentUser['username'] ?? 'User'));
@@ -180,9 +187,36 @@ final class ProfileController
             'profileFields' => $profileFields,
             'profileErrors' => $profileErrors,
             'profileSuccess' => $profileSuccess,
+            'effectiveLanguage' => $effectiveLanguage,
             'csrfToken' => CsrfMiddleware::getToken(),
             'baseUrl' => '/',
         ];
+    }
+
+    /**
+     * @return array{
+     *     language: string,
+     *     effective_language: string,
+     *     calendar_system: string,
+     *     timezone: string,
+     *     is_persisted: bool
+     * }
+     */
+    private function resolveUserSettings(int $userId, Request $request): array
+    {
+        return $this->settingsService->getForUser(
+            $userId,
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
+        );
+    }
+
+    private function createTranslator(string $effectiveLanguage): Translator
+    {
+        return new Translator(
+            $effectiveLanguage,
+            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'lang'
+        );
     }
 
     private function resolveDisplayName(?object $profile, ?array $user): string

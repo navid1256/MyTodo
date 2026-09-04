@@ -4,10 +4,19 @@
 }
 
 .accountSettingsPage {
+    display: flex;
+    flex-direction: column;
     min-height: 100%;
-    padding: 0px 36px 70px;
+    padding: 0px 36px 36px;
     box-sizing: border-box;
     color: #1f2933;
+}
+
+.accountSettingsForm {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .accountSettingsHeader {
@@ -32,7 +41,7 @@
 
 .accountSettingsFields {
     display: grid;
-    width: min(100%, 510px);
+    width: min(100%, 650px);
     margin: 100px auto 0;
     gap: 70px;
     justify-content: center;
@@ -40,18 +49,18 @@
 
 .accountSettingsField {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 126px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     align-items: center;
     column-gap: 40px;
 }
 
 .accountSettingsField label {
     font-size: 24px;
-    text-align: right;
+    text-align: end;
 }
 
 .accountSettingsField select {
-    width: 126px;
+    width: 280px;
     height: 44px;
     padding: 0 14px;
     border: 1px solid #93a2aa;
@@ -61,6 +70,68 @@
     font: inherit;
     font-size: 16px;
     opacity: 1;
+}
+
+.accountSettingsField select:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.accountSettingsHint,
+.accountSettingsStatus {
+    grid-column: 1 / -1;
+    margin: -20px 0 0;
+    text-align: center;
+    font-size: 14px;
+}
+
+.accountSettingsHint {
+    color: #607d8b;
+}
+
+.accountSettingsStatus {
+    min-height: 20px;
+    color: #16823c;
+}
+
+.accountSettingsStatus.isError {
+    color: #c62828;
+}
+
+.accountSettingsActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding-top: 40px;
+}
+
+.accountSettingsSaveButton {
+    min-width: 100px;
+    min-height: 44px;
+    padding: 10px 24px;
+    border: 0;
+    border-radius: 24px;
+    background-color: #69bd34;
+    box-shadow: 0 8px 18px rgba(105, 189, 52, 0.25);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.accountSettingsSaveButton:hover,
+.accountSettingsSaveButton:focus-visible {
+    background-color: #59a52b;
+    box-shadow: 0 10px 24px rgba(105, 189, 52, 0.32);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.accountSettingsSaveButton:disabled {
+    cursor: wait;
+    opacity: 0.68;
+    transform: none;
 }
 
 html.dark-mode .accountSettingsPage {
@@ -80,6 +151,18 @@ html.dark-mode .accountSettingsField select {
     background-color: #242321;
     color: #f7fafc;
     color-scheme: dark;
+}
+
+html.dark-mode .accountSettingsHint {
+    color: #a8c7d1;
+}
+
+html.dark-mode .accountSettingsStatus {
+    color: #5ee28b;
+}
+
+html.dark-mode .accountSettingsStatus.isError {
+    color: #ff7b83;
 }
 
 @media (max-width: 620px) {
@@ -111,10 +194,20 @@ html.dark-mode .accountSettingsField select {
     }
 
     .accountSettingsField label {
-        text-align: left;
+        text-align: start;
     }
 
     .accountSettingsField select {
         width: 100%;
+    }
+
+    .accountSettingsHint,
+    .accountSettingsStatus {
+        margin-top: 0;
+        text-align: start;
+    }
+
+    .accountSettingsActions {
+        padding-top: 32px;
     }
 }
