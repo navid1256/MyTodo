@@ -1,10 +1,10 @@
 import { sendJsonFormRequest } from './api-client.js';
 
-export async function changePassword(formData) {
+export async function changePassword(formData, errorMessage) {
     formData.set('action', 'changePassword');
 
     return sendJsonFormRequest(formData, {
-        errorMessage: 'The password could not be changed.'
+        errorMessage: errorMessage || 'The password could not be changed.'
     });
 }
 

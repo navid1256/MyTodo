@@ -60,7 +60,7 @@ final class Application
         $profileService = new ProfileService($userRepository);
         $userSettingsService = new UserSettingsService($userSettingsRepository);
 
-        $this->router->bind(AuthController::class, new AuthController($authService));
+        $this->router->bind(AuthController::class, new AuthController($authService, $userSettingsService));
         $this->router->bind(HomeController::class, new HomeController(
             $taskService,
             $notificationService,

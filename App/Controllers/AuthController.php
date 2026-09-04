@@ -6,8 +6,10 @@ namespace App\Controllers;
 
 use App\Http\Request;
 use App\Http\Response;
+use App\Localization\Translator;
 use App\Middleware\CsrfMiddleware;
 use App\Services\AuthService;
+use App\Services\UserSettingsService;
 use InvalidArgumentException;
 use PDOException;
 
@@ -15,7 +17,10 @@ final class AuthController
 {
     private const AUTH_VIEW = 'pages/auth';
 
-    public function __construct(private readonly AuthService $authService) {}
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly UserSettingsService $settingsService
+    ) {}
 
     public function showLogin(Request $request): Response
     {
@@ -117,12 +122,22 @@ final class AuthController
     public function changePassword(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
+        $translator = $this->resolveTranslator($request, $userId);
+
         if ($userId <= 0) {
-            return Response::json(['success' => false, 'message' => 'Authentication required.'], 401);
+            return Response::json([
+                'success' => false,
+                'message' => $translator->translate('password.validation.authentication_required'),
+                'code' => 'password.validation.authentication_required',
+            ], 401);
         }
 
         if (!CsrfMiddleware::isValid($request->post('csrf_token'))) {
-            return Response::json(['success' => false, 'message' => 'Your session has expired. Please refresh the page and try again.'], 403);
+            return Response::json([
+                'success' => false,
+                'message' => $translator->translate('password.validation.session_expired'),
+                'code' => 'password.validation.session_expired',
+            ], 403);
         }
 
         $currentPassword = (string) ($request->post('current_password') ?? '');
@@ -133,7 +148,8 @@ final class AuthController
             userId: $userId,
             currentPassword: $currentPassword,
             newPassword: $newPassword,
-            confirmation: $newPasswordConfirmation
+            confirmation: $newPasswordConfirmation,
+            translator: $translator
         );
 
         return Response::json($result['body'], $result['status']);
@@ -155,25 +171,64 @@ final class AuthController
     }
 
     /**
-     * @return array{status: int, body: array{success: bool, message: string}}
+     * @return array{status: int, body: array{success: bool, message: string, code?: string}}
      */
-    private function processPasswordChange(int $userId, string $currentPassword, string $newPassword, string $confirmation): array
-    {
+    private function processPasswordChange(
+        int $userId,
+        string $currentPassword,
+        string $newPassword,
+        string $confirmation,
+        Translator $translator
+    ): array {
         try {
             if ($currentPassword === '') {
-                throw new InvalidArgumentException('Current password is required.');
+                throw new InvalidArgumentException('password.validation.current_required');
             }
 
             $this->authService->validateNewPassword($newPassword, $confirmation);
 
             if (!$this->authService->changePassword($userId, $currentPassword, $newPassword)) {
-                throw new InvalidArgumentException('Current password is incorrect.');
+                throw new InvalidArgumentException('password.validation.current_incorrect');
             }
 
-            return ['status' => 200, 'body' => ['success' => true, 'message' => 'Your password has been changed successfully.']];
+            return [
+                'status' => 200,
+                'body' => [
+                    'success' => true,
+                    'message' => $translator->translate('password.changed'),
+                ],
+            ];
         } catch (InvalidArgumentException $exception) {
-            return ['status' => 422, 'body' => ['success' => false, 'message' => $exception->getMessage()]];
+            $translationKey = $exception->getMessage();
+
+            return [
+                'status' => 422,
+                'body' => [
+                    'success' => false,
+                    'message' => $translator->translate($translationKey),
+                    'code' => $translationKey,
+                ],
+            ];
         }
+    }
+
+    private function resolveTranslator(Request $request, int $userId): Translator
+    {
+        $effectiveLanguage = $userId > 0
+            ? $this->settingsService->getForUser(
+                $userId,
+                $request->cookieString('mytodo_timezone'),
+                $request->header('Accept-Language')
+            )['effective_language']
+            : $this->settingsService->resolveEffectiveLanguage(
+                'default',
+                $request->header('Accept-Language')
+            );
+
+        return new Translator(
+            $effectiveLanguage,
+            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'lang'
+        );
     }
 
     /**
