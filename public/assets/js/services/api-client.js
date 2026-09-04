@@ -34,6 +34,10 @@ export async function sendFormRequest(urlOrFormData, formDataOrOptions = {}, may
         body: formData
     };
 
+    if (options.acceptJson) {
+        requestOptions.headers.Accept = 'application/json';
+    }
+
     if (options.signal) {
         requestOptions.signal = options.signal;
     }
@@ -50,7 +54,13 @@ export async function sendFormRequest(urlOrFormData, formDataOrOptions = {}, may
 export async function sendJsonFormRequest(urlOrFormData, formDataOrOptions = {}, maybeOptions = {}) {
     const options = typeof urlOrFormData === 'string' ? (maybeOptions || {}) : (formDataOrOptions || {});
     const fallbackMessage = options.errorMessage || 'The request failed.';
-    const response = await sendFormRequest(urlOrFormData, formDataOrOptions, maybeOptions);
+    const requestOptions = {
+        ...options,
+        acceptJson: true
+    };
+    const response = typeof urlOrFormData === 'string'
+        ? await sendFormRequest(urlOrFormData, formDataOrOptions, requestOptions)
+        : await sendFormRequest(urlOrFormData, requestOptions);
     let responseData;
 
     try {
@@ -64,7 +74,13 @@ export async function sendJsonFormRequest(urlOrFormData, formDataOrOptions = {},
     }
 
     if (!response.ok || !responseData.success) {
-        throw new Error(responseData.message || fallbackMessage);
+        const requestError = new Error(responseData.message || fallbackMessage);
+
+        if (typeof responseData.code === 'string') {
+            requestError.code = responseData.code;
+        }
+
+        throw requestError;
     }
 
     return responseData;

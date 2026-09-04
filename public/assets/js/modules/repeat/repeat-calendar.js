@@ -1,14 +1,19 @@
 import {
-    formatDate,
     formatDateKey,
     normaliseDate,
     parseDateKey
 } from '../../utils/date-utils.js';
-
-const MONTH_NAMES = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-];
+import {
+    CALENDAR_SYSTEM,
+    changeCalendarMonth,
+    formatCalendarDate,
+    getActiveCalendarSystem,
+    getCalendarGrid,
+    getCalendarMonthLabel,
+    getCalendarMonthStart,
+    getCalendarNavigation,
+    getCalendarWeekdayNames
+} from '../../utils/calendar-core.js';
 
 export function createRepeatCalendar(options) {
     const repeatCalendarMonth = document.getElementById('repeatCalendarMonth');
@@ -16,8 +21,19 @@ export function createRepeatCalendar(options) {
     const previousRepeatMonth = document.getElementById('previousRepeatMonth');
     const nextRepeatMonth = document.getElementById('nextRepeatMonth');
     const repeatEndDateSummary = document.getElementById('repeatEndDateSummary');
+    const repeatCalendarWeekdays = document.querySelector('.repeatCalendarWeekdays');
+    const calendarSystem = getActiveCalendarSystem();
+    const calendarNavigation = getCalendarNavigation();
     let draftEndDate = '';
-    let calendarDate = normaliseDate(new Date());
+    let calendarDate = getCalendarMonthStart(normaliseDate(new Date()), calendarSystem);
+
+    if (previousRepeatMonth) {
+        previousRepeatMonth.setAttribute('aria-label', calendarNavigation.left.label);
+    }
+
+    if (nextRepeatMonth) {
+        nextRepeatMonth.setAttribute('aria-label', calendarNavigation.right.label);
+    }
 
     function getMinimumEndDate() {
         const minimumEndDate = options.getMinimumEndDate();
@@ -29,39 +45,49 @@ export function createRepeatCalendar(options) {
             return;
         }
 
-        const year = calendarDate.getFullYear();
-        const month = calendarDate.getMonth();
-        const firstOfMonth = new Date(year, month, 1, 12);
-        const firstVisibleDate = new Date(year, month, 1 - firstOfMonth.getDay(), 12);
+        const firstOfMonth = getCalendarMonthStart(calendarDate, calendarSystem);
+        const calendarGrid = getCalendarGrid(calendarDate, calendarSystem);
         const minimumEndDate = getMinimumEndDate();
         const selectedEndDate = parseDateKey(draftEndDate);
-        const minimumMonth = new Date(minimumEndDate.getFullYear(), minimumEndDate.getMonth(), 1, 12);
+        const minimumMonth = getCalendarMonthStart(minimumEndDate, calendarSystem);
 
-        repeatCalendarMonth.textContent = MONTH_NAMES[month] + ' ' + year;
+        repeatCalendarMonth.textContent = getCalendarMonthLabel(calendarDate, calendarSystem);
+        repeatCalendarDays.dir = calendarSystem === CALENDAR_SYSTEM.JALALI ? 'rtl' : 'ltr';
+
+        if (repeatCalendarWeekdays) {
+            repeatCalendarWeekdays.dir = repeatCalendarDays.dir;
+            getCalendarWeekdayNames(calendarSystem).forEach((weekdayName, index) => {
+                if (repeatCalendarWeekdays.children[index]) {
+                    repeatCalendarWeekdays.children[index].textContent = weekdayName;
+                }
+            });
+        }
+
         repeatCalendarDays.textContent = '';
 
         if (previousRepeatMonth) {
-            previousRepeatMonth.disabled = firstOfMonth <= minimumMonth;
+            previousRepeatMonth.disabled = calendarNavigation.left.offset < 0
+                && firstOfMonth <= minimumMonth;
         }
 
-        for (let index = 0; index < 42; index++) {
-            const day = new Date(
-                firstVisibleDate.getFullYear(),
-                firstVisibleDate.getMonth(),
-                firstVisibleDate.getDate() + index,
-                12
-            );
-            const dayKey = formatDateKey(day);
+        if (nextRepeatMonth) {
+            nextRepeatMonth.disabled = calendarNavigation.right.offset < 0
+                && firstOfMonth <= minimumMonth;
+        }
+
+        calendarGrid.forEach((calendarDay) => {
+            const day = calendarDay.date;
+            const dayKey = calendarDay.dateKey;
             const button = document.createElement('button');
 
             button.type = 'button';
             button.className = 'repeatCalendarDay';
-            button.textContent = String(day.getDate());
+            button.textContent = calendarDay.dayLabel;
             button.setAttribute('role', 'gridcell');
-            button.setAttribute('aria-label', formatDate(day));
+            button.setAttribute('aria-label', calendarDay.accessibleLabel);
             button.disabled = day <= minimumEndDate;
 
-            if (day.getMonth() !== month) {
+            if (calendarDay.isOutsideMonth) {
                 button.classList.add('outsideMonth');
             }
 
@@ -72,17 +98,17 @@ export function createRepeatCalendar(options) {
 
             button.addEventListener('click', function () {
                 draftEndDate = dayKey;
-                calendarDate = new Date(day.getFullYear(), day.getMonth(), 1, 12);
+                calendarDate = getCalendarMonthStart(day, calendarSystem);
                 options.setMessage('');
                 render();
             });
 
             repeatCalendarDays.appendChild(button);
-        }
+        });
 
         if (repeatEndDateSummary) {
             repeatEndDateSummary.textContent = selectedEndDate
-                ? 'Ends on ' + formatDate(selectedEndDate)
+                ? 'Ends on ' + formatCalendarDate(selectedEndDate, calendarSystem)
                 : 'Select an end date';
         }
     }
@@ -94,12 +120,7 @@ export function createRepeatCalendar(options) {
             || baseDate
             || normaliseDate(new Date());
 
-        calendarDate = new Date(
-            calendarBase.getFullYear(),
-            calendarBase.getMonth(),
-            1,
-            12
-        );
+        calendarDate = getCalendarMonthStart(calendarBase, calendarSystem);
 
         render();
     }
@@ -110,14 +131,22 @@ export function createRepeatCalendar(options) {
 
     if (previousRepeatMonth) {
         previousRepeatMonth.addEventListener('click', function () {
-            calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1, 12);
+            calendarDate = changeCalendarMonth(
+                calendarDate,
+                calendarNavigation.left.offset,
+                calendarSystem
+            );
             render();
         });
     }
 
     if (nextRepeatMonth) {
         nextRepeatMonth.addEventListener('click', function () {
-            calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1, 12);
+            calendarDate = changeCalendarMonth(
+                calendarDate,
+                calendarNavigation.right.offset,
+                calendarSystem
+            );
             render();
         });
     }

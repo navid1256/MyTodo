@@ -1,3 +1,5 @@
+import { applyTranslations } from '../utils/i18n.js';
+
 const DASHBOARD_AJAX_VIEWS = ['home', 'activity', 'manage-tasks', 'messages'];
 
 export function getDashboardNavigationView(targetUrl, baseUrl) {
@@ -197,6 +199,12 @@ export function initNavigation(options) {
       const nextView = replaceDashboardView(payload.html);
       document.body.dataset.activeView = payload.activeView;
       document.body.dataset.renderTimezone = payload.renderTimezone || '';
+      document.body.dataset.timezonePersisted = payload.timezoneIsPersisted ? '1' : '0';
+      document.body.dataset.effectiveLanguage = payload.effectiveLanguage || 'english';
+      document.body.dataset.calendarSystem = payload.calendarSystem === 'jalali' ? 'jalali' : 'gregorian';
+      document.documentElement.lang = payload.effectiveLanguage === 'persian' ? 'fa' : 'en';
+      document.documentElement.dir = payload.direction === 'rtl' ? 'rtl' : 'ltr';
+      applyTranslations(payload.translations);
       document.body.dataset.renderDate = payload.renderDate || '';
       activateNavigationView(payload.activeView);
       updateNotificationBadge(payload.sentNotificationCount);

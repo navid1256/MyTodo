@@ -12,6 +12,29 @@ function formatOffset(value, unit) {
     return numericValue + ' ' + unit + (numericValue === 1 ? '' : 's') + ' before due time';
 }
 
+function setRowStatus(row, status) {
+    const statusElement = row.querySelector('[data-notification-status]');
+    const editButton = row.querySelector('[data-notification-edit]');
+    const cancelButton = row.querySelector('[data-notification-cancel]');
+    const canManage = status === 'pending' || status === 'failed';
+
+    if (statusElement) {
+        NOTIFICATION_STATUSES.forEach(function (statusName) {
+            statusElement.classList.remove('notificationStatus--' + statusName);
+        });
+        statusElement.classList.add('notificationStatus--' + status);
+        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    if (editButton) {
+        editButton.disabled = !canManage;
+    }
+
+    if (cancelButton) {
+        cancelButton.disabled = !canManage;
+    }
+}
+
 export function initNotificationCenter(signal) {
     const page = document.querySelector('.notificationsContent');
 
@@ -52,28 +75,7 @@ export function initNotificationCenter(signal) {
         modalMessage.textContent = message;
     }
 
-    function setRowStatus(row, status) {
-        const statusElement = row.querySelector('[data-notification-status]');
-        const editButton = row.querySelector('[data-notification-edit]');
-        const cancelButton = row.querySelector('[data-notification-cancel]');
-        const canManage = status === 'pending' || status === 'failed';
 
-        if (statusElement) {
-            NOTIFICATION_STATUSES.forEach(function (statusName) {
-                statusElement.classList.remove('notificationStatus--' + statusName);
-            });
-            statusElement.classList.add('notificationStatus--' + status);
-            statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        }
-
-        if (editButton) {
-            editButton.disabled = !canManage;
-        }
-
-        if (cancelButton) {
-            cancelButton.disabled = !canManage;
-        }
-    }
 
     function openEditor(button) {
         activeRow = button.closest('[data-notification-id]');

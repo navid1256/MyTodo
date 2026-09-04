@@ -48,7 +48,11 @@ final class TaskService
         $this->taskRepository->beginTransaction();
 
         try {
-            $formattedDueAt = $dueAt?->format('Y-m-d H:i:s');
+            $formattedDueAt = $dueAt === null
+                ? null
+                : DateTimeImmutable::createFromInterface($dueAt)
+                    ->setTimezone(TimezoneHelper::getApplicationTimezone())
+                    ->format('Y-m-d H:i:s');
             $taskId = $this->taskRepository->create(
                 userId: $userId,
                 title: trim($title),
@@ -100,12 +104,14 @@ final class TaskService
     public function deleteTask(int $taskId, int $userId): bool
     {
         if ($taskId <= 0) {
-            return false;
+            throw new TaskNotFoundException('Invalid task.');
         }
 
-        $this->reminderService->deleteRemindersForTask($taskId);
+        if (!$this->taskRepository->delete($taskId, $userId)) {
+            throw new TaskNotFoundException('Task not found.');
+        }
 
-        return $this->taskRepository->delete($taskId, $userId);
+        return true;
     }
 
     /**

@@ -12,7 +12,7 @@ final class TimezoneHelper
 {
     public static function getApplicationTimezone(): DateTimeZone
     {
-        return new DateTimeZone('Asia/Tehran');
+        return new DateTimeZone('UTC');
     }
 
     public static function getClientTimezone(?string $timezoneName = null): DateTimeZone
@@ -32,15 +32,19 @@ final class TimezoneHelper
             }
         }
 
-        return self::getApplicationTimezone();
+        try {
+            return new DateTimeZone(date_default_timezone_get());
+        } catch (Exception) {
+            return self::getApplicationTimezone();
+        }
     }
 
     public static function formatNotificationDate(string $dateTime, ?DateTimeZone $timezone = null): string
     {
-        $tz = $timezone ?? self::getApplicationTimezone();
-        $date = new DateTimeImmutable($dateTime, $tz);
+        $displayTimezone = $timezone ?? self::getClientTimezone();
+        $date = new DateTimeImmutable($dateTime, self::getApplicationTimezone());
 
-        return $date->format('M j, Y \a\t h:i A');
+        return $date->setTimezone($displayTimezone)->format('M j, Y \a\t h:i A');
     }
 
     public static function formatNotificationOffset(int $value, string $unit): string

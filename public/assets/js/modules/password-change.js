@@ -1,4 +1,5 @@
 import { changePassword } from '../services/account-service.js';
+import { translate } from '../utils/i18n.js';
 
 const PASSWORD_CHECK_DELAY = 100;
 
@@ -36,11 +37,18 @@ export function initPasswordChange() {
             }
 
             const shouldShowPassword = passwordInput.type === 'password';
+            const labelKey = shouldShowPassword
+                ? toggleButton.dataset.hideLabelKey
+                : toggleButton.dataset.showLabelKey;
             passwordInput.type = shouldShowPassword ? 'text' : 'password';
             toggleButton.setAttribute('aria-pressed', String(shouldShowPassword));
             toggleButton.setAttribute(
                 'aria-label',
-                shouldShowPassword ? 'Hide password' : 'Show password'
+                translate(
+                    labelKey,
+                    {},
+                    shouldShowPassword ? 'Hide password' : 'Show password'
+                )
             );
         });
     });
@@ -75,7 +83,7 @@ export function initPasswordChange() {
 
         confirmation.classList.toggle('is-invalid', hasConfirmation && !passwordsMatch);
         confirmationMessage.textContent = hasConfirmation && !passwordsMatch
-            ? 'New password confirmation does not match.'
+            ? translate('password.validation.confirmation_mismatch')
             : '';
 
         return passwordsMatch;
@@ -131,29 +139,32 @@ export function initPasswordChange() {
         currentPassword.classList.toggle('is-invalid', currentPassword.value === '');
 
         if (currentPassword.value === '') {
-            setFormMessage('Enter your current password.', 'error');
+            setFormMessage(translate('password.validation.current_required_client'), 'error');
             currentPassword.focus();
             return;
         }
 
         if (!passwordIsValid) {
-            setFormMessage('Your new password must meet all password requirements.', 'error');
+            setFormMessage(translate('password.validation.requirements_unmet'), 'error');
             newPassword.focus();
             return;
         }
 
         if (!confirmationIsValid) {
-            setFormMessage('Confirm your new password correctly.', 'error');
+            setFormMessage(translate('password.validation.confirm_correctly'), 'error');
             confirmation.focus();
             return;
         }
 
         submitButton.disabled = true;
-        submitButton.textContent = 'Changing...';
+        submitButton.textContent = translate('password.changing');
         setFormMessage('', '');
 
         try {
-            const result = await changePassword(new FormData(form));
+            const result = await changePassword(
+                new FormData(form),
+                translate('password.change_failed')
+            );
 
             form.reset();
             updatePasswordRequirements();
@@ -161,17 +172,17 @@ export function initPasswordChange() {
             setFormMessage(result.message, 'success');
             currentPassword.focus();
         } catch (error) {
-            const message = error.message || 'The password could not be changed.';
+            const message = error.message || translate('password.change_failed');
 
             setFormMessage(message, 'error');
 
-            if (message === 'Current password is incorrect.') {
+            if (error.code === 'password.validation.current_incorrect') {
                 currentPassword.classList.add('is-invalid');
                 currentPassword.focus();
             }
         } finally {
             submitButton.disabled = false;
-            submitButton.textContent = 'Confirm';
+            submitButton.textContent = translate('password.confirm');
         }
     });
 

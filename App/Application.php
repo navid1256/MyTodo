@@ -9,6 +9,7 @@ use App\Controllers\HomeController;
 use App\Controllers\NotificationController;
 use App\Controllers\ProfileController;
 use App\Controllers\ReminderController;
+use App\Controllers\SettingsController;
 use App\Controllers\TaskController;
 use App\Http\Request;
 use App\Http\Response;
@@ -17,11 +18,13 @@ use App\Repositories\NotificationRepository;
 use App\Repositories\ReminderRepository;
 use App\Repositories\TaskRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\UserSettingsRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\ProfileService;
 use App\Services\ReminderService;
 use App\Services\TaskService;
+use App\Services\UserSettingsService;
 use PDO;
 
 final class Application
@@ -48,33 +51,51 @@ final class Application
         $taskRepository = new TaskRepository($this->pdo);
         $reminderRepository = new ReminderRepository($this->pdo);
         $notificationRepository = new NotificationRepository($this->pdo);
+        $userSettingsRepository = new UserSettingsRepository($this->pdo);
 
         $authService = new AuthService($userRepository);
         $reminderService = new ReminderService($reminderRepository);
         $taskService = new TaskService($taskRepository, $reminderService);
         $notificationService = new NotificationService($notificationRepository, $reminderService);
         $profileService = new ProfileService($userRepository);
+        $userSettingsService = new UserSettingsService($userSettingsRepository);
 
-        $this->router->bind(AuthController::class, new AuthController($authService));
+        $this->router->bind(AuthController::class, new AuthController($authService, $userSettingsService));
         $this->router->bind(HomeController::class, new HomeController(
             $taskService,
             $notificationService,
             $authService,
-            $userRepository
+            $userRepository,
+            $userSettingsService
         ));
         $this->router->bind(TaskController::class, new TaskController(
             $taskService,
             $authService,
             $userRepository,
-            $notificationService
+            $notificationService,
+            $userSettingsService
         ));
-        $this->router->bind(ReminderController::class, new ReminderController($reminderService, $authService));
+        $this->router->bind(ReminderController::class, new ReminderController(
+            $reminderService,
+            $authService,
+            $userSettingsService
+        ));
         $this->router->bind(NotificationController::class, new NotificationController(
             $notificationService,
             $authService,
+            $userRepository,
+            $userSettingsService
+        ));
+        $this->router->bind(ProfileController::class, new ProfileController(
+            $profileService,
+            $userRepository,
+            $userSettingsService
+        ));
+        $this->router->bind(SettingsController::class, new SettingsController(
+            $userSettingsService,
+            $authService,
             $userRepository
         ));
-        $this->router->bind(ProfileController::class, new ProfileController($profileService, $userRepository));
     }
 
     private function loadRoutes(): void

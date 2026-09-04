@@ -1,9 +1,8 @@
-<div class="repeatModalBackdrop" id="repeatModal" hidden>
-    <section
-        class="repeatModal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="repeatModalTitle">
+<?php
+/** @var string $calendarCssClass */
+?>
+<dialog class="repeatModalBackdrop" id="repeatModal" aria-labelledby="repeatModalTitle">
+    <div class="repeatModal">
         <button class="repeatModalClose" id="closeRepeatModal" type="button" aria-label="Close repeat modal">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
@@ -95,7 +94,7 @@
                     </label>
                 </fieldset>
 
-                <div class="repeatEndDateSection" id="repeatEndDateSection" hidden>
+                <div class="repeatEndDateSection <?= $calendarCssClass ?>" id="repeatEndDateSection" hidden>
                     <div class="repeatCalendarHeader">
                         <button id="previousRepeatMonth" type="button" aria-label="Previous month">
                             <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
@@ -126,5 +125,5 @@
                 <button class="applyRepeatButton" id="applyRepeatButton" type="button">Apply</button>
             </div>
         </div>
-    </section>
-</div>
+    </div>
+</dialog>
