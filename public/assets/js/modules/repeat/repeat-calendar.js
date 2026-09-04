@@ -14,6 +14,7 @@ import {
     getCalendarNavigation,
     getCalendarWeekdayNames
 } from '../../utils/calendar-core.js';
+import { translate } from '../../utils/i18n.js';
 
 export function createRepeatCalendar(options) {
     const repeatCalendarMonth = document.getElementById('repeatCalendarMonth');
@@ -108,8 +109,8 @@ export function createRepeatCalendar(options) {
 
         if (repeatEndDateSummary) {
             repeatEndDateSummary.textContent = selectedEndDate
-                ? 'Ends on ' + formatCalendarDate(selectedEndDate, calendarSystem)
-                : 'Select an end date';
+                ? translate('repeat.ends_on', { date: formatCalendarDate(selectedEndDate, calendarSystem) }, 'Ends on {date}')
+                : translate('repeat.select_end_date');
         }
     }
 

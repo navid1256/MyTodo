@@ -1,4 +1,5 @@
 import { previewTaskReminders } from '../../services/task-service.js';
+import { translate } from '../../utils/i18n.js';
 
 export function createReminderPreviewController(options) {
     let previewTimer = null;
@@ -26,11 +27,11 @@ export function createReminderPreviewController(options) {
 
         if (!options.hasDueDateAndTime()) {
             options.setPreviewState(
-                'Set a due date and time to calculate this notification.',
+                translate('reminder.preview.date_required', {}, 'Set a due date and time to calculate this notification.'),
                 'error'
             );
             options.setModalMessage(
-                'Please set a due date and time before adding reminders.'
+                translate('reminder.validation.date_required', {}, 'Please set a due date and time before adding reminders.')
             );
             return false;
         }
@@ -42,11 +43,11 @@ export function createReminderPreviewController(options) {
 
         if (invalidReminderIndex !== -1) {
             options.setPreviewState(
-                'Choose a valid reminder time to calculate this notification.',
+                translate('reminder.preview.invalid_time', {}, 'Choose a valid reminder time to calculate this notification.'),
                 'error'
             );
             options.setModalMessage(
-                'Reminder ' + (invalidReminderIndex + 1) + ' has an invalid reminder time.'
+                translate('reminder.invalid_item', { number: invalidReminderIndex + 1 }, 'Reminder {number} has an invalid reminder time.')
             );
             return false;
         }
@@ -57,7 +58,7 @@ export function createReminderPreviewController(options) {
         previewController = requestController;
 
         options.setModalMessage('');
-        options.setPreviewState('Calculating notification time...', 'loading');
+        options.setPreviewState(translate('reminder.preview.calculating', {}, 'Calculating notification time...'), 'loading');
 
         try {
             const previewItems = await previewTaskReminders({
@@ -81,11 +82,11 @@ export function createReminderPreviewController(options) {
 
             if (requestId === previewRequestId) {
                 options.setPreviewState(
-                    'The notification time could not be calculated.',
+                    translate('reminder.preview.failed', {}, 'The notification time could not be calculated.'),
                     'error'
                 );
                 options.setModalMessage(
-                    error.message || 'The reminder time could not be calculated.'
+                    error.message || translate('reminder.preview.request_failed', {}, 'The reminder time could not be calculated.')
                 );
             }
 
@@ -99,7 +100,7 @@ export function createReminderPreviewController(options) {
 
     function schedulePreview() {
         cancelPendingPreview();
-        options.setPreviewState('Calculating notification time...', 'loading');
+        options.setPreviewState(translate('reminder.preview.calculating', {}, 'Calculating notification time...'), 'loading');
 
         previewTimer = window.setTimeout(function () {
             previewTimer = null;

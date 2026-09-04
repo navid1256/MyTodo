@@ -18,6 +18,8 @@ import {
     normalizeTimeInput,
 } from '../../utils/time-utils.js';
 
+import { translate } from '../../utils/i18n.js';
+
 import {
     renderDateTimeCalendar,
     changeCalendarMonth
@@ -254,7 +256,7 @@ export function initDateTimePicker() {
         if (!draftSelectedDate) {
             taskDueAt.value = '';
             taskHasTime.value = '0';
-            taskDateSummary.textContent = 'No date';
+            taskDateSummary.textContent = translate('task.modal.no_date');
             if (setTaskDateButton) {
                 setTaskDateButton.classList.remove('has-date');
             }
@@ -269,9 +271,9 @@ export function initDateTimePicker() {
         let dateLabel;
 
         if (datesAreEqual(draftSelectedDate, today)) {
-            dateLabel = 'Today';
+            dateLabel = translate('date_time.today');
         } else if (datesAreEqual(draftSelectedDate, tomorrow)) {
-            dateLabel = 'Tomorrow';
+            dateLabel = translate('date_time.tomorrow');
         } else {
             dateLabel = formatCalendarDate(draftSelectedDate, getActiveCalendarSystem());
         }
@@ -282,7 +284,7 @@ export function initDateTimePicker() {
             });
 
             if (invalidTimeControl) {
-                setDateTimeModalMessage('Enter an hour from 1 to 12 and minutes from 0 to 59.');
+                setDateTimeModalMessage(translate('date_time.invalid_time', {}, 'Enter an hour from 1 to 12 and minutes from 0 to 59.'));
                 invalidTimeControl.focus();
                 return;
             }
@@ -304,7 +306,7 @@ export function initDateTimePicker() {
         } else {
             taskDueAt.value = formatDateKey(draftSelectedDate) + 'T00:00';
             taskHasTime.value = '0';
-            taskDateSummary.textContent = dateLabel + ' · No time';
+            taskDateSummary.textContent = dateLabel + ' · ' + translate('date_time.no_time');
         }
 
         if (setTaskDateButton) {
@@ -392,7 +394,7 @@ export function initDateTimePicker() {
         radio.addEventListener('change', function () {
             if (!draftSelectedDate) {
                 draftHasTime = false;
-                setDateTimeModalMessage('Please set a date first.');
+                setDateTimeModalMessage(translate('date_time.set_date_first', {}, 'Please set a date first.'));
             } else {
                 draftHasTime = radio.value === 'yes';
                 setDateTimeModalMessage('');
@@ -420,7 +422,7 @@ export function initDateTimePicker() {
         setTimeSection.addEventListener('pointerdown', function (event) {
             if (!draftSelectedDate) {
                 event.preventDefault();
-                setDateTimeModalMessage('Please set a date first.');
+                setDateTimeModalMessage(translate('date_time.set_date_first', {}, 'Please set a date first.'));
             }
         }, true);
     }

@@ -1,4 +1,4 @@
-import { applyTranslations } from '../utils/i18n.js';
+import { applyTranslations, translate } from '../utils/i18n.js';
 
 const DASHBOARD_AJAX_VIEWS = ['home', 'activity', 'manage-tasks', 'messages'];
 
@@ -109,7 +109,7 @@ export function initNavigation(options) {
     const safeCount = Math.max(0, Number(count) || 0);
     let badge = notificationButton.querySelector('.notificationBadge');
 
-    notificationButton.setAttribute('aria-label', safeCount + ' sent notifications');
+    notificationButton.setAttribute('aria-label', translate('header.sent_notifications', { count: safeCount }));
 
     if (safeCount === 0) {
       if (badge) {
@@ -136,7 +136,7 @@ export function initNavigation(options) {
     const nextView = template.content.firstElementChild;
 
     if (!currentView || !nextView || nextView.id !== 'tasks') {
-      throw new Error('The requested dashboard view is invalid.');
+      throw new Error(translate('navigation.view_invalid', {}, 'The requested dashboard view is invalid.'));
     }
 
     currentView.replaceWith(nextView);
@@ -180,13 +180,13 @@ export function initNavigation(options) {
       });
 
       if (!response.ok) {
-        throw new Error('The dashboard view could not be loaded.');
+        throw new Error(translate('navigation.view_load_failed', {}, 'The dashboard view could not be loaded.'));
       }
 
       const payload = await response.json();
 
       if (!payload || payload.activeView !== view || typeof payload.html !== 'string') {
-        throw new Error('The dashboard response is invalid.');
+        throw new Error(translate('navigation.response_invalid', {}, 'The dashboard response is invalid.'));
       }
 
       await updateStylesheet('taskModalStylesheet', payload.taskModalStylesheet);

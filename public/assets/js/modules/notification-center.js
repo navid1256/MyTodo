@@ -1,4 +1,5 @@
 import { cancelNotification, updateNotification } from '../services/notification-service.js';
+import { translate } from '../utils/i18n.js';
 
 const NOTIFICATION_STATUSES = ['pending', 'sent', 'failed', 'cancelled'];
 
@@ -6,10 +7,17 @@ function formatOffset(value, unit) {
     const numericValue = Number(value);
 
     if (numericValue === 0) {
-        return 'On due time';
+        return translate('notifications.on_due_time');
     }
 
-    return numericValue + ' ' + unit + (numericValue === 1 ? '' : 's') + ' before due time';
+    const unitKey = 'notifications.unit.' + (unit === 'minute' ? 'minute' : unit === 'hour' ? 'hour' : 'day') + '.'
+        + (numericValue === 1 ? 'one' : 'other');
+
+    return translate(
+        'notifications.before_due_time',
+        { value: numericValue, unit: translate(unitKey, {}, unit) },
+        '{value} {unit} before due time'
+    );
 }
 
 function setRowStatus(row, status) {
@@ -23,7 +31,7 @@ function setRowStatus(row, status) {
             statusElement.classList.remove('notificationStatus--' + statusName);
         });
         statusElement.classList.add('notificationStatus--' + status);
-        statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusElement.textContent = translate('notifications.status.' + status);
     }
 
     if (editButton) {
@@ -132,7 +140,7 @@ export function initNotificationCenter(signal) {
 
         const row = cancelButton.closest('[data-notification-id]');
 
-        if (!row || !window.confirm('Cancel this notification?')) {
+        if (!row || !window.confirm(translate('notifications.cancel_confirm', {}, 'Cancel this notification?'))) {
             return;
         }
 
@@ -145,7 +153,7 @@ export function initNotificationCenter(signal) {
             setPageMessage(result.message, 'success');
         } catch (error) {
             cancelButton.disabled = false;
-            setPageMessage(error.message || 'The notification could not be cancelled.', 'error');
+            setPageMessage(error.message || translate('notifications.cancel_failed', {}, 'The notification could not be cancelled.'), 'error');
         }
     });
 
@@ -153,7 +161,7 @@ export function initNotificationCenter(signal) {
         event.preventDefault();
         setModalMessage('');
         saveButton.disabled = true;
-        saveButton.textContent = 'Saving...';
+        saveButton.textContent = translate('common.saving');
 
         try {
             const result = await updateNotification(new FormData(form));
@@ -186,10 +194,10 @@ export function initNotificationCenter(signal) {
             closeEditor();
             setPageMessage(result.message, 'success');
         } catch (error) {
-            setModalMessage(error.message || 'The notification could not be updated.');
+            setModalMessage(error.message || translate('notifications.update_failed', {}, 'The notification could not be updated.'));
         } finally {
             saveButton.disabled = false;
-            saveButton.textContent = 'Save Changes';
+            saveButton.textContent = translate('notifications.editor.save_changes');
         }
     });
 

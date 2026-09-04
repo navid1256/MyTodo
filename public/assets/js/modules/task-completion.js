@@ -1,4 +1,5 @@
 import { toggleTaskCompletion } from '../services/task-service.js';
+import { translate } from '../utils/i18n.js';
 
 function updateTaskItem(toggleButton, task) {
     const taskItem = toggleButton.closest('.taskItem');
@@ -12,7 +13,7 @@ function updateTaskItem(toggleButton, task) {
     toggleButton.setAttribute('aria-pressed', String(isDone));
     toggleButton.setAttribute(
         'aria-label',
-        isDone ? 'Mark task as incomplete' : 'Mark task as completed'
+        isDone ? translate('task.mark_incomplete') : translate('task.mark_completed')
     );
 
     if (icon) {
@@ -44,7 +45,7 @@ export function initTaskCompletion(signal) {
         if (completedButton) {
             completedButton.setAttribute(
                 'aria-label',
-                safeCount + ' tasks completed today'
+                translate('task.completed_today_label', { count: safeCount })
             );
         }
     }
@@ -93,7 +94,7 @@ export function initTaskCompletion(signal) {
                 toggleButton.removeAttribute('aria-disabled');
             })
             .catch(function (error) {
-                window.alert(error.message || 'The task status could not be updated.');
+                window.alert(error.message || translate('task.toggle_failed', {}, 'The task status could not be updated.'));
                 delete toggleButton.dataset.processing;
                 toggleButton.removeAttribute('aria-disabled');
             });

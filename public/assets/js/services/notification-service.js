@@ -1,9 +1,10 @@
 import { sendJsonFormRequest } from './api-client.js';
+import { translate } from '../utils/i18n.js';
 
 export function updateNotification(formData) {
     formData.set('action', 'updateNotification');
     return sendJsonFormRequest(formData, {
-        errorMessage: 'The notification request failed.'
+        errorMessage: translate('notifications.request_failed', {}, 'The notification request failed.')
     });
 }
 
@@ -14,6 +15,6 @@ export function cancelNotification(notificationId, csrfToken) {
     formData.set('notification_id', String(notificationId));
 
     return sendJsonFormRequest(formData, {
-        errorMessage: 'The notification request failed.'
+        errorMessage: translate('notifications.request_failed', {}, 'The notification request failed.')
     });
 }

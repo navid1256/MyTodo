@@ -1,4 +1,5 @@
 import { createTask } from '../services/task-service.js';
+import { translate } from '../utils/i18n.js';
 
 export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     // متغیرهای Task Modal
@@ -94,7 +95,7 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
             const taskTitle = taskModalText ? taskModalText.value.trim() : '';
 
             if (taskTitle.length < 3) {
-                setTaskModalMessage('Task text must be at least 3 characters long.');
+                setTaskModalMessage(translate('task.validation.title_too_short', {}, 'Task text must be at least 3 characters long.'));
                 taskModalText.focus();
                 return;
             }
@@ -111,7 +112,7 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
             formData.set('task_title', taskTitle);
 
             saveTaskButton.disabled = true;
-            saveTaskButton.textContent = 'Saving...';
+            saveTaskButton.textContent = translate('common.saving');
             setTaskModalMessage('');
 
             createTask(formData)
@@ -119,9 +120,9 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
                     window.location.reload();
                 })
                 .catch(function (error) {
-                    setTaskModalMessage(error.message || 'The task could not be saved.');
+                    setTaskModalMessage(error.message || translate('task.save_failed', {}, 'The task could not be saved.'));
                     saveTaskButton.disabled = false;
-                    saveTaskButton.textContent = 'Save';
+                    saveTaskButton.textContent = translate('common.save');
                 });
         });
     }

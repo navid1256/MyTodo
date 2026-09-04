@@ -1,3 +1,5 @@
+import { translate } from '../../utils/i18n.js';
+
 const reminderList = document.getElementById('reminderList');
 const reminderCountLabel = document.getElementById('reminderCountLabel');
 const reminderCount = document.getElementById('reminderCount');
@@ -13,7 +15,7 @@ export function renderPreviewItems(previewItems) {
         preview.classList.remove('is-loading', 'is-error');
         preview.classList.add('is-ready');
         preview.textContent = previewItem
-            ? 'Your notification will be sent on ' + previewItem.formatted + '.'
+            ? translate('reminder.preview.ready', { time: previewItem.formatted }, 'Your notification will be sent on {time}.')
             : '';
     });
 }
@@ -21,8 +23,8 @@ export function renderPreviewItems(previewItems) {
 export function updateCountLabel() {
     if (reminderCountLabel && reminderCount) {
         reminderCountLabel.textContent = reminderCount.value === '1'
-            ? 'Reminder'
-            : 'Reminders';
+            ? translate('reminder.modal.label')
+            : translate('reminder.modal.count');
     }
 }
 
