@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Exceptions\ReminderValidationException;
 use App\Exceptions\TaskNotFoundException;
 use App\Exceptions\TaskValidationException;
+use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
@@ -179,10 +180,10 @@ final class TaskController
 
         $dueAt = null;
         if ($dueAtString !== '') {
-            try {
-                $clientTimezone = $this->resolveUserTimezone($request);
-                $dueAt = new DateTimeImmutable($dueAtString, $clientTimezone);
-            } catch (Throwable) {
+            $clientTimezone = $this->resolveUserTimezone($request);
+            $dueAt = TimezoneHelper::parseCanonicalDateTime($dueAtString, $clientTimezone);
+
+            if ($dueAt === null) {
                 return Response::text('Invalid due date format.', 422);
             }
         }

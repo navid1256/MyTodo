@@ -55,4 +55,30 @@ final class TimezoneHelper
 
         return $value . ' ' . $unit . ($value === 1 ? '' : 's') . ' before due time';
     }
+
+    /**
+     * Strictly parses a canonical Gregorian "YYYY-MM-DDTHH:MM" input in the
+     * given timezone. Rejects invalid calendar dates such as February 30th,
+     * leap-day in non-leap years or overflowing month days instead of
+     * silently rolling them over to the next month.
+     */
+    public static function parseCanonicalDateTime(string $value, ?DateTimeZone $timezone = null): ?DateTimeImmutable
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        $parsed = DateTimeImmutable::createFromFormat('Y-m-d\TH:i', $value, $timezone ?? self::getApplicationTimezone());
+        $dateErrors = DateTimeImmutable::getLastErrors();
+
+        if (
+            !$parsed
+            || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
+            || $parsed->format('Y-m-d\TH:i') !== $value
+        ) {
+            return null;
+        }
+
+        return $parsed;
+    }
 }
