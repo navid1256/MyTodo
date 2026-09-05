@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Exceptions\ReminderValidationException;
+use App\Exceptions\RepeatValidationException;
 use App\Exceptions\TaskNotFoundException;
 use App\Exceptions\TaskValidationException;
 use App\Helpers\TimezoneHelper;
@@ -168,6 +169,7 @@ final class TaskController
         $dueAtString = $request->postString('due_at');
         $hasTime = $request->postString('has_time') === '1';
         $remindersJson = $request->postString('reminders');
+        $repeatConfigJson = $request->postString('repeat_config');
 
         $reminders = [];
         if ($remindersJson !== '') {
@@ -176,6 +178,21 @@ final class TaskController
             } catch (JsonException) {
                 return Response::text('Invalid reminders payload.', 422);
             }
+        }
+
+        $repeatConfig = null;
+        if ($repeatConfigJson !== '') {
+            try {
+                $decodedRepeatConfig = json_decode($repeatConfigJson, true, 512, JSON_THROW_ON_ERROR);
+            } catch (JsonException) {
+                return Response::text('Invalid repeat settings payload.', 422);
+            }
+
+            if (!is_array($decodedRepeatConfig)) {
+                return Response::text('Invalid repeat settings payload.', 422);
+            }
+
+            $repeatConfig = $decodedRepeatConfig;
         }
 
         $dueAt = null;
@@ -194,11 +211,12 @@ final class TaskController
                 $taskTitle,
                 $dueAt,
                 $hasTime,
-                is_array($reminders) ? $reminders : []
+                is_array($reminders) ? $reminders : [],
+                $repeatConfig
             );
 
             $response = Response::text('1', 200);
-        } catch (TaskValidationException | ReminderValidationException $exception) {
+        } catch (TaskValidationException | ReminderValidationException | RepeatValidationException $exception) {
             $response = Response::text($exception->getMessage(), 422);
         }
 

@@ -132,7 +132,7 @@
     background: linear-gradient(180deg, #0878d3, #006ec4);
     box-shadow: 0 7px 15px rgba(7, 132, 233, 0.3);
     outline: none;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 
 .taskOptionButton.has-date,
@@ -187,7 +187,7 @@
     background: linear-gradient(180deg, #24b95a, #169c44);
     box-shadow: 0 8px 18px rgba(32, 185, 85, 0.3);
     outline: none;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 
 .saveTaskButton:disabled {

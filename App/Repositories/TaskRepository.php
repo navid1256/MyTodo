@@ -116,14 +116,27 @@ final class TaskRepository
         return $task !== false ? $task : null;
     }
 
-    public function create(int $userId, string $title, ?string $dueAt, bool $hasTime): int
+    public function create(
+        int $userId,
+        string $title,
+        ?string $dueAt,
+        bool $hasTime,
+        ?int $repeatRuleId = null,
+        ?int $repeatOccurrenceNumber = null
+    ): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO tasks (title, user_id, due_at, has_time) VALUES (:title, :user_id, :due_at, :has_time)'
+            'INSERT INTO tasks (
+                title, user_id, repeat_rule_id, repeat_occurrence_number, due_at, has_time
+             ) VALUES (
+                :title, :user_id, :repeat_rule_id, :repeat_occurrence_number, :due_at, :has_time
+             )'
         );
         $stmt->execute([
             ':title' => $title,
             ':user_id' => $userId,
+            ':repeat_rule_id' => $repeatRuleId,
+            ':repeat_occurrence_number' => $repeatOccurrenceNumber,
             ':due_at' => $dueAt,
             ':has_time' => $hasTime ? 1 : 0,
         ]);
