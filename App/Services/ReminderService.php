@@ -54,8 +54,45 @@ final class ReminderService
                 reminderNumber: $index + 1,
                 dueDate: $dueDate,
                 now: $now,
-                usedOffsets: $usedOffsets
+                usedOffsets: $usedOffsets,
+                rejectPast: true
             );
+        }
+
+        return $preparedReminders;
+    }
+
+    /**
+     * @param array<int, array{value: int, unit: string}> $reminders
+     * @return array<int, array{offset_value: int, offset_unit: string, offset_minutes: int, remind_at: DateTimeImmutable}>
+     */
+    public function prepareGeneratedTaskReminders(
+        array $reminders,
+        DateTimeInterface $dueAt,
+        bool $hasTime
+    ): array {
+        if ($reminders === [] || !$hasTime) {
+            return [];
+        }
+
+        $dueDate = DateTimeImmutable::createFromInterface($dueAt);
+        $now = new DateTimeImmutable('now', $dueDate->getTimezone());
+        $preparedReminders = [];
+        $usedOffsets = [];
+
+        foreach (array_values($reminders) as $index => $reminder) {
+            $preparedReminder = $this->parseSingleReminder(
+                reminder: $reminder,
+                reminderNumber: $index + 1,
+                dueDate: $dueDate,
+                now: $now,
+                usedOffsets: $usedOffsets,
+                rejectPast: false
+            );
+
+            if ($preparedReminder['remind_at'] > $now) {
+                $preparedReminders[] = $preparedReminder;
+            }
         }
 
         return $preparedReminders;
@@ -102,7 +139,8 @@ final class ReminderService
         int $reminderNumber,
         DateTimeImmutable $dueDate,
         DateTimeImmutable $now,
-        array &$usedOffsets
+        array &$usedOffsets,
+        bool $rejectPast
     ): array {
         [$value, $unit] = $this->extractReminderInputs($reminder, $reminderNumber);
         $offsetMinutes = $this->calculateOffsetMinutes($value, $unit, $reminderNumber);
@@ -112,7 +150,7 @@ final class ReminderService
         }
 
         $remindAt = $dueDate->sub(new DateInterval("PT{$offsetMinutes}M"));
-        if ($remindAt <= $now) {
+        if ($rejectPast && $remindAt <= $now) {
             throw new ReminderValidationException(
                 "Reminder {$reminderNumber} would be scheduled in the past. Choose a later due time or a shorter reminder."
             );

@@ -1,7 +1,18 @@
 import assert from 'node:assert/strict';
-import {
+
+globalThis.document = {
+    getElementById() {
+        return null;
+    },
+    documentElement: {
+        lang: 'en',
+        dir: 'ltr'
+    }
+};
+
+const {
     resolveMonthlyDay
-} from '../public/assets/js/modules/repeat/repeat-rule.js';
+} = await import('../../public/assets/js/modules/repeat/repeat-rule.js');
 
 assert.equal(
     resolveMonthlyDay(2028, 1, 31, false),

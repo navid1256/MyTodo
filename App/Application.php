@@ -16,6 +16,7 @@ use App\Http\Response;
 use App\Http\Router;
 use App\Repositories\NotificationRepository;
 use App\Repositories\ReminderRepository;
+use App\Repositories\RepeatRuleRepository;
 use App\Repositories\TaskRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\UserSettingsRepository;
@@ -23,6 +24,10 @@ use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\ProfileService;
 use App\Services\ReminderService;
+use App\Services\RepeatRuleValidator;
+use App\Services\RepeatOccurrencePlanner;
+use App\Services\RepeatScheduleCalculator;
+use App\Services\RepeatService;
 use App\Services\TaskService;
 use App\Services\UserSettingsService;
 use PDO;
@@ -50,12 +55,22 @@ final class Application
         $userRepository = new UserRepository($this->pdo);
         $taskRepository = new TaskRepository($this->pdo);
         $reminderRepository = new ReminderRepository($this->pdo);
+        $repeatRuleRepository = new RepeatRuleRepository($this->pdo);
         $notificationRepository = new NotificationRepository($this->pdo);
         $userSettingsRepository = new UserSettingsRepository($this->pdo);
 
         $authService = new AuthService($userRepository);
         $reminderService = new ReminderService($reminderRepository);
-        $taskService = new TaskService($taskRepository, $reminderService);
+        $repeatScheduleCalculator = new RepeatScheduleCalculator();
+        $repeatService = new RepeatService(
+            $repeatRuleRepository,
+            new RepeatRuleValidator(),
+            $repeatScheduleCalculator,
+            new RepeatOccurrencePlanner($repeatScheduleCalculator),
+            $taskRepository,
+            $reminderService
+        );
+        $taskService = new TaskService($taskRepository, $reminderService, $repeatService);
         $notificationService = new NotificationService($notificationRepository, $reminderService);
         $profileService = new ProfileService($userRepository);
         $userSettingsService = new UserSettingsService($userSettingsRepository);

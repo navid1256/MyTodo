@@ -16,7 +16,8 @@ final class TaskService
 {
     public function __construct(
         private readonly TaskRepository $taskRepository,
-        private readonly ReminderService $reminderService
+        private readonly ReminderService $reminderService,
+        private readonly RepeatService $repeatService
     ) {}
 
     public function validateTitle(string $title): void
@@ -34,20 +35,37 @@ final class TaskService
 
     /**
      * @param array<int, mixed> $reminders
+     * @param array<string, mixed>|null $repeatConfig
      */
     public function createTask(
         int $userId,
         string $title,
         ?DateTimeInterface $dueAt,
         bool $hasTime = false,
-        array $reminders = []
+        array $reminders = [],
+        ?array $repeatConfig = null
     ): int {
         $this->validateTitle($title);
         $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
+        $preparedRepeatRule = $repeatConfig === null
+            ? null
+            : $this->repeatService->prepareRule($repeatConfig, $dueAt);
 
         $this->taskRepository->beginTransaction();
 
         try {
+            $repeatRuleId = null;
+            if ($preparedRepeatRule !== null && $dueAt !== null) {
+                $repeatRuleId = $this->repeatService->createRule(
+                    userId: $userId,
+                    title: $title,
+                    startAt: $dueAt,
+                    hasTime: $hasTime,
+                    rule: $preparedRepeatRule,
+                    reminders: $preparedReminders
+                );
+            }
+
             $formattedDueAt = $dueAt === null
                 ? null
                 : DateTimeImmutable::createFromInterface($dueAt)
@@ -57,11 +75,21 @@ final class TaskService
                 userId: $userId,
                 title: trim($title),
                 dueAt: $formattedDueAt,
-                hasTime: $dueAt !== null && $hasTime
+                hasTime: $dueAt !== null && $hasTime,
+                repeatRuleId: $repeatRuleId,
+                repeatOccurrenceNumber: $repeatRuleId === null ? null : 0
             );
 
             if ($preparedReminders !== []) {
                 $this->reminderService->saveRemindersForTask($taskId, $preparedReminders);
+            }
+
+            if ($repeatRuleId !== null) {
+                $now = new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone());
+                $this->repeatService->generateInitialWindow(
+                    $repeatRuleId,
+                    $now->modify('+30 days')
+                );
             }
 
             $this->taskRepository->commit();

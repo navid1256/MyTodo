@@ -797,3 +797,180 @@ html[dir="rtl"] .taskCalendarHeader h2 {
 html[lang="fa"] body {
     font-family: "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
+/* ==========================================================================
+   Responsive layout (additive only — no existing rule above is modified)
+   Tablet: <= 1050px | Mobile: <= 620px | Small mobile: <= 400px
+   ========================================================================== */
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1050px) {
+    .page {
+        width: 94%;
+        left: 3%;
+        height: 88%;
+        top: 6%;
+    }
+
+    .main .nav {
+        width: 160px;
+    }
+
+    .main .view {
+        margin-left: 160px;
+    }
+
+    html[dir="rtl"] .main .view {
+        margin-right: 160px;
+        margin-left: 0;
+    }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 620px) {
+    .page {
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .pageHeader {
+        padding: 5px 12px;
+    }
+
+    .pageHeader .title {
+        width: auto;
+        max-width: 45%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 1.15em;
+    }
+
+    /* Icon-only sidebar rail */
+    .main .nav {
+        width: 56px;
+    }
+
+    .main .nav .menu {
+        margin: 12px 6px;
+    }
+
+    .main .nav .menu .title {
+        display: none;
+    }
+
+    /* Visually hide link labels (screen readers still read them) */
+    .main .nav .menu ul li a span,
+    .main .nav .menu ul li button span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .main .nav .menu ul li a,
+    .main .nav .menu ul li button {
+        justify-content: center;
+        padding: 10px 0;
+    }
+
+    .main .view {
+        margin-left: 56px;
+    }
+
+    html[dir="rtl"] .main .view {
+        margin-right: 56px;
+        margin-left: 0;
+    }
+
+    /* Stack the view header and let the content fill the rest */
+    .main .view {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main .view .viewHeader {
+        height: auto;
+        min-height: 64px;
+        line-height: 1.4;
+        padding: 12px 12px 6px;
+        box-sizing: border-box;
+    }
+
+    .main .view .viewHeader .title {
+        float: none;
+        margin-top: 0;
+        font-size: 1.15em;
+    }
+
+    .main .view .viewHeader .functions {
+        float: none;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        line-height: 1.4;
+    }
+
+    .main .view .viewHeader .functions .button {
+        float: none;
+        margin: 0;
+    }
+
+    .main .view .viewHeader .functions .completedButton {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .main .view .content {
+        position: static;
+        flex: 1;
+        min-height: 0;
+        padding: 10px;
+    }
+
+    /* Section headers: back button flows inline instead of absolute overlay */
+    .dashboardSectionHeader {
+        padding-inline: 0;
+    }
+
+    .dashboardBackButton {
+        position: static;
+        min-width: 0;
+        margin-block: 6px;
+    }
+
+    /* Home task list: flex row instead of floats */
+    .main .view .content .list ul li.taskItem {
+        display: flex;
+        height: auto;
+        min-height: 50px;
+        align-items: center;
+        gap: 8px;
+        line-height: 1.4;
+    }
+
+    .main .view .content .list ul li.taskItem .info {
+        margin-inline-start: auto;
+    }
+}
+
+/* ---------- Small mobile ---------- */
+@media (max-width: 400px) {
+    .pageHeader .userPanel .username {
+        display: none;
+    }
+
+    .pageHeader .userArea {
+        gap: 8px;
+    }
+}
