@@ -64,19 +64,21 @@ final class ReminderService
 
     /**
      * @param array<int, array{value: int, unit: string}> $reminders
+     * @param DateTimeImmutable|null $now Clock used to filter generated reminders; defaults to the current time.
      * @return array<int, array{offset_value: int, offset_unit: string, offset_minutes: int, remind_at: DateTimeImmutable}>
      */
     public function prepareGeneratedTaskReminders(
         array $reminders,
         DateTimeInterface $dueAt,
-        bool $hasTime
+        bool $hasTime,
+        ?DateTimeImmutable $now = null
     ): array {
         if ($reminders === [] || !$hasTime) {
             return [];
         }
 
         $dueDate = DateTimeImmutable::createFromInterface($dueAt);
-        $now = new DateTimeImmutable('now', $dueDate->getTimezone());
+        $now ??= new DateTimeImmutable('now', $dueDate->getTimezone());
         $preparedReminders = [];
         $usedOffsets = [];
 

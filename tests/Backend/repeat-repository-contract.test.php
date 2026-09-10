@@ -131,6 +131,12 @@ $maxOccurrence = extractMethodSource($taskRepository, 'getMaxOccurrenceNumber');
 assertContainsText('t.repeat_rule_id = :repeat_rule_id', $maxOccurrence, 'Occurrence cursor lookup must target the requested rule ID.');
 assertContainsText('t.user_id = :user_id', $maxOccurrence, 'Occurrence cursor lookup must check ownership in SQL.');
 
+$occurrenceDates = extractMethodSource($taskRepository, 'getOccurrenceDatesForRule');
+assertContainsText('t.repeat_rule_id = :repeat_rule_id', $occurrenceDates, 'Materialized occurrence dates must target the requested rule.');
+assertContainsText('t.user_id = :user_id', $occurrenceDates, 'Materialized occurrence dates must preserve ownership.');
+assertContainsText('t.due_at >= :start_at', $occurrenceDates, 'Occurrence dates must respect the generation window start.');
+assertContainsText('t.due_at <= :horizon', $occurrenceDates, 'Occurrence dates must respect the generation horizon.');
+
 $firstFutureTask = extractMethodSource($taskRepository, 'findFirstFutureIncompleteForRule');
 assertContainsText('t.repeat_rule_id = :repeat_rule_id', $firstFutureTask, 'Future task lookup must target the requested rule ID.');
 assertContainsText('t.user_id = :user_id', $firstFutureTask, 'Future task lookup must check ownership in SQL.');

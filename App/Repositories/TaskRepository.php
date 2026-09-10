@@ -242,6 +242,33 @@ final class TaskRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * @return array<int, string> Materialized occurrence dates in application UTC.
+     */
+    public function getOccurrenceDatesForRule(
+        int $repeatRuleId,
+        int $userId,
+        string $startAt,
+        string $horizon
+    ): array {
+        $stmt = $this->pdo->prepare(
+            'SELECT t.due_at
+             FROM tasks t
+             WHERE t.repeat_rule_id = :repeat_rule_id
+               AND t.user_id = :user_id
+               AND t.due_at >= :start_at
+               AND t.due_at <= :horizon'
+        );
+        $stmt->execute([
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+            ':start_at' => $startAt,
+            ':horizon' => $horizon,
+        ]);
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     public function findFirstFutureIncompleteForRule(
         int $repeatRuleId,
         int $userId,
