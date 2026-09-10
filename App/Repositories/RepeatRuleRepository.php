@@ -136,7 +136,10 @@ final class RepeatRuleRepository
         $statusPredicate = $status === 'all' ? '' : ' AND r.status = :status';
         $statement = $this->pdo->prepare(
             'SELECT r.*,
-                    (SELECT COUNT(*) FROM tasks t WHERE t.repeat_rule_id = r.id) AS task_count,
+                    (SELECT COUNT(*)
+                       FROM tasks t
+                      WHERE t.repeat_rule_id = r.id
+                        AND t.user_id = r.user_id) AS task_count,
                     (SELECT MIN(t.due_at)
                        FROM tasks t
                       WHERE t.repeat_rule_id = r.id

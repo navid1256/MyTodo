@@ -174,11 +174,13 @@ final class TaskRepository
     }
 
     /**
+     * @param string $cutoffAt Application UTC cutoff in database datetime format.
      * @return array<int, int>
      */
     public function deleteIncompleteFromOccurrence(
         int $repeatRuleId,
         int $userId,
+        string $cutoffAt,
         int $occurrenceNumber,
         int $exceptTaskId
     ): array {
@@ -188,6 +190,7 @@ final class TaskRepository
              WHERE t.repeat_rule_id = :repeat_rule_id
                AND t.user_id = :user_id
                AND t.is_done = 0
+               AND t.due_at >= :cutoff_at
                AND t.repeat_occurrence_number >= :occurrence_number
                AND t.id <> :except_task_id
              ORDER BY t.repeat_occurrence_number ASC, t.id ASC
@@ -196,6 +199,7 @@ final class TaskRepository
         $stmt->execute([
             ':repeat_rule_id' => $repeatRuleId,
             ':user_id' => $userId,
+            ':cutoff_at' => $cutoffAt,
             ':occurrence_number' => $occurrenceNumber,
             ':except_task_id' => $exceptTaskId,
         ]);
