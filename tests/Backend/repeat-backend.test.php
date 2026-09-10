@@ -132,6 +132,26 @@ assertSameValue(2, $countPlan['generated_repeats'], 'Generated repeat count must
 assertSameValue('completed', $countPlan['status'], 'A count-limited rule must complete after all repeats are planned.');
 assertSameValue(null, $countPlan['next_occurrence'], 'A completed rule must not retain another occurrence.');
 
+$resumeStart = new DateTimeImmutable('2026-09-16 12:00:00', $timezone);
+$resumeCandidate = $calculator->nextOccurrence($weeklyRule, $start, $resumeStart);
+
+assertSameValue(
+    '2026-09-21 09:30:00',
+    $resumeCandidate->format('Y-m-d H:i:s'),
+    'Resume must skip missed weekly occurrences and retain the original weekday/time anchor.'
+);
+
+$exhaustedPlan = $planner->plan(
+    $countRule,
+    $start,
+    new DateTimeImmutable('2026-09-08 09:30:00', $timezone),
+    new DateTimeImmutable('2026-10-05 23:59:59', $timezone),
+    2
+);
+
+assertSameValue([], $exhaustedPlan['occurrences'], 'An exhausted count rule must not create another task.');
+assertSameValue('completed', $exhaustedPlan['status'], 'An exhausted count rule must be terminal.');
+
 $rollingPlan = $planner->plan(
     $weeklyRule,
     $start,
