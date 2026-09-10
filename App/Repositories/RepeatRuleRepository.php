@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use JsonException;
+use InvalidArgumentException;
 use PDO;
 
 final class RepeatRuleRepository
@@ -121,6 +122,169 @@ final class RepeatRuleRepository
         $rule = $statement->fetch(PDO::FETCH_OBJ);
 
         return $rule !== false ? $rule : null;
+    }
+
+    /**
+     * @return array<int, object>
+     */
+    public function getForUser(int $userId, string $status, string $cutoffAt): array
+    {
+        if (!in_array($status, ['all', 'active', 'paused', 'completed', 'cancelled'], true)) {
+            throw new InvalidArgumentException('Invalid repeat rule status.');
+        }
+
+        $statusPredicate = $status === 'all' ? '' : ' AND r.status = :status';
+        $statement = $this->pdo->prepare(
+            'SELECT r.*,
+                    (SELECT COUNT(*) FROM tasks t WHERE t.repeat_rule_id = r.id) AS task_count,
+                    (SELECT MIN(t.due_at)
+                       FROM tasks t
+                      WHERE t.repeat_rule_id = r.id
+                        AND t.user_id = r.user_id
+                        AND t.is_done = 0
+                        AND t.due_at >= :cutoff_at) AS first_future_task_at
+             FROM task_repeat_rules r
+             WHERE r.user_id = :user_id' . $statusPredicate . '
+             ORDER BY r.created_at DESC, r.id DESC'
+        );
+        $parameters = [
+            ':user_id' => $userId,
+            ':cutoff_at' => $cutoffAt,
+        ];
+
+        if ($status !== 'all') {
+            $parameters[':status'] = $status;
+        }
+
+        $statement->execute($parameters);
+
+        return $statement->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function findByIdForUserForUpdate(int $repeatRuleId, int $userId): ?object
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT *
+             FROM task_repeat_rules
+             WHERE id = :repeat_rule_id AND user_id = :user_id
+             LIMIT 1
+             FOR UPDATE'
+        );
+        $statement->execute([
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+        ]);
+        $rule = $statement->fetch(PDO::FETCH_OBJ);
+
+        return $rule !== false ? $rule : null;
+    }
+
+    public function updateStatus(
+        int $repeatRuleId,
+        int $userId,
+        string $status,
+        ?string $nextOccurrenceAt
+    ): bool {
+        $statement = $this->pdo->prepare(
+            'UPDATE task_repeat_rules
+             SET status = :status, next_occurrence_at = :next_occurrence_at
+             WHERE id = :repeat_rule_id AND user_id = :user_id'
+        );
+        $statement->execute([
+            ':status' => $status,
+            ':next_occurrence_at' => $nextOccurrenceAt,
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+        ]);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
+     * @param array<string, mixed> $rule
+     * @throws JsonException
+     */
+    public function updateRule(int $repeatRuleId, int $userId, array $rule): bool
+    {
+        $statement = $this->pdo->prepare(
+            'UPDATE task_repeat_rules
+             SET title = :title,
+                 start_at = :start_at,
+                 has_time = :has_time,
+                 timezone = :timezone,
+                 frequency = :frequency,
+                 interval_value = :interval_value,
+                 interval_unit = :interval_unit,
+                 week_days = :week_days,
+                 month_day = :month_day,
+                 month_day_mode = :month_day_mode,
+                 end_type = :end_type,
+                 end_date = :end_date,
+                 repeat_count = :repeat_count,
+                 next_occurrence_at = :next_occurrence_at
+             WHERE id = :repeat_rule_id AND user_id = :user_id'
+        );
+        $statement->execute([
+            ':title' => $rule['title'],
+            ':start_at' => $rule['start_at'],
+            ':has_time' => $rule['has_time'] ? 1 : 0,
+            ':timezone' => $rule['timezone'],
+            ':frequency' => $rule['frequency'],
+            ':interval_value' => $rule['interval'],
+            ':interval_unit' => $rule['unit'],
+            ':week_days' => $rule['week_days'] === []
+                ? null
+                : json_encode($rule['week_days'], JSON_THROW_ON_ERROR),
+            ':month_day' => $rule['month_day'],
+            ':month_day_mode' => $rule['month_day_mode'],
+            ':end_type' => $rule['end_type'],
+            ':end_date' => $rule['end_date'],
+            ':repeat_count' => $rule['repeat_count'],
+            ':next_occurrence_at' => $rule['next_occurrence_at'],
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+        ]);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
+     * @param array<int, array{offset_value: int, offset_unit: string}> $reminders
+     */
+    public function replaceReminderTemplates(int $repeatRuleId, int $userId, array $reminders): void
+    {
+        $deleteStatement = $this->pdo->prepare(
+            'DELETE templates
+             FROM task_repeat_reminder_templates templates
+             INNER JOIN task_repeat_rules r
+                     ON r.id = templates.repeat_rule_id
+                    AND r.user_id = :user_id
+             WHERE templates.repeat_rule_id = :repeat_rule_id'
+        );
+        $deleteStatement->execute([
+            ':user_id' => $userId,
+            ':repeat_rule_id' => $repeatRuleId,
+        ]);
+
+        if ($reminders === []) {
+            return;
+        }
+
+        $insertStatement = $this->pdo->prepare(
+            'INSERT INTO task_repeat_reminder_templates (repeat_rule_id, offset_value, offset_unit)
+             SELECT r.id, :offset_value, :offset_unit
+             FROM task_repeat_rules r
+             WHERE r.id = :repeat_rule_id AND r.user_id = :user_id'
+        );
+
+        foreach ($reminders as $reminder) {
+            $insertStatement->execute([
+                ':offset_value' => $reminder['offset_value'],
+                ':offset_unit' => $reminder['offset_unit'],
+                ':repeat_rule_id' => $repeatRuleId,
+                ':user_id' => $userId,
+            ]);
+        }
     }
 
     /**

@@ -116,6 +116,185 @@ final class TaskRepository
         return $task !== false ? $task : null;
     }
 
+    public function findRecurringByIdForUpdate(int $taskId, int $userId): ?object
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT t.*
+             FROM tasks t
+             WHERE t.id = :task_id
+               AND t.user_id = :user_id
+               AND t.repeat_rule_id IS NOT NULL
+             LIMIT 1
+             FOR UPDATE'
+        );
+        $stmt->execute([
+            ':task_id' => $taskId,
+            ':user_id' => $userId,
+        ]);
+        $task = $stmt->fetch(PDO::FETCH_OBJ);
+
+        return $task !== false ? $task : null;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function deleteFutureIncompleteForRule(
+        int $repeatRuleId,
+        int $userId,
+        string $cutoffAt,
+        ?int $exceptTaskId = null
+    ): array {
+        $exceptPredicate = $exceptTaskId === null ? '' : ' AND t.id <> :except_task_id';
+        $stmt = $this->pdo->prepare(
+            'SELECT t.id
+             FROM tasks t
+             WHERE t.repeat_rule_id = :repeat_rule_id
+               AND t.user_id = :user_id
+               AND t.is_done = 0
+               AND t.due_at >= :cutoff_at' . $exceptPredicate . '
+             ORDER BY t.due_at ASC, t.id ASC
+             FOR UPDATE'
+        );
+        $parameters = [
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+            ':cutoff_at' => $cutoffAt,
+        ];
+
+        if ($exceptTaskId !== null) {
+            $parameters[':except_task_id'] = $exceptTaskId;
+        }
+
+        $stmt->execute($parameters);
+        $taskIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        $this->deleteOwnedTaskIds($taskIds, $userId);
+
+        return $taskIds;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function deleteIncompleteFromOccurrence(
+        int $repeatRuleId,
+        int $userId,
+        int $occurrenceNumber,
+        int $exceptTaskId
+    ): array {
+        $stmt = $this->pdo->prepare(
+            'SELECT t.id
+             FROM tasks t
+             WHERE t.repeat_rule_id = :repeat_rule_id
+               AND t.user_id = :user_id
+               AND t.is_done = 0
+               AND t.repeat_occurrence_number >= :occurrence_number
+               AND t.id <> :except_task_id
+             ORDER BY t.repeat_occurrence_number ASC, t.id ASC
+             FOR UPDATE'
+        );
+        $stmt->execute([
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+            ':occurrence_number' => $occurrenceNumber,
+            ':except_task_id' => $exceptTaskId,
+        ]);
+        $taskIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        $this->deleteOwnedTaskIds($taskIds, $userId);
+
+        return $taskIds;
+    }
+
+    public function countRepeatsForRule(int $repeatRuleId, int $userId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*)
+             FROM tasks t
+             WHERE t.repeat_rule_id = :repeat_rule_id
+               AND t.user_id = :user_id
+               AND t.repeat_occurrence_number > 0'
+        );
+        $stmt->execute([
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+        ]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function getMaxOccurrenceNumber(int $repeatRuleId, int $userId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT COALESCE(MAX(t.repeat_occurrence_number), 0)
+             FROM tasks t
+             WHERE t.repeat_rule_id = :repeat_rule_id
+               AND t.user_id = :user_id'
+        );
+        $stmt->execute([
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+        ]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function findFirstFutureIncompleteForRule(
+        int $repeatRuleId,
+        int $userId,
+        string $cutoffAt
+    ): ?object {
+        $stmt = $this->pdo->prepare(
+            'SELECT t.*
+             FROM tasks t
+             WHERE t.repeat_rule_id = :repeat_rule_id
+               AND t.user_id = :user_id
+               AND t.is_done = 0
+               AND t.due_at >= :cutoff_at
+             ORDER BY t.due_at ASC, t.id ASC
+             LIMIT 1
+             FOR UPDATE'
+        );
+        $stmt->execute([
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+            ':cutoff_at' => $cutoffAt,
+        ]);
+        $task = $stmt->fetch(PDO::FETCH_OBJ);
+
+        return $task !== false ? $task : null;
+    }
+
+    public function attachToRule(
+        int $taskId,
+        int $userId,
+        int $repeatRuleId,
+        int $occurrenceNumber
+    ): bool {
+        $stmt = $this->pdo->prepare(
+            'UPDATE tasks t
+             SET t.repeat_rule_id = :repeat_rule_id,
+                 t.repeat_occurrence_number = :occurrence_number
+             WHERE t.id = :task_id
+               AND t.user_id = :user_id
+               AND EXISTS (
+                   SELECT 1
+                   FROM task_repeat_rules r
+                   WHERE r.id = :owned_repeat_rule_id
+                     AND r.user_id = :rule_user_id
+               )'
+        );
+        $stmt->execute([
+            ':repeat_rule_id' => $repeatRuleId,
+            ':occurrence_number' => $occurrenceNumber,
+            ':task_id' => $taskId,
+            ':user_id' => $userId,
+            ':owned_repeat_rule_id' => $repeatRuleId,
+            ':rule_user_id' => $userId,
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     public function create(
         int $userId,
         string $title,
@@ -215,6 +394,32 @@ final class TaskRepository
         ]);
 
         return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * @param array<int, int> $taskIds
+     */
+    private function deleteOwnedTaskIds(array $taskIds, int $userId): void
+    {
+        if ($taskIds === []) {
+            return;
+        }
+
+        $idPlaceholders = [];
+        $parameters = [':user_id' => $userId];
+
+        foreach ($taskIds as $index => $taskId) {
+            $placeholder = ':task_id_' . $index;
+            $idPlaceholders[] = $placeholder;
+            $parameters[$placeholder] = $taskId;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'DELETE FROM tasks
+             WHERE user_id = :user_id
+               AND id IN (' . implode(', ', $idPlaceholders) . ')'
+        );
+        $stmt->execute($parameters);
     }
 
     public function beginTransaction(): bool
