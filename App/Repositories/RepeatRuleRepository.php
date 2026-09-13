@@ -308,6 +308,7 @@ final class RepeatRuleRepository
 
     public function updateGenerationState(
         int $repeatRuleId,
+        int $userId,
         int $generatedRepeats,
         ?string $nextOccurrenceAt,
         string $status
@@ -317,13 +318,14 @@ final class RepeatRuleRepository
              SET generated_repeats = :generated_repeats,
                  next_occurrence_at = :next_occurrence_at,
                  status = :status
-             WHERE id = :repeat_rule_id'
+             WHERE id = :repeat_rule_id AND user_id = :user_id'
         );
         $statement->execute([
             ':generated_repeats' => $generatedRepeats,
             ':next_occurrence_at' => $nextOccurrenceAt,
             ':status' => $status,
             ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
         ]);
     }
 

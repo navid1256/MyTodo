@@ -87,6 +87,11 @@ $updateRuleStatus = extractMethodSource($repeatRepository, 'updateStatus');
 assertContainsText('id = :repeat_rule_id', $updateRuleStatus, 'Rule status updates must target the requested rule ID.');
 assertContainsText('user_id = :user_id', $updateRuleStatus, 'Rule status updates must check ownership in SQL.');
 
+$updateGenerationState = extractMethodSource($repeatRepository, 'updateGenerationState');
+assertContainsText('id = :repeat_rule_id', $updateGenerationState, 'Generation-state updates must target the requested rule ID.');
+assertContainsText('user_id = :user_id', $updateGenerationState, 'Generation-state updates must check ownership in SQL.');
+assertContainsText('int $userId', $updateGenerationState, 'Generation-state updates must require a user ID.');
+
 $updateRule = extractMethodSource($repeatRepository, 'updateRule');
 assertContainsText('id = :repeat_rule_id', $updateRule, 'Rule edits must target the requested rule ID.');
 assertContainsText('user_id = :user_id', $updateRule, 'Rule edits must check ownership in SQL.');

@@ -181,6 +181,7 @@ final class RepeatService
             if ($candidate === null) {
                 $this->repeatRuleRepository->updateGenerationState(
                     $repeatRuleId,
+                    (int) $storedRule->user_id,
                     $this->taskRepository->countRepeatsForRule($repeatRuleId, $userId),
                     null,
                     'completed'
@@ -391,6 +392,7 @@ final class RepeatService
             : null;
         $this->repeatRuleRepository->updateGenerationState(
             $repeatRuleId,
+            (int) $storedRule->user_id,
             $plan['generated_repeats'],
             $nextOccurrenceAt,
             $plan['status']

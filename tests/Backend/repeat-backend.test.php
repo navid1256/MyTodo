@@ -384,10 +384,25 @@ $lifecycleTests = [
         assertSameValue([], $service->getRulesForUser(10, 'paused', $lifecycleNow), 'Status filter must apply.');
         assertLifecycleThrows(InvalidArgumentException::class, fn() => $service->getRulesForUser(10, 'invalid', $lifecycleNow));
     },
+    'generation state updates require matching rule ownership' => static function (): void {
+        [$pdo, , $rules] = lifecycleFixture();
+        $before = $pdo->query('SELECT id, generated_repeats, next_occurrence_at, status FROM task_repeat_rules ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+        $rules->updateGenerationState(
+            repeatRuleId: 1, userId: 20, generatedRepeats: 99, nextOccurrenceAt: null, status: 'completed'
+        );
+        assertSameValue($before, $pdo->query('SELECT id, generated_repeats, next_occurrence_at, status FROM task_repeat_rules ORDER BY id')->fetchAll(PDO::FETCH_ASSOC), 'A mismatched owner must not change generation count, cursor, or status.');
+        $rules->updateGenerationState(
+            repeatRuleId: 1, userId: 10, generatedRepeats: 2, nextOccurrenceAt: null, status: 'completed'
+        );
+        assertSameValue([
+            ['id' => 1, 'generated_repeats' => 2, 'next_occurrence_at' => null, 'status' => 'completed'],
+            $before[1],
+        ], $pdo->query('SELECT id, generated_repeats, next_occurrence_at, status FROM task_repeat_rules ORDER BY id')->fetchAll(PDO::FETCH_ASSOC), 'The matching owner must update only the requested rule.');
+    },
     'Cron generation reconciles count and skips retained dates' => static function (): void {
         [$pdo, $service, $rules] = lifecycleFixture('active', 'count', 5);
         $pdo->exec('DELETE FROM tasks WHERE id IN (3, 4)');
-        $rules->updateGenerationState(1, 8, '2026-09-21 06:00:00', 'active');
+        $rules->updateGenerationState(1, 10, 8, '2026-09-21 06:00:00', 'active');
         $pdo->beginTransaction();
         assertSameValue(3, $service->generateInitialWindow(1, new DateTimeImmutable('2026-10-16 00:00:00', new DateTimeZone('UTC'))), 'Generation must use surviving repeat count, not stale generated_repeats or the unique cursor.');
         assertSameValue(true, $pdo->inTransaction(), 'Initial generation must leave the TaskService transaction open.');
@@ -411,4 +426,4 @@ if ($lifecycleFailures > 0) {
     exit(1);
 }
 
-echo "repeat-backend tests passed (scheduling regressions + 9 lifecycle checks)\n";
+echo "repeat-backend tests passed (scheduling regressions + 10 lifecycle checks)\n";
