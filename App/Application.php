@@ -9,6 +9,7 @@ use App\Controllers\HomeController;
 use App\Controllers\NotificationController;
 use App\Controllers\ProfileController;
 use App\Controllers\ReminderController;
+use App\Controllers\RepeatController;
 use App\Controllers\SettingsController;
 use App\Controllers\TaskController;
 use App\Http\Request;
@@ -93,6 +94,13 @@ final class Application
         $this->router->bind(ReminderController::class, new ReminderController(
             $reminderService,
             $authService,
+            $userSettingsService
+        ));
+        $this->router->bind(RepeatController::class, new RepeatController(
+            $repeatService,
+            $authService,
+            $userRepository,
+            $notificationService,
             $userSettingsService
         ));
         $this->router->bind(NotificationController::class, new NotificationController(
