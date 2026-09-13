@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Controllers\RepeatController;
 use App\Http\Request;
+use App\Http\Router;
+use App\Middleware\AuthMiddleware;
 use App\Repositories\NotificationRepository;
 use App\Repositories\ReminderRepository;
 use App\Repositories\RepeatRuleRepository;
@@ -44,10 +46,31 @@ function assertRepeatControllerResponse(int $status, array $body, object $respon
 {
     assertRepeatControllerSame($status, $response->getStatusCode(), $message . ' status mismatch.');
     assertRepeatControllerSame(
+        'application/json; charset=utf-8',
+        $response->getHeaders()['Content-Type'] ?? null,
+        $message . ' content type mismatch.'
+    );
+    assertRepeatControllerSame(
         $body,
         json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR),
         $message . ' body mismatch.'
     );
+}
+
+function extractRepeatControllerBinding(string $applicationSource): string
+{
+    $marker = '$this->router->bind(RepeatController::class, new RepeatController(';
+    $start = strpos($applicationSource, $marker);
+    if ($start === false) {
+        throw new RuntimeException('Application must bind RepeatController.');
+    }
+
+    $end = strpos($applicationSource, '));', $start);
+    if ($end === false) {
+        throw new RuntimeException('RepeatController binding must be a complete constructor call.');
+    }
+
+    return substr($applicationSource, $start, $end + 3 - $start);
 }
 
 $root = dirname(__DIR__, 2);
@@ -79,8 +102,37 @@ assertRepeatControllerContains("new DateTimeImmutable('now', TimezoneHelper::get
 assertRepeatControllerContains('catch (RepeatRuleNotFoundException $exception)', $controllerSource, 'Repeat-rule not-found errors must be mapped.');
 assertRepeatControllerContains('catch (RepeatValidationException | RepeatRuleStateException $exception)', $controllerSource, 'Repeat validation and state errors must be mapped.');
 assertRepeatControllerContains("'The repeat rule could not be updated.'", $controllerSource, 'Unexpected errors must use a generic message.');
-assertRepeatControllerContains('$this->router->bind(RepeatController::class, new RepeatController(', $applicationSource, 'Application must bind RepeatController.');
-assertRepeatControllerContains('$repeatService,', $applicationSource, 'RepeatController must receive the shared RepeatService.');
+$repeatControllerBinding = extractRepeatControllerBinding($applicationSource);
+assertRepeatControllerContains('$repeatService,', $repeatControllerBinding, 'RepeatController must receive the shared RepeatService.');
+
+$router = new Router();
+$apiRoutes = require $root . '/routes/api.php';
+$apiRoutes($router);
+$router->get(
+    '/protected-web-contract',
+    static fn(Request $request): string => 'middleware did not stop the request',
+    [AuthMiddleware::class]
+);
+
+$_SESSION = [];
+foreach (['pause', 'resume', 'cancel'] as $action) {
+    assertRepeatControllerResponse(
+        401,
+        ['success' => false, 'message' => 'Authentication required.'],
+        $router->dispatch(new Request(server: [
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => '/api/repeat-rules/' . $action,
+        ])),
+        'Unauthenticated non-XHR ' . ucfirst($action) . ' API route'
+    );
+}
+
+$webResponse = $router->dispatch(new Request(server: [
+    'REQUEST_METHOD' => 'GET',
+    'REQUEST_URI' => '/protected-web-contract',
+]));
+assertRepeatControllerSame(302, $webResponse->getStatusCode(), 'Unauthenticated web route must still redirect.');
+assertRepeatControllerSame('/auth', $webResponse->getHeaders()['Location'] ?? null, 'Web redirect must retain the auth destination.');
 
 final class RepeatControllerTestPdo extends PDO
 {
