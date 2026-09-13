@@ -113,7 +113,7 @@ try {
                 $taskRepository->updateStatus($taskId, $userId, true, '2026-09-15 06:00:00');
             }
         }
-        $ruleRepository->updateGenerationState($ruleId, 8, '2026-10-05 06:00:00', 'active');
+        $ruleRepository->updateGenerationState($ruleId, $userId, 8, '2026-10-05 06:00:00', 'active');
     }
 
     $paused = $service->pauseRule($ruleA, $userA, $now);
