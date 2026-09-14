@@ -40,6 +40,7 @@ $htmlDirection = $translator->direction();
 $pageStylesheets = [
     'home' => '/assets/css/pages/home.css',
     'manage-tasks' => '/assets/css/pages/manage-tasks.css',
+    'recurring-tasks' => '/assets/css/pages/recurring-tasks.css',
     'activity' => '/assets/css/pages/activity.css',
     'messages' => '/assets/css/pages/messages.css',
     'notifications' => '/assets/css/pages/messages.css',
@@ -48,12 +49,13 @@ $pageStylesheets = [
     'account-settings' => '/assets/css/pages/account-settings.css',
 ];
 $activePageStylesheet = $pageStylesheets[$activeView] ?? null;
-$usesTaskModals = in_array($activeView, ['home', 'activity', 'manage-tasks', 'messages'], true);
+$usesTaskModals = in_array($activeView, ['home', 'activity', 'manage-tasks', 'recurring-tasks', 'messages'], true);
 $viewClassMap = [
     'profile' => ' profileView',
     'change-password' => ' profileView',
     'account-settings' => ' accountSettingsView',
     'manage-tasks' => ' manageTasksView',
+    'recurring-tasks' => ' recurringTasksView',
     'activity' => ' activityView',
     'messages' => ' messagesView',
     'notifications' => ' messagesView',
@@ -111,13 +113,18 @@ if ($isPartial) {
 
             <div class="view<?= $extraViewClass ?>" id="tasks">
                 <?php
-                if (in_array($activeView, ['messages', 'activity', 'manage-tasks', 'home'], true)) {
+                if (in_array($activeView, ['messages', 'activity', 'manage-tasks', 'recurring-tasks', 'home'], true)) {
                     require_once dirname(__DIR__) . '/components/task-toolbar.php';
                 }
 
                 $pageFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'pages' . DIRECTORY_SEPARATOR . $activeView . '.php';
-                if ($activeView === 'home' || $activeView === 'manage-tasks') {
-                    echo '<div class="content' . ($activeView === 'manage-tasks' ? ' manageTasksContent' : '') . '">';
+                if (in_array($activeView, ['home', 'manage-tasks', 'recurring-tasks'], true)) {
+                    $contentClass = match ($activeView) {
+                        'manage-tasks' => ' manageTasksContent',
+                        'recurring-tasks' => ' recurringTasksContent',
+                        default => '',
+                    };
+                    echo '<div class="content' . $contentClass . '">';
                     require_once $pageFile;
                     echo '</div>';
                 } else {

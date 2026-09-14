@@ -15,8 +15,10 @@ use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\RepeatService;
+use App\Services\TaskService;
 use App\Services\UserSettingsService;
 use DateTimeImmutable;
+use DateTimeZone;
 use Throwable;
 
 final class RepeatController
@@ -29,8 +31,49 @@ final class RepeatController
         private readonly AuthService $authService,
         private readonly UserRepository $userRepository,
         private readonly NotificationService $notificationService,
-        private readonly UserSettingsService $settingsService
+        private readonly UserSettingsService $settingsService,
+        private readonly TaskService $taskService
     ) {}
+
+    public function index(Request $request): Response
+    {
+        $userId = $this->authService->getCurrentUserId();
+        if ($userId === 0) {
+            return Response::redirect('/auth');
+        }
+
+        $filter = $request->queryString('filter', 'all');
+        if (!in_array($filter, ['all', 'active', 'paused', 'completed', 'cancelled'], true)) {
+            $filter = 'all';
+        }
+        $settings = $this->settingsService->getForUser(
+            $userId,
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
+        );
+        $clientTimezone = new DateTimeZone($settings['timezone']);
+        $clientToday = new DateTimeImmutable('today', $clientTimezone);
+
+        return Response::view('layouts/dashboard', [
+            'activeView' => 'recurring-tasks',
+            'repeatRules' => $this->repeatService->getRulesForUser(
+                $userId, $filter, new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone())
+            ),
+            'repeatFilter' => $filter,
+            'completedTasksToday' => $this->taskService->countCompletedTasksForDate($userId, $clientToday),
+            'sentNotificationCount' => $this->notificationService->countSentNotifications($userId),
+            // The shared dashboard header resolves display name and avatar from these values.
+            'currentUser' => $this->authService->getCurrentUser(),
+            'userProfile' => $this->userRepository->getProfile($userId),
+            'csrfToken' => CsrfMiddleware::getToken(),
+            'renderDate' => $clientToday->format('Y-m-d'),
+            'renderTimezone' => $clientTimezone->getName(),
+            'timezoneIsPersisted' => $settings['is_persisted'],
+            'effectiveLanguage' => $settings['effective_language'],
+            'calendarSystem' => $settings['calendar_system'],
+            'isPartial' => $request->queryString('partial') === '1',
+        ]);
+    }
 
     public function pause(Request $request): Response
     {

@@ -195,7 +195,8 @@ function repeatControllerFixture(): array
         $authService,
         new UserRepository($pdo),
         $notificationService,
-        $settingsService
+        $settingsService,
+        new App\Services\TaskService($taskRepository, $reminderService, $repeatService)
     )];
 }
 
