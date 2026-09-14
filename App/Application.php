@@ -101,7 +101,8 @@ final class Application
             $authService,
             $userRepository,
             $notificationService,
-            $userSettingsService
+            $userSettingsService,
+            $taskService
         ));
         $this->router->bind(NotificationController::class, new NotificationController(
             $notificationService,

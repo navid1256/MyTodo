@@ -1,6 +1,6 @@
 import { applyTranslations, translate } from '../utils/i18n.js';
 
-const DASHBOARD_AJAX_VIEWS = ['home', 'activity', 'manage-tasks', 'messages'];
+const DASHBOARD_AJAX_VIEWS = ['home', 'activity', 'manage-tasks', 'recurring-tasks', 'messages'];
 
 export function getDashboardNavigationView(targetUrl, baseUrl) {
   try {
@@ -17,6 +17,7 @@ export function getDashboardNavigationView(targetUrl, baseUrl) {
       '/home': 'home',
       '/activity': 'activity',
       '/manage-tasks': 'manage-tasks',
+      '/recurring-tasks': 'recurring-tasks',
       '/messages': 'messages'
     };
 
