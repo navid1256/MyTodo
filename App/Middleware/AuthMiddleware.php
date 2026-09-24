@@ -14,7 +14,7 @@ final class AuthMiddleware
         $userId = (int) ($_SESSION['user']['id'] ?? 0);
 
         if ($userId <= 0) {
-            if ($request->isAjax()) {
+            if ($request->isAjax() || str_starts_with($request->uri(), '/api/')) {
                 return Response::json([
                     'success' => false,
                     'message' => 'Authentication required.',

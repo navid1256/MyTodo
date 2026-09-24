@@ -1,0 +1,172 @@
+.main .recurringTasksView {
+    block-size: 100%;
+    box-sizing: border-box;
+}
+
+/* Match the neighboring task lists and keep all page styling below the toolbar. */
+.recurringTasksContent .recurringTasksPage {
+    --recurring-text: #48575f;
+    --recurring-muted: #52636c;
+    --recurring-accent: #2e8294;
+    --recurring-border: #cbd5da;
+    --recurring-surface: #fff;
+    block-size: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-block: 0 20px;
+    padding-inline: 10px;
+    color: var(--recurring-text);
+}
+
+.recurringTasksContent .recurringTasksHeader {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding-block-end: 10px;
+    border-block-end: 1px solid var(--recurring-border);
+}
+
+.recurringTasksContent h1 {
+    margin-block: 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--recurring-text);
+}
+
+.recurringTasksContent .recurringFilters,
+.recurringTasksContent .recurringActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.recurringTasksContent .recurringFilters a,
+.recurringTasksContent .recurringActions button {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 32px;
+    padding-block: 4px;
+    padding-inline: 10px;
+    box-sizing: border-box;
+    border: 1px solid var(--recurring-border);
+    border-radius: 7px;
+    background: var(--recurring-surface);
+    color: var(--recurring-text);
+    font: inherit;
+    font-size: 12px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.recurringTasksContent .recurringFilters a[aria-current="page"] {
+    border-color: var(--recurring-accent);
+    color: var(--recurring-text);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.recurringTasksContent a:hover,
+.recurringTasksContent button:hover {
+    border-color: var(--recurring-accent);
+}
+
+.recurringTasksContent a:focus-visible,
+.recurringTasksContent button:focus-visible {
+    outline: 2px solid var(--recurring-accent);
+    outline-offset: 2px;
+}
+
+.recurringTasksContent .recurringRule {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    padding-block: 12px;
+    border-block-end: 1px solid var(--recurring-border);
+}
+
+.recurringTasksContent .recurringRuleMain {
+    flex: 1 1 240px;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+}
+
+.recurringTasksContent h2 {
+    margin-block: 0 4px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.recurringTasksContent .recurringSchedule,
+.recurringTasksContent .recurringDetails {
+    margin-block: 4px 0;
+    color: var(--recurring-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.recurringTasksContent .recurringDetails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+}
+
+.recurringTasksContent .recurringDetails > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.recurringTasksContent dt {
+    font-weight: 600;
+}
+
+.recurringTasksContent dd {
+    margin-inline: 0;
+}
+
+.recurringTasksContent .recurringStatus {
+    padding-block: 3px;
+    padding-inline: 8px;
+    border-inline-start: 3px solid var(--recurring-border);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.recurringTasksContent [data-repeat-status="active"] .recurringStatus {
+    border-color: var(--recurring-accent);
+}
+
+.recurringTasksContent .recurringEmpty,
+.recurringTasksContent .recurringMessage {
+    margin-block: 16px;
+    color: var(--recurring-muted);
+    line-height: 1.6;
+}
+
+html.dark-mode .recurringTasksContent .recurringTasksPage {
+    --recurring-text: #d8e5eb;
+    --recurring-muted: #8fa0aa;
+    --recurring-accent: #54b9cd;
+    --recurring-border: #3b4a57;
+    --recurring-surface: #1e303b;
+}
+
+@media (max-width: 600px) {
+    .recurringTasksContent .recurringRuleMain {
+        flex-basis: 100%;
+    }
+
+    .recurringTasksContent .recurringActions {
+        margin-inline-start: auto;
+    }
+
+    .recurringTasksContent .recurringFilters a,
+    .recurringTasksContent .recurringActions button {
+        min-block-size: 40px;
+    }
+}

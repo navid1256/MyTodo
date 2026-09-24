@@ -7,6 +7,7 @@ use App\Controllers\HomeController;
 use App\Controllers\NotificationController;
 use App\Controllers\ProfileController;
 use App\Controllers\ReminderController;
+use App\Controllers\RepeatController;
 use App\Controllers\SettingsController;
 use App\Controllers\TaskController;
 use App\Http\Router;
@@ -30,6 +31,7 @@ return static function (Router $router): void {
 
     // Tasks Routes
     $router->get('/manage-tasks', [TaskController::class, 'index'], [AuthMiddleware::class]);
+    $router->get('/recurring-tasks', [RepeatController::class, 'index'], [AuthMiddleware::class]);
     $router->get('/activity', [TaskController::class, 'showActivity'], [AuthMiddleware::class]);
     $router->post('/tasks/create', [TaskController::class, 'create'], [AuthMiddleware::class]);
     $router->post('/tasks/toggle', [TaskController::class, 'toggle'], [AuthMiddleware::class]);

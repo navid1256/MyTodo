@@ -8,7 +8,7 @@ use App\Config\EnvironmentLoader;
 
 final class ViteHelper
 {
-    private const DEVELOPMENT_SERVER_ORIGIN = 'https://mytodo.php:5173';
+    private const DEVELOPMENT_SERVER_ORIGIN = 'https://mytodo.php:5180';
 
     public static function isDevelopment(): bool
     {
