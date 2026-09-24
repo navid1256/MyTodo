@@ -17,6 +17,7 @@ import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
 import { initAccountSettings } from './modules/account-settings.js';
 import { initProfileBirthDate } from './modules/profile-birth-date.js';
+import { initRecurringTasks } from './modules/recurring-tasks.js';
 
 let dashboardViewController = null;
 
@@ -35,6 +36,7 @@ function initDashboardView() {
     initActivityFilter(signal);
     initAccountSettings(signal);
     initProfileBirthDate(signal);
+    initRecurringTasks(signal);
 
     const dateTimePicker = initDateTimePicker();
     const reminderPicker = initReminderPicker(signal);
