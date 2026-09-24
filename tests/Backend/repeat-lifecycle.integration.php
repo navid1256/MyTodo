@@ -155,6 +155,46 @@ try {
         assertLifecycleException(RepeatRuleStateException::class, fn() => $service->$method($ruleB, $userB, $now));
     }
     assertLifecycleValue(true, $pdo->inTransaction(), 'Lifecycle calls must not commit the outer fixture transaction.');
+
+    $editRuleData = $ruleData;
+    $editRuleData['user_id'] = $userA;
+    $editRuleData['title'] = 'Edit fixture';
+    $editRuleData['start_at'] = '2026-09-30 09:00:00';
+    $editRuleData['next_occurrence_at'] = '2026-09-30 09:00:00';
+    $editRule = $ruleRepository->create($editRuleData);
+    $selectedEditTask = $taskRepository->create($userA, 'Before edit', '2026-09-30 09:00:00', true, $editRule, 1);
+    $siblingEditTask = $taskRepository->create($userA, 'Sibling task', '2026-10-07 09:00:00', true, $editRule, 2);
+    $reminderRepository->create($selectedEditTask, 30, 'minute', '2026-09-30 08:30:00');
+    $reminderRepository->create($siblingEditTask, 30, 'minute', '2026-10-07 08:30:00');
+    $foreignEditTask = $taskRepository->create($userB, 'Foreign edit', '2026-09-30 09:00:00', true, $ruleB, 10);
+    $originalRule = $ruleRepository->findByIdForUserForUpdate($editRule, $userA);
+
+    $singleEdit = $service->updateSingleOccurrence(
+        $selectedEditTask,
+        $userA,
+        'After edit',
+        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        true,
+        [['value' => 15, 'unit' => 'minute']]
+    );
+    assertLifecycleValue('single', $singleEdit['scope'], 'Single edit must identify its scope.');
+    $editedTask = $taskRepository->findById($selectedEditTask, $userA);
+    assertLifecycleValue('After edit', $editedTask->title, 'Single edit must update only the selected title.');
+    assertLifecycleValue('2026-09-30 07:30:00', $editedTask->due_at, 'Single edit must canonicalize due_at to UTC.');
+    assertLifecycleValue($editRule, (int) $editedTask->repeat_rule_id, 'Single edit must preserve the repeat rule.');
+    assertLifecycleValue(1, (int) $editedTask->repeat_occurrence_number, 'Single edit must preserve the occurrence number.');
+    assertLifecycleValue(1, count($reminderRepository->getByTaskId($selectedEditTask)), 'Single edit must replace reminders.');
+    assertLifecycleValue('Edit fixture', $ruleRepository->findByIdForUserForUpdate($editRule, $userA)->title, 'Single edit must not change the rule.');
+    assertLifecycleValue('Sibling task', $taskRepository->findById($siblingEditTask, $userA)->title, 'Single edit must preserve siblings.');
+    assertLifecycleValue(1, count($reminderRepository->getByTaskId($siblingEditTask)), 'Single edit must preserve sibling reminders.');
+    assertLifecycleException(RepeatRuleNotFoundException::class, fn() => $service->updateSingleOccurrence(
+        $foreignEditTask,
+        $userA,
+        'Should fail',
+        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        true,
+        []
+    ));
 } finally {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();

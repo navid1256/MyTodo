@@ -318,6 +318,28 @@ export function initDateTimePicker() {
         closeDateTimeModal();
     }
 
+    function load(value, hasTime) {
+        const nextValue = typeof value === 'string' ? value : '';
+        if (taskDueAt) taskDueAt.value = nextValue;
+        if (taskHasTime) taskHasTime.value = nextValue && hasTime ? '1' : '0';
+        committedDateMode = nextValue ? 'date' : 'no-date';
+        draftSelectedDate = nextValue ? parseDateKey(nextValue.slice(0, 10)) : null;
+        draftHasTime = Boolean(nextValue && hasTime);
+        if (draftHasTime && nextValue) setPickerTime(Number(nextValue.slice(11, 13)), Number(nextValue.slice(14, 16)));
+        if (taskDateSummary) {
+            taskDateSummary.textContent = !nextValue
+                ? translate('task.modal.no_date')
+                : (formatCalendarDate(draftSelectedDate, getActiveCalendarSystem()) + ' · ' + (draftHasTime ? nextValue.slice(11, 16) : translate('date_time.no_time')));
+        }
+        setTaskDateButton?.classList.toggle('has-date', Boolean(nextValue));
+        updateQuickDateSelection();
+        updateTimeControls();
+    }
+
+    function reset() {
+        load('', false);
+    }
+
     if (setTaskDateButton) {
         setTaskDateButton.addEventListener('click', function () {
             openDateTimeModal(setTaskDateButton);
@@ -433,6 +455,8 @@ export function initDateTimePicker() {
         },
         close: function (shouldRestoreFocus) {
             closeDateTimeModal(shouldRestoreFocus);
-        }
+        },
+        load,
+        reset
     };
 }
