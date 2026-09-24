@@ -25,4 +25,4 @@ Status: implemented and committed.
 - Real MySQL locking/cascade assertions remain dependent on the isolated `_test` database credentials.
 - Browser/HTTPS verification remains deferred to Task 9.
 
-Commit: `PENDING_COMMIT`
+Commit: `a015486` — `Edit current and future recurring tasks`
