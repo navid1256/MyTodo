@@ -97,6 +97,30 @@ export function initRepeatPicker() {
         });
     }
 
+    function load(rule) {
+        appliedRule = cloneRule(rule);
+        if (taskRepeat) {
+            taskRepeat.value = appliedRule ? JSON.stringify(appliedRule) : '';
+        }
+        if (taskRepeatSummary) {
+            taskRepeatSummary.textContent = appliedRule
+                ? formatRuleSummary(appliedRule)
+                : '';
+        }
+        setTaskRepeatButton?.classList.toggle('has-repeat', Boolean(appliedRule));
+    }
+
+    function reset() {
+        load(null);
+    }
+
+    function setEnabled(isEnabled) {
+        if (!setTaskRepeatButton) return;
+        setTaskRepeatButton.disabled = !isEnabled;
+        setTaskRepeatButton.hidden = !isEnabled;
+        setTaskRepeatButton.setAttribute('aria-disabled', String(!isEnabled));
+    }
+
     if (setTaskRepeatButton) {
         setTaskRepeatButton.addEventListener('click', function () {
             open(setTaskRepeatButton);
@@ -163,6 +187,9 @@ export function initRepeatPicker() {
         },
         validate: function () {
             return appliedRule ? validateRule(appliedRule, getTaskStartDate()) : '';
-        }
+        },
+        load,
+        reset,
+        setEnabled
     };
 }

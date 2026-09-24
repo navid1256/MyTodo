@@ -183,6 +183,35 @@ export function initReminderPicker(signal) {
         }
     }
 
+    function fromPayload(reminder) {
+        const value = Number(reminder?.value);
+        const unit = String(reminder?.unit || 'minutes').toLowerCase();
+        const preset = Object.entries({
+            'on-due-time': [0, 'minutes'],
+            '30-minutes': [30, 'minutes'],
+            '1-hour': [1, 'hours'],
+            '12-hours': [12, 'hours'],
+            '24-hours': [24, 'hours']
+        }).find(([, match]) => match[0] === value && match[1] === unit)?.[0];
+        return {
+            preset: preset || 'custom',
+            customValue: value,
+            customUnit: unit
+        };
+    }
+
+    function load(reminders) {
+        committedReminders = Array.isArray(reminders) ? reminders.map(fromPayload) : [];
+        draftReminders = committedReminders.map(cloneReminder);
+        updateCommittedReminderSummary();
+    }
+
+    function reset() {
+        committedReminders = [];
+        draftReminders = [];
+        updateCommittedReminderSummary();
+    }
+
     function closeReminderModal(shouldRestoreFocus) {
         if (!reminderModal) {
             return;
@@ -341,6 +370,8 @@ export function initReminderPicker(signal) {
         },
         close: function (shouldRestoreFocus) {
             closeReminderModal(shouldRestoreFocus);
-        }
+        },
+        load,
+        reset
     };
 }

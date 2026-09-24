@@ -147,7 +147,7 @@ final class TaskService
      */
     public function getTasksForUser(int $userId): array
     {
-        return $this->taskRepository->getTasksForUser($userId);
+        return $this->withEditPayloads($this->taskRepository->getTasksForUser($userId), $userId);
     }
 
     /**
@@ -158,7 +158,7 @@ final class TaskService
         DateTimeInterface $date,
         ?DateTimeInterface $showCompletedSince = null
     ): array {
-        return $this->taskRepository->getTasksForDate($userId, $date, $showCompletedSince);
+        return $this->withEditPayloads($this->taskRepository->getTasksForDate($userId, $date, $showCompletedSince), $userId);
     }
 
     /**
@@ -166,7 +166,7 @@ final class TaskService
      */
     public function getTasksWithoutDueDate(int $userId, ?DateTimeInterface $showCompletedSince = null): array
     {
-        return $this->taskRepository->getTasksWithoutDueDate($userId, $showCompletedSince);
+        return $this->withEditPayloads($this->taskRepository->getTasksWithoutDueDate($userId, $showCompletedSince), $userId);
     }
 
     /**
@@ -180,5 +180,22 @@ final class TaskService
     public function countCompletedTasksForDate(int $userId, DateTimeInterface $date): int
     {
         return $this->taskRepository->countCompletedTasksForDate($userId, $date);
+    }
+
+    /**
+     * @param array<int, object> $tasks
+     * @return array<int, object>
+     */
+    private function withEditPayloads(array $tasks, int $userId): array
+    {
+        foreach ($tasks as $task) {
+            if ((bool) ($task->is_done ?? false) || empty($task->repeat_rule_id)) {
+                continue;
+            }
+
+            $task->edit_payload = $this->repeatService->getTaskEditPayload((int) $task->id, $userId);
+        }
+
+        return $tasks;
     }
 }

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Exceptions\RepeatRuleNotFoundException;
 use App\Exceptions\RepeatRuleStateException;
+use App\Exceptions\RepeatValidationException;
 use App\Helpers\TimezoneHelper;
 use App\Repositories\RepeatRuleRepository;
 use App\Repositories\TaskRepository;
@@ -227,6 +228,106 @@ final class RepeatService
         });
     }
 
+    /**
+     * @param array<int, mixed> $reminders
+     * @return array{task_id: int, repeat_rule_id: int, scope: string, task: array<string, mixed>, reminders: array<int, array{value: int, unit: string}>}
+     */
+    public function updateSingleOccurrence(
+        int $taskId,
+        int $userId,
+        string $title,
+        DateTimeInterface $dueAt,
+        bool $hasTime,
+        array $reminders
+    ): array {
+        return $this->runInTransaction(function () use ($taskId, $userId, $title, $dueAt, $hasTime, $reminders): array {
+            $task = $this->taskRepository->findRecurringByIdForUpdate($taskId, $userId);
+            if ($task === null) {
+                throw new RepeatRuleNotFoundException('Recurring task not found.');
+            }
+            if ((bool) $task->is_done) {
+                throw new RepeatRuleStateException('Completed recurring tasks cannot be edited.');
+            }
+
+            $repeatRuleId = (int) $task->repeat_rule_id;
+            $rule = $this->requireOwnedRuleForUpdate($repeatRuleId, $userId);
+            if (in_array((string) $rule->status, ['completed', 'cancelled'], true)) {
+                throw new RepeatRuleStateException('This recurring task is no longer editable.');
+            }
+
+            $trimmedTitle = trim($title);
+            if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
+                throw new RepeatValidationException('Task title is invalid.');
+            }
+
+            $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
+            $databaseDueAt = $this->toDatabaseDateTime($dueAt);
+            $this->taskRepository->update($taskId, $userId, [
+                'title' => $trimmedTitle,
+                'due_at' => $databaseDueAt,
+                'has_time' => $hasTime ? 1 : 0,
+            ]);
+            $this->reminderService->saveRemindersForTask($taskId, $preparedReminders);
+
+            $updatedTask = $this->taskRepository->findById($taskId, $userId);
+            $updatedReminders = array_map(
+                static fn(array $reminder): array => [
+                    'value' => (int) $reminder['offset_value'],
+                    'unit' => (string) $reminder['offset_unit'],
+                ],
+                $preparedReminders
+            );
+
+            return [
+                'task_id' => $taskId,
+                'repeat_rule_id' => $repeatRuleId,
+                'scope' => 'single',
+                'task' => [
+                    'id' => $taskId,
+                    'title' => $trimmedTitle,
+                    'due_at' => $updatedTask?->due_at ?? $databaseDueAt,
+                    'has_time' => $updatedTask === null ? $hasTime : (bool) $updatedTask->has_time,
+                    'repeat_rule_id' => $repeatRuleId,
+                    'repeat_occurrence_number' => (int) $task->repeat_occurrence_number,
+                ],
+                'reminders' => $updatedReminders,
+            ];
+        });
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getTaskEditPayload(int $taskId, int $userId): ?array
+    {
+        $task = $this->taskRepository->findById($taskId, $userId);
+        if ($task === null || (bool) $task->is_done || $task->repeat_rule_id === null) {
+            return null;
+        }
+
+        $rule = $this->repeatRuleRepository->findByIdForUserForUpdate((int) $task->repeat_rule_id, $userId);
+        if ($rule === null || in_array((string) $rule->status, ['completed', 'cancelled'], true)) {
+            return null;
+        }
+
+        $reminders = array_map(
+            static fn(object $reminder): array => [
+                'value' => (int) $reminder->offset_value,
+                'unit' => (string) $reminder->offset_unit,
+            ],
+            $this->reminderService->getRemindersForTask($taskId)
+        );
+
+        return [
+            'task_id' => (int) $task->id,
+            'title' => (string) $task->title,
+            'due_at' => $task->due_at === null ? '' : (new DateTimeImmutable((string) $task->due_at, TimezoneHelper::getApplicationTimezone()))->format('Y-m-d\\TH:i'),
+            'has_time' => (bool) $task->has_time,
+            'repeat_rule_id' => (int) $task->repeat_rule_id,
+            'repeat_occurrence_number' => (int) $task->repeat_occurrence_number,
+            'reminders' => $reminders,
+            'repeat_config' => $this->hydrateStoredRule($rule) + ['frequency' => (string) $rule->frequency],
+        ];
+    }
+
     private function requireOwnedRuleForUpdate(int $repeatRuleId, int $userId): object
     {
         $storedRule = $this->repeatRuleRepository->findByIdForUserForUpdate($repeatRuleId, $userId);
@@ -419,6 +520,7 @@ final class RepeatService
             : json_decode((string) $storedRule->week_days, true, 512, JSON_THROW_ON_ERROR);
 
         return [
+            'frequency' => (string) $storedRule->frequency,
             'interval' => (int) $storedRule->interval_value,
             'unit' => (string) $storedRule->interval_unit,
             'week_days' => is_array($weekDays) ? array_map('intval', $weekDays) : [],

@@ -7,6 +7,8 @@ namespace App\Controllers;
 use App\Exceptions\RepeatRuleNotFoundException;
 use App\Exceptions\RepeatRuleStateException;
 use App\Exceptions\RepeatValidationException;
+use App\Exceptions\ReminderValidationException;
+use App\Exceptions\TaskValidationException;
 use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
@@ -102,6 +104,65 @@ final class RepeatController
         );
     }
 
+    public function updateTask(Request $request): Response
+    {
+        $guardResponse = $this->guardJsonRequest($request);
+        if ($guardResponse !== null) {
+            return $guardResponse;
+        }
+
+        $taskId = $this->readPositiveId($request, 'task_id');
+        $scope = $request->postString('scope');
+        if ($taskId === null || !in_array($scope, ['single', 'future'], true)) {
+            return Response::json(['success' => false, 'message' => 'Invalid recurring task edit request.'], 422);
+        }
+        if ($scope === 'future') {
+            return Response::json(['success' => false, 'message' => 'This and future tasks are not available yet.'], 422);
+        }
+        if ($request->postString('repeat_config') !== '') {
+            return Response::json(['success' => false, 'message' => 'Repeat settings cannot be changed for one task.'], 422);
+        }
+
+        $reminders = [];
+        $remindersJson = $request->postString('reminders');
+        if ($remindersJson !== '') {
+            try {
+                $decoded = json_decode($remindersJson, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException) {
+                return Response::json(['success' => false, 'message' => 'Invalid reminders payload.'], 422);
+            }
+            if (!is_array($decoded)) {
+                return Response::json(['success' => false, 'message' => 'Invalid reminders payload.'], 422);
+            }
+            $reminders = $decoded;
+        }
+
+        $dueAtString = $request->postString('due_at');
+        $dueAt = TimezoneHelper::parseCanonicalDateTime($dueAtString, $this->resolveUserTimezone($request));
+        if ($dueAt === null) {
+            return Response::json(['success' => false, 'message' => 'A valid due date is required.'], 422);
+        }
+
+        try {
+            $result = $this->repeatService->updateSingleOccurrence(
+                $taskId,
+                $this->authService->getCurrentUserId(),
+                $request->postString('task_title'),
+                $dueAt,
+                $request->postString('has_time') === '1',
+                $reminders
+            );
+
+            return Response::json(array_merge(['success' => true], $result));
+        } catch (RepeatRuleNotFoundException $exception) {
+            return Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
+        } catch (TaskValidationException | ReminderValidationException | RepeatValidationException | RepeatRuleStateException $exception) {
+            return Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
+        } catch (Throwable) {
+            return Response::json(['success' => false, 'message' => 'The recurring task could not be updated.'], 500);
+        }
+    }
+
     /**
      * @param callable(int, int, DateTimeImmutable): array<string, mixed> $operation
      */
@@ -152,5 +213,16 @@ final class RepeatController
         $value = filter_var($request->post($key), FILTER_VALIDATE_INT);
 
         return $value !== false && $value > 0 ? $value : null;
+    }
+
+    private function resolveUserTimezone(Request $request): DateTimeZone
+    {
+        $settings = $this->settingsService->getForUser(
+            $this->authService->getCurrentUserId(),
+            $request->cookieString('mytodo_timezone'),
+            $request->header('Accept-Language')
+        );
+
+        return new DateTimeZone($settings['timezone']);
     }
 }
