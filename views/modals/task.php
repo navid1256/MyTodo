@@ -16,6 +16,10 @@
                 type="hidden"
                 name="csrf_token"
                 value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+            <input id="taskFormMode" name="mode" type="hidden" value="create">
+            <input id="taskEditId" name="task_id" type="hidden" value="">
+            <input id="taskEditRuleId" name="repeat_rule_id" type="hidden" value="">
+            <input id="taskEditScope" name="scope" type="hidden" value="">
 
             <label class="srOnly" for="taskModalText" data-i18n="task.modal.text_label"><?= htmlspecialchars($translator->translate('task.modal.text_label'), ENT_QUOTES, 'UTF-8') ?></label>
             <textarea
@@ -51,6 +55,14 @@
                     aria-controls="repeatModal">
                     <span data-i18n="task.modal.repeat"><?= htmlspecialchars($translator->translate('task.modal.repeat'), ENT_QUOTES, 'UTF-8') ?></span>
                 </button>
+            </div>
+
+            <div class="taskEditScope" id="taskEditScopeControl" hidden>
+                <label for="taskEditScopeChoice"><?= htmlspecialchars($translator->translate('task.edit_scope.label'), ENT_QUOTES, 'UTF-8') ?></label>
+                <select id="taskEditScopeChoice">
+                    <option value="single"><?= htmlspecialchars($translator->translate('task.edit_scope.single'), ENT_QUOTES, 'UTF-8') ?></option>
+                    <option value="future"><?= htmlspecialchars($translator->translate('task.edit_scope.future'), ENT_QUOTES, 'UTF-8') ?></option>
+                </select>
             </div>
 
             <input id="taskDueAt" name="due_at" type="hidden" value="">

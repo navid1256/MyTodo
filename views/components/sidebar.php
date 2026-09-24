@@ -28,6 +28,12 @@ $navigationItems = [
         'translationKey' => 'navigation.manage_tasks',
         'label' => $translator->translate('navigation.manage_tasks'),
     ],
+    'recurring-tasks' => [
+        'href' => '/recurring-tasks',
+        'icon' => 'fa-solid fa-arrows-rotate',
+        'translationKey' => 'navigation.recurring_tasks',
+        'label' => $translator->translate('navigation.recurring_tasks'),
+    ],
     'messages' => [
         'href' => '/messages',
         'icon' => 'fa-solid fa-envelope',

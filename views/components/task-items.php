@@ -95,14 +95,29 @@ if (!function_exists('renderSingleTaskItem')) {
             ENT_QUOTES,
             'UTF-8'
         );
+        $editPayload = isset($task->edit_payload) && is_array($task->edit_payload)
+            && !$isDone && !empty($task->repeat_rule_id)
+            ? $task->edit_payload
+            : null;
+        $editLabel = htmlspecialchars(
+            $translator->translate('task.edit', ['title' => $title]),
+            ENT_QUOTES,
+            'UTF-8'
+        );
 
         echo "<li class=\"{$itemClass}\" data-task-id=\"{$taskId}\" data-task-date=\"{$taskDate}\">\n"
             . "    <button class=\"taskToggleButton\" type=\"button\" data-task-toggle data-task-id=\"{$taskId}\" aria-pressed=\"{$ariaPressed}\" data-i18n-aria-label=\"{$toggleTranslationKey}\" aria-label=\"{$ariaLabel}\">\n"
             . "        <i class=\"{$iconClass}\" aria-hidden=\"true\"></i>\n"
             . "    </button>\n"
-            . "    <span>{$escapedTitle}</span>\n"
+            . "    <span class=\"taskTitle\">{$escapedTitle}</span>\n"
             . "    <div class=\"info\">\n"
             . "        {$timeInfo}\n"
+            . ($editPayload !== null
+                ? "        <button class=\"editTaskButton\" type=\"button\" data-task-edit aria-label=\"{$editLabel}\"><i class=\"fa-light fa-pen\" aria-hidden=\"true\"></i></button>\n"
+                    . "        <script type=\"application/json\" data-task-edit-payload>"
+                    . json_encode($editPayload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
+                    . "</script>\n"
+                : '')
             . "        <a class=\"deleteTaskLink\" href=\"{$deleteUrl}\" data-i18n-aria-label=\"task.delete\" data-title=\"{$escapedTitle}\" aria-label=\"{$deleteLabel}\" onclick=\"{$confirmationScript}\">\n"
             . "            <i class=\"fa-light fa-trash-can\" aria-hidden=\"true\"></i>\n"
             . "        </a>\n"

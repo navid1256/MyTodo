@@ -49,6 +49,23 @@ final class ReminderRepository
     }
 
     /**
+     * @param array<int, array{offset_value: int, offset_unit: string, remind_at: string}> $reminders
+     */
+    public function replaceForTask(int $taskId, array $reminders): void
+    {
+        $this->deleteByTaskId($taskId);
+
+        foreach ($reminders as $reminder) {
+            $this->create(
+                $taskId,
+                $reminder['offset_value'],
+                $reminder['offset_unit'],
+                $reminder['remind_at']
+            );
+        }
+    }
+
+    /**
      * @return array<int, object>
      */
     public function getActiveRemindersForUser(int $userId): array
