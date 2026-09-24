@@ -41,6 +41,7 @@ return [
     'recurring.message.completed' => 'This recurring task has reached its end.',
     'recurring.message.failed' => 'The recurring task could not be updated. Please try again.',
     'recurring.message.processing' => 'Updating recurring task…',
+    'recurring.message.updated' => 'Recurring task updated.',
     'recurring.empty' => 'No recurring tasks match this filter. Use Add New Task and choose a repeat schedule to create one.',
     'app.name' => 'MyTodo',
     'header.title' => 'Task Manager',

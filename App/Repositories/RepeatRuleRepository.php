@@ -203,6 +203,42 @@ final class RepeatRuleRepository
         return $statement->rowCount() > 0;
     }
 
+    /** Mark the previous rule terminal after a series split. */
+    public function completeForSplit(int $repeatRuleId, int $userId): bool
+    {
+        $statement = $this->pdo->prepare(
+            'UPDATE task_repeat_rules
+             SET status = :status, next_occurrence_at = NULL
+             WHERE id = :repeat_rule_id AND user_id = :user_id'
+        );
+        $statement->execute([
+            ':status' => 'completed',
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+        ]);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /** Update an edited paused rule while preserving its paused cursor semantics. */
+    public function updatePausedRule(int $repeatRuleId, int $userId, array $rule): bool
+    {
+        $rule['next_occurrence_at'] = null;
+        $updated = $this->updateRule($repeatRuleId, $userId, $rule);
+        $status = $this->pdo->prepare(
+            'UPDATE task_repeat_rules
+             SET status = :status, next_occurrence_at = NULL
+             WHERE id = :repeat_rule_id AND user_id = :user_id'
+        );
+        $status->execute([
+            ':status' => 'paused',
+            ':repeat_rule_id' => $repeatRuleId,
+            ':user_id' => $userId,
+        ]);
+
+        return $updated || $status->rowCount() > 0;
+    }
+
     /**
      * @param array<string, mixed> $rule
      * @throws JsonException

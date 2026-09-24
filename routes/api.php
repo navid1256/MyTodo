@@ -24,5 +24,6 @@ return static function (Router $router): void {
     $router->post('/api/repeat-rules/resume', [RepeatController::class, 'resume'], [AuthMiddleware::class]);
     $router->post('/api/repeat-rules/cancel', [RepeatController::class, 'cancel'], [AuthMiddleware::class]);
     $router->post('/api/repeat-tasks/update', [RepeatController::class, 'updateTask'], [AuthMiddleware::class]);
+    $router->post('/api/repeat-rules/update', [RepeatController::class, 'updateRule'], [AuthMiddleware::class]);
     $router->post('/api/settings', [SettingsController::class, 'update'], [AuthMiddleware::class]);
 };

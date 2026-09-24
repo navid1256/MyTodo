@@ -142,7 +142,14 @@ final class RepeatService
     /** @return array<int, object> */
     public function getRulesForUser(int $userId, string $status, DateTimeImmutable $now): array
     {
-        return $this->repeatRuleRepository->getForUser($userId, $status, $this->toDatabaseDateTime($now));
+        $rules = $this->repeatRuleRepository->getForUser($userId, $status, $this->toDatabaseDateTime($now));
+        foreach ($rules as $rule) {
+            $rule->reminders = $this->normalizeStoredReminderTemplates(
+                $this->repeatRuleRepository->getReminderTemplates((int) $rule->id)
+            );
+        }
+
+        return $rules;
     }
 
     /** @return array{status: string, deleted_task_ids: array<int, int>} */
@@ -292,6 +299,192 @@ final class RepeatService
                 ],
                 'reminders' => $updatedReminders,
             ];
+        });
+    }
+
+    /**
+     * Split a recurring series at the selected occurrence. The selected task
+     * becomes occurrence zero of a new rule; history and completed siblings
+     * remain attached to the terminal old rule.
+     *
+     * @param array<string, mixed> $repeatConfig
+     * @param array<int, mixed> $reminders
+     * @return array<string, mixed>
+     */
+    public function updateThisAndFuture(
+        int $taskId,
+        int $userId,
+        string $title,
+        DateTimeInterface $dueAt,
+        bool $hasTime,
+        array $reminders,
+        array $repeatConfig
+    ): array {
+        return $this->runInTransaction(function () use ($taskId, $userId, $title, $dueAt, $hasTime, $repeatConfig, $reminders): array {
+            $task = $this->taskRepository->findRecurringByIdForUpdate($taskId, $userId);
+            if ($task === null) {
+                throw new RepeatRuleNotFoundException('Recurring task not found.');
+            }
+            if ((bool) $task->is_done) {
+                throw new RepeatRuleStateException('Completed recurring tasks cannot be edited.');
+            }
+
+            $oldRuleId = (int) $task->repeat_rule_id;
+            $oldRule = $this->requireOwnedRuleForUpdate($oldRuleId, $userId);
+            if (in_array((string) $oldRule->status, ['completed', 'cancelled'], true)) {
+                throw new RepeatRuleStateException('This recurring task is no longer editable.');
+            }
+
+            $trimmedTitle = trim($title);
+            if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
+                throw new RepeatValidationException('Task title is invalid.');
+            }
+            $preparedRule = $this->validator->validate($repeatConfig, $dueAt);
+            $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
+            $this->repeatRuleRepository->completeForSplit($oldRuleId, $userId);
+            $deletedTaskIds = $this->taskRepository->deleteIncompleteFromOccurrence(
+                $oldRuleId,
+                $userId,
+                $this->toDatabaseDateTime($dueAt),
+                (int) $task->repeat_occurrence_number,
+                $taskId
+            );
+            $newRuleId = $this->createRule(
+                userId: $userId,
+                title: $trimmedTitle,
+                startAt: $dueAt,
+                hasTime: $hasTime,
+                rule: $preparedRule,
+                reminders: $preparedReminders
+            );
+            $databaseDueAt = $this->toDatabaseDateTime($dueAt);
+            $this->taskRepository->update($taskId, $userId, [
+                'title' => $trimmedTitle,
+                'due_at' => $databaseDueAt,
+                'has_time' => $hasTime ? 1 : 0,
+            ]);
+            $this->taskRepository->attachToRule($taskId, $userId, $newRuleId, 0);
+            $this->reminderService->saveRemindersForTask($taskId, $preparedReminders);
+
+            $generatedCount = $this->generateInitialWindow(
+                $newRuleId,
+                (new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone()))->modify('+30 days')
+            );
+            $updatedTask = $this->taskRepository->findById($taskId, $userId);
+
+            return [
+                'scope' => 'future',
+                'task_id' => $taskId,
+                'old_repeat_rule_id' => $oldRuleId,
+                'repeat_rule_id' => $newRuleId,
+                'new_repeat_rule_id' => $newRuleId,
+                'deleted_task_ids' => $deletedTaskIds,
+                'generated_count' => $generatedCount,
+                'task' => [
+                    'id' => $taskId,
+                    'title' => $trimmedTitle,
+                    'due_at' => $updatedTask?->due_at ?? $databaseDueAt,
+                    'has_time' => $updatedTask === null ? $hasTime : (bool) $updatedTask->has_time,
+                    'repeat_rule_id' => $newRuleId,
+                    'repeat_occurrence_number' => 0,
+                ],
+            ];
+        });
+    }
+
+    /**
+     * Edit a rule from the recurring-rules page. Active rules split at their
+     * first future incomplete occurrence; paused rules retain their identity.
+     *
+     * @param array<string, mixed> $repeatConfig
+     * @param array<int, mixed> $reminders
+     * @return array<string, mixed>
+     */
+    public function updateRule(
+        int $repeatRuleId,
+        int $userId,
+        string $title,
+        DateTimeInterface $dueAt,
+        bool $hasTime,
+        array $repeatConfig,
+        array $reminders,
+        ?DateTimeImmutable $now = null
+    ): array {
+        $now ??= new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone());
+
+        return $this->runInTransaction(function () use ($repeatRuleId, $userId, $title, $dueAt, $hasTime, $repeatConfig, $reminders, $now): array {
+            $storedRule = $this->requireOwnedRuleForUpdate($repeatRuleId, $userId);
+            $status = (string) $storedRule->status;
+            if (in_array($status, ['completed', 'cancelled'], true)) {
+                throw new RepeatRuleStateException('Completed or cancelled recurring rules cannot be edited.');
+            }
+
+            $trimmedTitle = trim($title);
+            if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
+                throw new RepeatValidationException('Task title is invalid.');
+            }
+            $preparedRule = $this->validator->validate($repeatConfig, $dueAt);
+            $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
+            $ruleData = [
+                'title' => $trimmedTitle,
+                'start_at' => $this->toDatabaseDateTime($dueAt),
+                'has_time' => $hasTime,
+                'timezone' => $dueAt->getTimezone()->getName(),
+                'frequency' => $preparedRule['frequency'],
+                'interval' => $preparedRule['interval'],
+                'unit' => $preparedRule['unit'],
+                'week_days' => $preparedRule['week_days'],
+                'month_day' => $preparedRule['month_day'],
+                'month_day_mode' => $preparedRule['month_day_mode'],
+                'end_type' => $preparedRule['ends']['type'],
+                'end_date' => $preparedRule['ends']['date'],
+                'repeat_count' => $preparedRule['ends']['count'],
+                'next_occurrence_at' => null,
+            ];
+
+            if ($status === 'paused') {
+                $this->repeatRuleRepository->updatePausedRule($repeatRuleId, $userId, $ruleData);
+                $this->repeatRuleRepository->replaceReminderTemplates($repeatRuleId, $userId, $preparedReminders);
+
+                return [
+                    'scope' => 'rule',
+                    'repeat_rule_id' => $repeatRuleId,
+                    'status' => 'paused',
+                    'generated_count' => 0,
+                ];
+            }
+
+            $selected = $this->taskRepository->findFirstFutureIncompleteForRule(
+                $repeatRuleId,
+                $userId,
+                $this->toDatabaseDateTime($now)
+            );
+            if ($selected === null) {
+                if ($storedRule->next_occurrence_at === null) {
+                    throw new RepeatRuleStateException('This recurring rule has no future occurrence to edit.');
+                }
+                $selectedDueAt = new DateTimeImmutable((string) $storedRule->next_occurrence_at, TimezoneHelper::getApplicationTimezone());
+                $selectedId = $this->taskRepository->create(
+                    userId: $userId,
+                    title: (string) $storedRule->title,
+                    dueAt: $this->toDatabaseDateTime($selectedDueAt),
+                    hasTime: (bool) $storedRule->has_time,
+                    repeatRuleId: $repeatRuleId,
+                    repeatOccurrenceNumber: $this->taskRepository->getMaxOccurrenceNumber($repeatRuleId, $userId) + 1
+                );
+            } else {
+                $selectedId = (int) $selected->id;
+            }
+
+            return $this->updateThisAndFuture(
+                $selectedId,
+                $userId,
+                $trimmedTitle,
+                $dueAt,
+                $hasTime,
+                $reminders,
+                $repeatConfig
+            ) + ['scope' => 'rule'];
         });
     }
 

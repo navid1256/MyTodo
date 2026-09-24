@@ -116,10 +116,20 @@ final class RepeatController
         if ($taskId === null || !in_array($scope, ['single', 'future'], true)) {
             return Response::json(['success' => false, 'message' => 'Invalid recurring task edit request.'], 422);
         }
-        if ($scope === 'future') {
-            return Response::json(['success' => false, 'message' => 'This and future tasks are not available yet.'], 422);
+        $repeatConfig = null;
+        $repeatConfigJson = $request->postString('repeat_config');
+        if ($repeatConfigJson !== '') {
+            try {
+                $decodedRepeat = json_decode($repeatConfigJson, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException) {
+                return Response::json(['success' => false, 'message' => 'Invalid repeat settings payload.'], 422);
+            }
+            if (!is_array($decodedRepeat)) {
+                return Response::json(['success' => false, 'message' => 'Invalid repeat settings payload.'], 422);
+            }
+            $repeatConfig = $decodedRepeat;
         }
-        if ($request->postString('repeat_config') !== '') {
+        if ($scope === 'single' && $repeatConfig !== null) {
             return Response::json(['success' => false, 'message' => 'Repeat settings cannot be changed for one task.'], 422);
         }
 
@@ -144,14 +154,24 @@ final class RepeatController
         }
 
         try {
-            $result = $this->repeatService->updateSingleOccurrence(
-                $taskId,
-                $this->authService->getCurrentUserId(),
-                $request->postString('task_title'),
-                $dueAt,
-                $request->postString('has_time') === '1',
-                $reminders
-            );
+            $result = $scope === 'future'
+                ? $this->repeatService->updateThisAndFuture(
+                    $taskId,
+                    $this->authService->getCurrentUserId(),
+                    $request->postString('task_title'),
+                    $dueAt,
+                    $request->postString('has_time') === '1',
+                    $reminders,
+                    $repeatConfig ?? []
+                )
+                : $this->repeatService->updateSingleOccurrence(
+                    $taskId,
+                    $this->authService->getCurrentUserId(),
+                    $request->postString('task_title'),
+                    $dueAt,
+                    $request->postString('has_time') === '1',
+                    $reminders
+                );
 
             return Response::json(array_merge(['success' => true], $result));
         } catch (RepeatRuleNotFoundException $exception) {
@@ -160,6 +180,57 @@ final class RepeatController
             return Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
         } catch (Throwable) {
             return Response::json(['success' => false, 'message' => 'The recurring task could not be updated.'], 500);
+        }
+    }
+
+    public function updateRule(Request $request): Response
+    {
+        $guardResponse = $this->guardJsonRequest($request);
+        if ($guardResponse !== null) {
+            return $guardResponse;
+        }
+
+        $repeatRuleId = $this->readPositiveId($request, 'repeat_rule_id');
+        if ($repeatRuleId === null) {
+            return Response::json(['success' => false, 'message' => 'Invalid repeat rule ID.'], 422);
+        }
+        try {
+            $configPayload = $request->postString('repeat_config');
+            if ($configPayload === '') {
+                $configPayload = $request->postString('rule');
+            }
+            $config = json_decode($configPayload, true, 512, JSON_THROW_ON_ERROR);
+            $reminders = $request->postString('reminders') === ''
+                ? []
+                : json_decode($request->postString('reminders'), true, 512, JSON_THROW_ON_ERROR);
+            if (!is_array($config) || !is_array($reminders)) {
+                throw new \JsonException('Invalid payload.');
+            }
+            $dueAt = TimezoneHelper::parseCanonicalDateTime(
+                $request->postString('due_at') !== '' ? $request->postString('due_at') : $request->postString('start_at'),
+                $this->resolveUserTimezone($request)
+            );
+            if ($dueAt === null) {
+                return Response::json(['success' => false, 'message' => 'A valid due date is required.'], 422);
+            }
+
+            $result = $this->repeatService->updateRule(
+                $repeatRuleId,
+                $this->authService->getCurrentUserId(),
+                $request->postString('task_title') !== '' ? $request->postString('task_title') : $request->postString('title'),
+                $dueAt,
+                $request->postString('has_time') === '1',
+                $config,
+                $reminders
+            );
+
+            return Response::json(array_merge(['success' => true], $result));
+        } catch (\JsonException | RepeatValidationException | ReminderValidationException | RepeatRuleStateException $exception) {
+            return Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
+        } catch (RepeatRuleNotFoundException $exception) {
+            return Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
+        } catch (Throwable) {
+            return Response::json(['success' => false, 'message' => 'The recurring rule could not be updated.'], 500);
         }
     }
 
