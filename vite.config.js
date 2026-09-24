@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { defineConfig, loadEnv } from 'vite';
 
 const DEV_HOST = 'mytodo.php';
-const DEV_PORT = 5173;
+const DEV_PORT = 5180;
 const DEV_ORIGIN = `https://${DEV_HOST}:${DEV_PORT}`;
 const BACKEND_ORIGIN = `https://${DEV_HOST}`;
 
