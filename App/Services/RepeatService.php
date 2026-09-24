@@ -13,13 +13,14 @@ use App\Repositories\TaskRepository;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use JsonException;
-use LogicException;
 use Throwable;
 
 final class RepeatService
 {
-    private const DATABASE_DATETIME_FORMAT = 'Y-m-d H:i:s';
+    private const INVALID_TASK_TITLE = 'Task title is invalid.';
+
+    private readonly RepeatRuleMapper $ruleMapper;
+    private readonly RepeatGenerationService $generationService;
 
     public function __construct(
         private readonly RepeatRuleRepository $repeatRuleRepository,
@@ -28,7 +29,17 @@ final class RepeatService
         private readonly RepeatOccurrencePlanner $occurrencePlanner,
         private readonly TaskRepository $taskRepository,
         private readonly ReminderService $reminderService
-    ) {}
+    ) {
+        $this->ruleMapper = new RepeatRuleMapper();
+        $this->generationService = new RepeatGenerationService(
+            $repeatRuleRepository,
+            $scheduleCalculator,
+            $occurrencePlanner,
+            $taskRepository,
+            $reminderService,
+            $this->ruleMapper
+        );
+    }
 
     /**
      * @param array<string, mixed> $payload
@@ -69,12 +80,11 @@ final class RepeatService
     ): int {
         $seriesStart = DateTimeImmutable::createFromInterface($startAt);
         $nextOccurrence = $this->scheduleCalculator->nextOccurrence($rule, $seriesStart, $seriesStart);
-        $databaseTimezone = TimezoneHelper::getApplicationTimezone();
 
         $repeatRuleId = $this->repeatRuleRepository->create([
             'user_id' => $userId,
             'title' => trim($title),
-            'start_at' => $seriesStart->setTimezone($databaseTimezone)->format(self::DATABASE_DATETIME_FORMAT),
+            'start_at' => $this->ruleMapper->toDatabaseDateTime($seriesStart),
             'has_time' => $hasTime,
             'timezone' => $seriesStart->getTimezone()->getName(),
             'frequency' => $rule['frequency'],
@@ -86,9 +96,7 @@ final class RepeatService
             'end_type' => $rule['ends']['type'],
             'end_date' => $rule['ends']['date'],
             'repeat_count' => $rule['ends']['count'],
-            'next_occurrence_at' => $nextOccurrence
-                ->setTimezone($databaseTimezone)
-                ->format(self::DATABASE_DATETIME_FORMAT),
+            'next_occurrence_at' => $this->ruleMapper->toDatabaseDateTime($nextOccurrence),
         ]);
 
         $this->repeatRuleRepository->saveReminderTemplates($repeatRuleId, $reminders);
@@ -101,26 +109,7 @@ final class RepeatService
         int $ruleLimit = 100,
         int $occurrenceLimit = 500
     ): int {
-        $databaseTimezone = TimezoneHelper::getApplicationTimezone();
-        $databaseHorizon = $horizon
-            ->setTimezone($databaseTimezone)
-            ->format(self::DATABASE_DATETIME_FORMAT);
-        $ruleIds = $this->repeatRuleRepository->findDueRuleIds($databaseHorizon, $ruleLimit);
-        $generatedTotal = 0;
-
-        foreach ($ruleIds as $ruleId) {
-            if ($generatedTotal >= $occurrenceLimit) {
-                break;
-            }
-
-            $generatedTotal += $this->generateRuleOccurrences(
-                $ruleId,
-                $horizon,
-                $occurrenceLimit - $generatedTotal
-            );
-        }
-
-        return $generatedTotal;
+        return $this->generationService->generateUntil($horizon, $ruleLimit, $occurrenceLimit);
     }
 
     public function generateInitialWindow(
@@ -128,23 +117,15 @@ final class RepeatService
         DateTimeImmutable $horizon,
         int $occurrenceLimit = 500
     ): int {
-        if (!$this->repeatRuleRepository->inTransaction()) {
-            throw new LogicException('The initial repeat window must be generated inside the task transaction.');
-        }
-
-        return $this->generateRuleOccurrencesInTransaction(
-            $repeatRuleId,
-            $horizon,
-            max(1, $occurrenceLimit)
-        );
+        return $this->generationService->generateInitialWindow($repeatRuleId, $horizon, $occurrenceLimit);
     }
 
     /** @return array<int, object> */
     public function getRulesForUser(int $userId, string $status, DateTimeImmutable $now): array
     {
-        $rules = $this->repeatRuleRepository->getForUser($userId, $status, $this->toDatabaseDateTime($now));
+        $rules = $this->repeatRuleRepository->getForUser($userId, $status, $this->ruleMapper->toDatabaseDateTime($now));
         foreach ($rules as $rule) {
-            $rule->reminders = $this->normalizeStoredReminderTemplates(
+            $rule->reminders = $this->ruleMapper->normalizeReminderTemplates(
                 $this->repeatRuleRepository->getReminderTemplates((int) $rule->id)
             );
         }
@@ -165,7 +146,7 @@ final class RepeatService
             }
 
             $deletedTaskIds = $this->taskRepository->deleteFutureIncompleteForRule(
-                $repeatRuleId, $userId, $this->toDatabaseDateTime($now)
+                $repeatRuleId, $userId, $this->ruleMapper->toDatabaseDateTime($now)
             );
             $this->repeatRuleRepository->updateStatus($repeatRuleId, $userId, 'paused', null);
 
@@ -199,10 +180,14 @@ final class RepeatService
             }
 
             $storedRule->status = 'active';
-            $storedRule->next_occurrence_at = $this->toDatabaseDateTime($candidate);
+            $storedRule->next_occurrence_at = $this->ruleMapper->toDatabaseDateTime($candidate);
             $this->repeatRuleRepository->updateStatus($repeatRuleId, $userId, 'active', $storedRule->next_occurrence_at);
-            $generatedCount = $this->generateRuleOccurrencesInTransaction(
-                $repeatRuleId, $now->modify('+30 days'), 500, $storedRule, $now
+            $generatedCount = $this->generationService->generateInTransaction(
+                $repeatRuleId,
+                $now->modify('+30 days'),
+                500,
+                $storedRule,
+                $now
             );
             $updatedRule = $this->requireOwnedRuleForUpdate($repeatRuleId, $userId);
 
@@ -227,7 +212,7 @@ final class RepeatService
             }
 
             $deletedTaskIds = $this->taskRepository->deleteFutureIncompleteForRule(
-                $repeatRuleId, $userId, $this->toDatabaseDateTime($now)
+                $repeatRuleId, $userId, $this->ruleMapper->toDatabaseDateTime($now)
             );
             $this->repeatRuleRepository->updateStatus($repeatRuleId, $userId, 'cancelled', null);
 
@@ -264,11 +249,11 @@ final class RepeatService
 
             $trimmedTitle = trim($title);
             if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
-                throw new RepeatValidationException('Task title is invalid.');
+                throw new RepeatValidationException(self::INVALID_TASK_TITLE);
             }
 
             $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
-            $databaseDueAt = $this->toDatabaseDateTime($dueAt);
+            $databaseDueAt = $this->ruleMapper->toDatabaseDateTime($dueAt);
             $this->taskRepository->update($taskId, $userId, [
                 'title' => $trimmedTitle,
                 'due_at' => $databaseDueAt,
@@ -337,7 +322,7 @@ final class RepeatService
 
             $trimmedTitle = trim($title);
             if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
-                throw new RepeatValidationException('Task title is invalid.');
+                throw new RepeatValidationException(self::INVALID_TASK_TITLE);
             }
             $preparedRule = $this->validator->validate($repeatConfig, $dueAt);
             $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
@@ -345,7 +330,7 @@ final class RepeatService
             $deletedTaskIds = $this->taskRepository->deleteIncompleteFromOccurrence(
                 $oldRuleId,
                 $userId,
-                $this->toDatabaseDateTime($dueAt),
+                $this->ruleMapper->toDatabaseDateTime($dueAt),
                 (int) $task->repeat_occurrence_number,
                 $taskId
             );
@@ -357,7 +342,7 @@ final class RepeatService
                 rule: $preparedRule,
                 reminders: $preparedReminders
             );
-            $databaseDueAt = $this->toDatabaseDateTime($dueAt);
+            $databaseDueAt = $this->ruleMapper->toDatabaseDateTime($dueAt);
             $this->taskRepository->update($taskId, $userId, [
                 'title' => $trimmedTitle,
                 'due_at' => $databaseDueAt,
@@ -400,36 +385,28 @@ final class RepeatService
      * @param array<int, mixed> $reminders
      * @return array<string, mixed>
      */
-    public function updateRule(
-        int $repeatRuleId,
-        int $userId,
-        string $title,
-        DateTimeInterface $dueAt,
-        bool $hasTime,
-        array $repeatConfig,
-        array $reminders,
-        ?DateTimeImmutable $now = null
-    ): array {
-        $now ??= new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone());
+    public function updateRule(RepeatRuleUpdateData $update): array
+    {
+        $now = $update->now ?? new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone());
 
-        return $this->runInTransaction(function () use ($repeatRuleId, $userId, $title, $dueAt, $hasTime, $repeatConfig, $reminders, $now): array {
-            $storedRule = $this->requireOwnedRuleForUpdate($repeatRuleId, $userId);
+        return $this->runInTransaction(function () use ($update, $now): array {
+            $storedRule = $this->requireOwnedRuleForUpdate($update->repeatRuleId, $update->userId);
             $status = (string) $storedRule->status;
             if (in_array($status, ['completed', 'cancelled'], true)) {
                 throw new RepeatRuleStateException('Completed or cancelled recurring rules cannot be edited.');
             }
 
-            $trimmedTitle = trim($title);
+            $trimmedTitle = trim($update->title);
             if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
-                throw new RepeatValidationException('Task title is invalid.');
+                throw new RepeatValidationException(self::INVALID_TASK_TITLE);
             }
-            $preparedRule = $this->validator->validate($repeatConfig, $dueAt);
-            $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
+            $preparedRule = $this->validator->validate($update->repeatConfig, $update->dueAt);
+            $preparedReminders = $this->reminderService->prepareTaskReminders($update->reminders, $update->dueAt, $update->hasTime);
             $ruleData = [
                 'title' => $trimmedTitle,
-                'start_at' => $this->toDatabaseDateTime($dueAt),
-                'has_time' => $hasTime,
-                'timezone' => $dueAt->getTimezone()->getName(),
+                'start_at' => $this->ruleMapper->toDatabaseDateTime($update->dueAt),
+                'has_time' => $update->hasTime,
+                'timezone' => $update->dueAt->getTimezone()->getName(),
                 'frequency' => $preparedRule['frequency'],
                 'interval' => $preparedRule['interval'],
                 'unit' => $preparedRule['unit'],
@@ -443,21 +420,21 @@ final class RepeatService
             ];
 
             if ($status === 'paused') {
-                $this->repeatRuleRepository->updatePausedRule($repeatRuleId, $userId, $ruleData);
-                $this->repeatRuleRepository->replaceReminderTemplates($repeatRuleId, $userId, $preparedReminders);
+                $this->repeatRuleRepository->updatePausedRule($update->repeatRuleId, $update->userId, $ruleData);
+                $this->repeatRuleRepository->replaceReminderTemplates($update->repeatRuleId, $update->userId, $preparedReminders);
 
                 return [
                     'scope' => 'rule',
-                    'repeat_rule_id' => $repeatRuleId,
+                    'repeat_rule_id' => $update->repeatRuleId,
                     'status' => 'paused',
                     'generated_count' => 0,
                 ];
             }
 
             $selected = $this->taskRepository->findFirstFutureIncompleteForRule(
-                $repeatRuleId,
-                $userId,
-                $this->toDatabaseDateTime($now)
+                $update->repeatRuleId,
+                $update->userId,
+                $this->ruleMapper->toDatabaseDateTime($now)
             );
             if ($selected === null) {
                 if ($storedRule->next_occurrence_at === null) {
@@ -465,12 +442,12 @@ final class RepeatService
                 }
                 $selectedDueAt = new DateTimeImmutable((string) $storedRule->next_occurrence_at, TimezoneHelper::getApplicationTimezone());
                 $selectedId = $this->taskRepository->create(
-                    userId: $userId,
+                    userId: $update->userId,
                     title: (string) $storedRule->title,
-                    dueAt: $this->toDatabaseDateTime($selectedDueAt),
+                    dueAt: $this->ruleMapper->toDatabaseDateTime($selectedDueAt),
                     hasTime: (bool) $storedRule->has_time,
-                    repeatRuleId: $repeatRuleId,
-                    repeatOccurrenceNumber: $this->taskRepository->getMaxOccurrenceNumber($repeatRuleId, $userId) + 1
+                    repeatRuleId: $update->repeatRuleId,
+                    repeatOccurrenceNumber: $this->taskRepository->getMaxOccurrenceNumber($update->repeatRuleId, $update->userId) + 1
                 );
             } else {
                 $selectedId = (int) $selected->id;
@@ -478,12 +455,12 @@ final class RepeatService
 
             return $this->updateThisAndFuture(
                 $selectedId,
-                $userId,
+                $update->userId,
                 $trimmedTitle,
-                $dueAt,
-                $hasTime,
-                $reminders,
-                $repeatConfig
+                $update->dueAt,
+                $update->hasTime,
+                $update->reminders,
+                $update->repeatConfig
             ) + ['scope' => 'rule'];
         });
     }
@@ -517,7 +494,7 @@ final class RepeatService
             'repeat_rule_id' => (int) $task->repeat_rule_id,
             'repeat_occurrence_number' => (int) $task->repeat_occurrence_number,
             'reminders' => $reminders,
-            'repeat_config' => $this->hydrateStoredRule($rule) + ['frequency' => (string) $rule->frequency],
+            'repeat_config' => $this->ruleMapper->toRuleArray($rule) + ['frequency' => (string) $rule->frequency],
         ];
     }
 
@@ -561,7 +538,7 @@ final class RepeatService
             ->setTimezone($timezone);
         $localNow = $now->setTimezone($timezone);
         $candidate = $this->scheduleCalculator->nextOccurrence(
-            $this->hydrateStoredRule($storedRule),
+            $this->ruleMapper->toRuleArray($storedRule),
             $seriesStart,
             $localNow > $seriesStart ? $localNow : $seriesStart
         );
@@ -575,170 +552,10 @@ final class RepeatService
         $seriesStart = (new DateTimeImmutable((string) $storedRule->start_at, TimezoneHelper::getApplicationTimezone()))
             ->setTimezone(new DateTimeZone((string) $storedRule->timezone));
         $plan = $this->occurrencePlanner->plan(
-            $this->hydrateStoredRule($storedRule), $seriesStart, $candidate, $candidate, $existingRepeatCount, 1
+            $this->ruleMapper->toRuleArray($storedRule), $seriesStart, $candidate, $candidate, $existingRepeatCount, 1
         );
 
         return $plan['occurrences'] === [];
     }
 
-    private function toDatabaseDateTime(DateTimeInterface $dateTime): string
-    {
-        return DateTimeImmutable::createFromInterface($dateTime)
-            ->setTimezone(TimezoneHelper::getApplicationTimezone())
-            ->format(self::DATABASE_DATETIME_FORMAT);
-    }
-
-    private function generateRuleOccurrences(
-        int $repeatRuleId,
-        DateTimeImmutable $horizon,
-        int $occurrenceLimit
-    ): int {
-        return $this->runInTransaction(fn(): int => $this->generateRuleOccurrencesInTransaction(
-            $repeatRuleId, $horizon, $occurrenceLimit
-        ));
-    }
-
-    private function generateRuleOccurrencesInTransaction(
-        int $repeatRuleId,
-        DateTimeImmutable $horizon,
-        int $occurrenceLimit,
-        ?object $storedRule = null,
-        ?DateTimeImmutable $now = null
-    ): int {
-        // Lifecycle calls supply their ownership-checked, locked row; Cron locks by ID.
-        $storedRule ??= $this->repeatRuleRepository->findByIdForUpdate($repeatRuleId);
-        if (
-            $storedRule === null
-            || (string) $storedRule->status !== 'active'
-            || $storedRule->next_occurrence_at === null
-        ) {
-            return 0;
-        }
-
-        $timezone = new DateTimeZone((string) $storedRule->timezone);
-        $databaseTimezone = TimezoneHelper::getApplicationTimezone();
-        $seriesStart = (new DateTimeImmutable((string) $storedRule->start_at, $databaseTimezone))
-            ->setTimezone($timezone);
-        $nextOccurrence = (new DateTimeImmutable((string) $storedRule->next_occurrence_at, $databaseTimezone))
-            ->setTimezone($timezone);
-        $rule = $this->hydrateStoredRule($storedRule);
-        $existingRepeatCount = $this->taskRepository->countRepeatsForRule($repeatRuleId, (int) $storedRule->user_id);
-        $nextOccurrenceNumber = $this->taskRepository->getMaxOccurrenceNumber($repeatRuleId, (int) $storedRule->user_id) + 1;
-        $existingDates = array_fill_keys($this->taskRepository->getOccurrenceDatesForRule(
-            $repeatRuleId,
-            (int) $storedRule->user_id,
-            $this->toDatabaseDateTime($nextOccurrence),
-            $this->toDatabaseDateTime($horizon)
-        ), true);
-        $templates = $this->normalizeStoredReminderTemplates(
-            $this->repeatRuleRepository->getReminderTemplates($repeatRuleId)
-        );
-
-        $generatedCount = 0;
-        while (true) {
-            // A retained completed task is already in the materialized count. Plan one
-            // candidate at a time so skipping its date never spends that count again.
-            $plan = $this->occurrencePlanner->plan(
-                $rule, $seriesStart, $nextOccurrence, $horizon, $existingRepeatCount, 1
-            );
-            if ($plan['occurrences'] === []) {
-                break;
-            }
-
-            $occurrence = $plan['occurrences'][0];
-            $dueAt = $this->toDatabaseDateTime($occurrence);
-            if (isset($existingDates[$dueAt])) {
-                $nextOccurrence = $this->scheduleCalculator->nextOccurrence($rule, $seriesStart, $occurrence);
-                continue;
-            }
-
-            $taskId = $this->taskRepository->create(
-                userId: (int) $storedRule->user_id,
-                title: (string) $storedRule->title,
-                dueAt: $dueAt,
-                hasTime: (bool) $storedRule->has_time,
-                repeatRuleId: $repeatRuleId,
-                repeatOccurrenceNumber: $nextOccurrenceNumber + $generatedCount
-            );
-            $preparedReminders = $this->reminderService->prepareGeneratedTaskReminders(
-                $templates,
-                $occurrence,
-                (bool) $storedRule->has_time,
-                $now
-            );
-
-            if ($preparedReminders !== []) {
-                $this->reminderService->saveRemindersForTask($taskId, $preparedReminders);
-            }
-
-            $generatedCount++;
-            $existingRepeatCount = $plan['generated_repeats'];
-            if ($plan['next_occurrence'] === null || $generatedCount >= max(1, $occurrenceLimit)) {
-                break;
-            }
-            $nextOccurrence = $plan['next_occurrence'];
-        }
-
-        $nextOccurrenceAt = $plan['next_occurrence'] instanceof DateTimeImmutable
-            ? $plan['next_occurrence']
-                ->setTimezone($databaseTimezone)
-                ->format(self::DATABASE_DATETIME_FORMAT)
-            : null;
-        $this->repeatRuleRepository->updateGenerationState(
-            $repeatRuleId,
-            (int) $storedRule->user_id,
-            $plan['generated_repeats'],
-            $nextOccurrenceAt,
-            $plan['status']
-        );
-
-        return $generatedCount;
-    }
-
-    /**
-     * @return array{
-     *     interval: int,
-     *     unit: string,
-     *     week_days: array<int, int>,
-     *     month_day: int|null,
-     *     month_day_mode: string,
-     *     ends: array{type: string, date: string|null, count: int|null}
-     * }
-     * @throws JsonException
-     */
-    private function hydrateStoredRule(object $storedRule): array
-    {
-        $weekDays = $storedRule->week_days === null
-            ? []
-            : json_decode((string) $storedRule->week_days, true, 512, JSON_THROW_ON_ERROR);
-
-        return [
-            'frequency' => (string) $storedRule->frequency,
-            'interval' => (int) $storedRule->interval_value,
-            'unit' => (string) $storedRule->interval_unit,
-            'week_days' => is_array($weekDays) ? array_map('intval', $weekDays) : [],
-            'month_day' => $storedRule->month_day === null ? null : (int) $storedRule->month_day,
-            'month_day_mode' => (string) $storedRule->month_day_mode,
-            'ends' => [
-                'type' => (string) $storedRule->end_type,
-                'date' => $storedRule->end_date === null ? null : (string) $storedRule->end_date,
-                'count' => $storedRule->repeat_count === null ? null : (int) $storedRule->repeat_count,
-            ],
-        ];
-    }
-
-    /**
-     * @param array<int, object> $templates
-     * @return array<int, array{value: int, unit: string}>
-     */
-    private function normalizeStoredReminderTemplates(array $templates): array
-    {
-        return array_map(
-            static fn(object $template): array => [
-                'value' => (int) $template->offset_value,
-                'unit' => (string) $template->offset_unit,
-            ],
-            $templates
-        );
-    }
 }
