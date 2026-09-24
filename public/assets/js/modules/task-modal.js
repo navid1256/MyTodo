@@ -1,6 +1,8 @@
 import { createTask } from '../services/task-service.js';
-import { updateRecurringTask } from '../services/repeat-service.js';
+import { updateRecurringRule, updateRecurringTask } from '../services/repeat-service.js';
 import { translate } from '../utils/i18n.js';
+
+const initializedTaskForms = new WeakSet();
 
 export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     // متغیرهای Task Modal
@@ -16,7 +18,13 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     const taskEditScope = document.getElementById('taskEditScope');
     const taskEditScopeControl = document.getElementById('taskEditScopeControl');
     const taskEditScopeChoice = document.getElementById('taskEditScopeChoice');
+    const taskEditRuleId = document.getElementById('taskEditRuleId');
     let lastTaskModalTrigger = null;
+
+    if (!newTaskForm || initializedTaskForms.has(newTaskForm)) {
+        return;
+    }
+    initializedTaskForms.add(newTaskForm);
 
     // توابع و Event Listenerها
 
@@ -47,6 +55,7 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         newTaskForm?.reset();
         if (taskFormMode) taskFormMode.value = 'create';
         if (taskEditId) taskEditId.value = '';
+        if (taskEditRuleId) taskEditRuleId.value = '';
         if (taskEditScope) taskEditScope.value = '';
         if (taskEditScopeControl) taskEditScopeControl.hidden = true;
         dateTimePicker?.reset?.();
@@ -75,6 +84,24 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         dateTimePicker?.load?.(payload.due_at || '', Boolean(payload.has_time));
         reminderPicker?.load?.(payload.reminders || []);
         repeatPicker?.load?.(payload.repeat_config || null);
+        if (!taskModal.open) taskModal.showModal();
+        document.body.classList.add('task-modal-open');
+        setTaskModalMessage('');
+        window.requestAnimationFrame(() => taskModalText.focus());
+    }
+
+    function openRuleEditModal(trigger, payload) {
+        if (!payload || !taskModalText) return;
+        lastTaskModalTrigger = trigger || document.activeElement;
+        if (taskFormMode) taskFormMode.value = 'rule';
+        if (taskEditRuleId) taskEditRuleId.value = String(payload.id || '');
+        if (taskEditId) taskEditId.value = '';
+        if (taskEditScopeControl) taskEditScopeControl.hidden = true;
+        if (taskEditScope) taskEditScope.value = '';
+        taskModalText.value = payload.title || '';
+        dateTimePicker?.load?.(payload.start_at || '', Boolean(payload.has_time));
+        reminderPicker?.load?.(payload.reminders || []);
+        repeatPicker?.load?.(payload);
         if (!taskModal.open) taskModal.showModal();
         document.body.classList.add('task-modal-open');
         setTaskModalMessage('');
@@ -133,6 +160,10 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         }
     });
 
+    document.addEventListener('recurring-rule:edit', function (event) {
+        openRuleEditModal(event.detail?.trigger, event.detail?.payload);
+    });
+
     if (closeTaskModalButton) {
         closeTaskModalButton.addEventListener('click', closeTaskModal);
     }
@@ -162,7 +193,8 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
                 return;
             }
 
-            const isEdit = taskFormMode?.value === 'edit';
+            const isEdit = taskFormMode?.value === 'edit' || taskFormMode?.value === 'rule';
+            const isRuleEdit = taskFormMode?.value === 'rule';
             const editScope = taskEditScope?.value || taskEditScopeChoice?.value || 'single';
             const repeatValidationMessage = !isEdit && repeatPicker ? repeatPicker.validate() : '';
 
@@ -175,25 +207,44 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
             formData.set('action', 'newTask');
             formData.set('task_title', taskTitle);
             if (isEdit) {
-                formData.set('scope', editScope);
                 formData.set('mode', 'edit');
-                if (editScope === 'single') formData.set('repeat_config', '');
+                if (isRuleEdit) {
+                    formData.set('repeat_rule_id', taskEditRuleId?.value || '');
+                    formData.set('mode', 'rule');
+                } else {
+                    formData.set('scope', editScope);
+                    if (editScope === 'single') formData.set('repeat_config', '');
+                }
             }
 
             saveTaskButton.disabled = true;
             saveTaskButton.textContent = translate('common.saving');
             setTaskModalMessage('');
 
-            const request = isEdit ? updateRecurringTask(formData) : createTask(formData);
+            const request = isRuleEdit
+                ? updateRecurringRule(formData)
+                : isEdit ? updateRecurringTask(formData) : createTask(formData);
             request.then(function (response) {
                     if (!isEdit) {
                         window.location.reload();
+                        return;
+                    }
+                    if (isRuleEdit) {
+                        document.dispatchEvent(new CustomEvent('recurring-rule:updated', {
+                            detail: { previousRuleId: taskEditRuleId?.value, response }
+                        }));
+                        closeTaskModal();
                         return;
                     }
                     const task = response.task || response;
                     const row = document.querySelector('[data-task-id="' + String(task.id || taskEditId?.value) + '"]');
                     const title = row?.querySelector?.('.taskTitle');
                     if (title) title.textContent = task.title || taskTitle;
+                    if (Array.isArray(response.deleted_task_ids)) {
+                        response.deleted_task_ids.forEach((deletedId) => {
+                            document.querySelector('[data-task-id="' + String(deletedId) + '"]')?.remove();
+                        });
+                    }
                     closeTaskModal();
                 })
                 .catch(function (error) {

@@ -5,7 +5,8 @@ const lifecycleEndpoints = Object.freeze({
     pause: '/api/repeat-rules/pause',
     resume: '/api/repeat-rules/resume',
     cancel: '/api/repeat-rules/cancel',
-    updateTask: '/api/repeat-tasks/update'
+    updateTask: '/api/repeat-tasks/update',
+    updateRule: '/api/repeat-rules/update'
 });
 
 async function updateRepeatRule(action, repeatRuleId, csrfToken, signal) {
@@ -38,5 +39,11 @@ export function cancelRepeatRule(repeatRuleId, csrfToken, signal) {
 export function updateRecurringTask(formData) {
     return sendJsonFormRequest(lifecycleEndpoints.updateTask, formData, {
         errorMessage: translate('task.edit_failed', {}, 'The recurring task could not be updated.')
+    });
+}
+
+export function updateRecurringRule(formData) {
+    return sendJsonFormRequest(lifecycleEndpoints.updateRule, formData, {
+        errorMessage: translate('task.edit_failed', {}, 'The recurring rule could not be updated.')
     });
 }

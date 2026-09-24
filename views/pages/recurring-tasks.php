@@ -82,6 +82,7 @@ $weekdayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
                 'month_day' => isset($rule->month_day) ? (int) $rule->month_day : null,
                 'month_day_mode' => ($rule->month_day_mode ?? '') === 'last_day' ? 'last_day' : 'clamp',
                 'ends' => ['type' => $endType, 'date' => $rule->end_date ?? null, 'count' => isset($rule->repeat_count) ? (int) $rule->repeat_count : null],
+                'reminders' => isset($rule->reminders) && is_array($rule->reminders) ? $rule->reminders : [],
             ];
             $encodedRule = json_encode($payload, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
             $actions = match ($status) {

@@ -167,6 +167,16 @@ function sendLifecycleRequest(action, repeatRuleId, csrfToken, signal) {
 
 function handleAction(container, actionButton, signal) {
     const action = actionButton.dataset.repeatAction;
+    if (action === 'edit') {
+        const row = actionButton.closest('.recurringRule');
+        if (!row || actionButton.disabled) return;
+        let payload = {};
+        try { payload = JSON.parse(row.dataset.repeatRule || '{}'); } catch { payload = {}; }
+        document.dispatchEvent(new CustomEvent('recurring-rule:edit', {
+            detail: { trigger: actionButton, payload }
+        }));
+        return;
+    }
     if (!['pause', 'resume', 'cancel'].includes(action) || actionButton.disabled) {
         return;
     }
@@ -237,6 +247,26 @@ export function initRecurringTasks(signal) {
         }
     };
     container.addEventListener('click', listener, signal ? { signal } : undefined);
+    const updateListener = (event) => {
+        const previousRuleId = String(event.detail?.previousRuleId || '');
+        const response = event.detail?.response || {};
+        const row = [...container.querySelectorAll('.recurringRule')]
+            .find((candidate) => candidate.dataset.repeatRuleId === previousRuleId);
+        if (!row) return;
+        const title = response.task?.title || response.title;
+        if (title) {
+            const heading = row.querySelector('.recurringRuleMain h2');
+            if (heading) heading.textContent = title;
+        }
+        if (response.status) renderRuleState(row, response.status);
+        if (response.repeat_rule_id && response.repeat_rule_id !== Number(previousRuleId)) {
+            row.dataset.repeatRuleId = String(response.repeat_rule_id);
+            row.dataset.repeatStatus = 'active';
+            renderRuleState(row, 'active');
+        }
+        setPageMessage(container, translate('recurring.message.updated', {}, 'Recurring task updated.'));
+    };
+    document.addEventListener('recurring-rule:updated', updateListener, signal ? { signal } : undefined);
     registeredContainers.set(container, signal || null);
 }
 

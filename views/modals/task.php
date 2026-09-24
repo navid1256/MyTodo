@@ -18,6 +18,7 @@
                 value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
             <input id="taskFormMode" name="mode" type="hidden" value="create">
             <input id="taskEditId" name="task_id" type="hidden" value="">
+            <input id="taskEditRuleId" name="repeat_rule_id" type="hidden" value="">
             <input id="taskEditScope" name="scope" type="hidden" value="">
 
             <label class="srOnly" for="taskModalText" data-i18n="task.modal.text_label"><?= htmlspecialchars($translator->translate('task.modal.text_label'), ENT_QUOTES, 'UTF-8') ?></label>

@@ -187,6 +187,37 @@ try {
     assertLifecycleValue('Edit fixture', $ruleRepository->findByIdForUserForUpdate($editRule, $userA)->title, 'Single edit must not change the rule.');
     assertLifecycleValue('Sibling task', $taskRepository->findById($siblingEditTask, $userA)->title, 'Single edit must preserve siblings.');
     assertLifecycleValue(1, count($reminderRepository->getByTaskId($siblingEditTask)), 'Single edit must preserve sibling reminders.');
+    $futureEdit = $service->updateThisAndFuture(
+        $selectedEditTask,
+        $userA,
+        'Split edit',
+        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        true,
+        [['value' => 30, 'unit' => 'minute']],
+        [
+            'frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly'],
+        ],
+    );
+    assertLifecycleValue('future', $futureEdit['scope'], 'Future edit must identify its scope.');
+    assertLifecycleValue(0, (int) $taskRepository->findById($selectedEditTask, $userA)->repeat_occurrence_number, 'Split selected task must become occurrence zero.');
+    assertLifecycleValue([], $taskRepository->findById($siblingEditTask, $userA) === null ? [] : ['present'], 'Future incomplete siblings must be removed.');
+    assertLifecycleValue('completed', $ruleRepository->findByIdForUserForUpdate($editRule, $userA)->status, 'The old rule must become terminal after a split.');
+    $splitRule = $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA);
+    assertLifecycleValue('active', $splitRule->status, 'The new split rule must be active.');
+    assertLifecycleValue(true, (int) $futureEdit['generated_count'] > 0, 'The split rule must generate its initial 30-day window.');
+    $service->pauseRule((int) $futureEdit['repeat_rule_id'], $userA, $now);
+    $pausedEdit = $service->updateRule(
+        (int) $futureEdit['repeat_rule_id'],
+        $userA,
+        'Paused split edit',
+        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        true,
+        [['value' => 15, 'unit' => 'minute']],
+        ['frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly']],
+        $now
+    );
+    assertLifecycleValue('paused', $pausedEdit['status'], 'Paused rule edits must stay paused.');
+    assertLifecycleValue(null, $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA)->next_occurrence_at, 'Paused edits must clear the cursor until Resume.');
     assertLifecycleException(RepeatRuleNotFoundException::class, fn() => $service->updateSingleOccurrence(
         $foreignEditTask,
         $userA,
