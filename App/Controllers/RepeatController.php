@@ -17,6 +17,7 @@ use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\RepeatService;
+use App\Services\RepeatRuleUpdateData;
 use App\Services\TaskService;
 use App\Services\UserSettingsService;
 use DateTimeImmutable;
@@ -214,15 +215,17 @@ final class RepeatController
                 return Response::json(['success' => false, 'message' => 'A valid due date is required.'], 422);
             }
 
-            $result = $this->repeatService->updateRule(
-                $repeatRuleId,
-                $this->authService->getCurrentUserId(),
-                $request->postString('task_title') !== '' ? $request->postString('task_title') : $request->postString('title'),
-                $dueAt,
-                $request->postString('has_time') === '1',
-                $config,
-                $reminders
-            );
+            $result = $this->repeatService->updateRule(new RepeatRuleUpdateData([
+                'repeat_rule_id' => $repeatRuleId,
+                'user_id' => $this->authService->getCurrentUserId(),
+                'title' => $request->postString('task_title') !== ''
+                    ? $request->postString('task_title')
+                    : $request->postString('title'),
+                'due_at' => $dueAt,
+                'has_time' => $request->postString('has_time') === '1',
+                'repeat_config' => $config,
+                'reminders' => $reminders,
+            ]));
 
             return Response::json(array_merge(['success' => true], $result));
         } catch (\JsonException | RepeatValidationException | ReminderValidationException | RepeatRuleStateException $exception) {

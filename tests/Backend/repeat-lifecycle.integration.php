@@ -10,6 +10,7 @@ use App\Repositories\TaskRepository;
 use App\Services\ReminderService;
 use App\Services\RepeatOccurrencePlanner;
 use App\Services\RepeatRuleValidator;
+use App\Services\RepeatRuleUpdateData;
 use App\Services\RepeatScheduleCalculator;
 use App\Services\RepeatService;
 
@@ -206,16 +207,16 @@ try {
     assertLifecycleValue('active', $splitRule->status, 'The new split rule must be active.');
     assertLifecycleValue(true, (int) $futureEdit['generated_count'] > 0, 'The split rule must generate its initial 30-day window.');
     $service->pauseRule((int) $futureEdit['repeat_rule_id'], $userA, $now);
-    $pausedEdit = $service->updateRule(
-        (int) $futureEdit['repeat_rule_id'],
-        $userA,
-        'Paused split edit',
-        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
-        true,
-        [['value' => 15, 'unit' => 'minute']],
-        ['frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly']],
-        $now
-    );
+    $pausedEdit = $service->updateRule(new RepeatRuleUpdateData([
+        'repeat_rule_id' => (int) $futureEdit['repeat_rule_id'],
+        'user_id' => $userA,
+        'title' => 'Paused split edit',
+        'due_at' => new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        'has_time' => true,
+        'repeat_config' => ['frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly']],
+        'reminders' => [['value' => 15, 'unit' => 'minute']],
+        'now' => $now,
+    ]));
     assertLifecycleValue('paused', $pausedEdit['status'], 'Paused rule edits must stay paused.');
     assertLifecycleValue(null, $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA)->next_occurrence_at, 'Paused edits must clear the cursor until Resume.');
     assertLifecycleException(RepeatRuleNotFoundException::class, fn() => $service->updateSingleOccurrence(
