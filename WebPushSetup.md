@@ -1,10 +1,11 @@
-# Web Push — مرحله ثبت مرورگر
+# Web Push — ثبت مرورگر و Sender مستقل
 
 ## وضعیت فعلی
 
 - کلیدهای VAPID و ثبت/حذف Subscription پیاده‌سازی شده‌اند.
 - کنترل فعال/غیرفعال‌سازی در Account Settings قرار دارد و مستقل از Save است.
 - Service Worker فعلاً فقط برای Push است؛ Cache آفلاین و نصب PWA هنوز پیاده‌سازی نشده‌اند.
+- Sender مستقل و تست آفلاین آن اضافه شده‌اند؛ هنوز از هیچ Route یا Worker فراخوانی نمی‌شود و هیچ Reminder واقعی ارسال نمی‌کند.
 - ارسال زمان‌بندی‌شده Reminder، Retry، Cron، Badge خوانده‌نشده و Pagination هنوز مراحل بعدی هستند.
 - `sent` در آینده به معنی پذیرش توسط سرویس Push خواهد بود، نه تضمین نمایش یا خواندن توسط کاربر.
 
@@ -57,6 +58,42 @@ Rollback اختیاری در `Database/migrations/rollbacks/20260927_create_push
 Endpoint با Hash یکتا ثبت می‌شود؛ User-Agent محدودشده نقش توضیح Device/Browser را دارد، نه شناسه قابل‌اعتماد دستگاه. در هر حساب حداکثر ۱۰ مرورگر ثبت می‌شود. مالکیت Subscription خودکار به حساب دیگر منتقل نمی‌شود.
 
 برای پیشگیری از SSRF، فقط HTTPS روی پورت استاندارد و سرویس‌های شناخته‌شده Chrome، Firefox، Safari و Windows پذیرفته می‌شود. افزودن سرویس جدید نیازمند بازبینی `PushSubscriptionValidator` است.
+
+## Sender مستقل — مرحله ۱
+
+قرارداد در `App/Notifications/NotificationSender.php` و پیاده‌سازی در `WebPushNotificationSender.php` است. متد `send` فقط برای یک Subscription ارسال می‌کند؛ مسئول خواندن دیتابیس، مالکیت User، زمان‌بندی Cron، ثبت `sent` یا Retry نیست. Worker آینده باید Subscription متعلق به صاحب همان Reminder را از Repository بگیرد؛ هیچ Route عمومی برای ارسال مستقیم اضافه نشده است.
+
+ورودی Subscription همان فیلدهای دیتابیس `endpoint`، `p256dh` و `auth` است. Payload فقط شامل `title`، `body`، `tag` و `url` است؛ فیلد اضافی ارسال نمی‌شود. متن UTF-8 و حجم JSON بررسی می‌شوند. لینک کلیک باید مسیر داخلی `/notifications`، `/manage-tasks` یا `/` باشد؛ Query مجاز است. این قرارداد با Service Worker فعلی یکسان است. ساخت عنوان، Due Time و Tag مخصوص هر Reminder در مرحله Worker انجام خواهد شد.
+
+نتیجه از نوع `NotificationSendResult` است و فقط Outcome و HTTP Status را نگه می‌دارد، نه Endpoint، کلید، Payload یا خطای خام سرویس:
+
+| Outcome | معنی |
+| --- | --- |
+| `accepted` | پاسخ 2xx؛ سرویس Push پیام را پذیرفته، نه لزوماً مرورگر آن را نمایش داده است |
+| `expired` | پاسخ 404 یا 410؛ Subscription قابل استفاده نیست |
+| `retryable` | پاسخ 408، 429 یا 5xx؛ سیاست Retry بر عهده Worker آینده است |
+| `failed` | سایر پاسخ‌ها، از جمله Redirect، خطای مجوز یا Payload |
+| `unknown` | پاسخ HTTP نداریم؛ پذیرش پیام معلوم نیست و Retry ممکن است تکراری شود |
+
+پیش از ارسال، Subscription دوباره اعتبارسنجی می‌شود؛ همه IPهای DNS باید عمومی باشند و IP بررسی‌شده برای همان درخواست Pin می‌شود. `NoPrivateNetworkHttpClient` نیز IP اتصال را بررسی می‌کند. Redirect و Proxy غیرفعال‌اند؛ TLS Verification فعال است. Idle Timeout برابر ۱۰ ثانیه و حداکثر مدت درخواست HTTP برابر ۱۵ ثانیه است؛ این سقف شامل DNS اولیه سیستم نیست.
+
+Retention فعلی سرویس Push (`TTL`) برابر ۳۶۰۰ ثانیه است تا پیام تحویل‌نشده هفته‌ها نگهداری نشود. این مقدار **فاصله اجرای Cron نیست**؛ Cron همچنان هر یک دقیقه اجرا خواهد شد. سیاست نهایی عمر Reminder در مرحله Worker قابل بازبینی است.
+
+پکیج `nyholm/psr7` Factory استاندارد PSR-17 را فراهم می‌کند؛ Symfony HTTP Client نصب‌شده از طریق Adapter استاندارد PSR-18 استفاده می‌شود. نسخه پکیج‌های قبلی تغییر نکرده است. این انتخاب و روش Mock مطابق [راهنمای رسمی Nyholm](https://github.com/Nyholm/psr7) و [راهنمای HTTP Client در Symfony](https://symfony.com/doc/7.4/http_client.html) است.
+
+تست آفلاین با کلیدهای عمومی و ثابتِ مخصوص آزمون، Encryption واقعی و HTTP/DNS شبیه‌سازی‌شده اجرا می‌شود؛ نه کلید خصوصی برنامه را می‌خواند، نه به سرویس Push متصل می‌شود، نه دیتابیس را تغییر می‌دهد:
+
+```powershell
+# Run from the MyTodo root. Restore the previous OpenSSL setting after testing.
+$senderTestOpenSsl = $env:OPENSSL_CONF
+try {
+    $env:OPENSSL_CONF = 'C:\xampp\apache\conf\openssl.cnf'
+    & 'C:\xampp\php\php.exe' tests/Backend/web-push-sender.test.php
+    if ($LASTEXITCODE -ne 0) { throw 'Sender test failed.' }
+} finally {
+    $env:OPENSSL_CONF = $senderTestOpenSsl
+}
+```
 
 ## آزمون مرورگر
 
