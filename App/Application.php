@@ -8,6 +8,8 @@ use App\Controllers\AuthController;
 use App\Controllers\HomeController;
 use App\Controllers\NotificationController;
 use App\Controllers\ProfileController;
+use App\Controllers\PushSubscriptionController;
+use App\Config\WebPushConfiguration;
 use App\Controllers\ReminderController;
 use App\Controllers\RepeatController;
 use App\Controllers\SettingsController;
@@ -16,6 +18,7 @@ use App\Http\Request;
 use App\Http\Response;
 use App\Http\Router;
 use App\Repositories\NotificationRepository;
+use App\Repositories\PushSubscriptionRepository;
 use App\Repositories\ReminderRepository;
 use App\Repositories\RepeatRuleRepository;
 use App\Repositories\TaskRepository;
@@ -24,6 +27,8 @@ use App\Repositories\UserSettingsRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\ProfileService;
+use App\Services\PushSubscriptionService;
+use App\Services\PushSubscriptionValidator;
 use App\Services\ReminderService;
 use App\Services\RepeatRuleValidator;
 use App\Services\RepeatOccurrencePlanner;
@@ -75,6 +80,12 @@ final class Application
         $notificationService = new NotificationService($notificationRepository, $reminderService);
         $profileService = new ProfileService($userRepository);
         $userSettingsService = new UserSettingsService($userSettingsRepository);
+
+        $pushConfig = require $this->rootPath . '/config/web-push.php';
+        $this->router->bind(PushSubscriptionController::class, new PushSubscriptionController(
+            new PushSubscriptionService(new PushSubscriptionRepository($this->pdo), new PushSubscriptionValidator(), new WebPushConfiguration($pushConfig)),
+            $userSettingsService
+        ));
 
         $this->router->bind(AuthController::class, new AuthController($authService, $userSettingsService));
         $this->router->bind(HomeController::class, new HomeController(

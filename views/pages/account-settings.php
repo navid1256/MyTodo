@@ -94,4 +94,14 @@ $isSelected = static fn(string $value, string $selected): string => $value === $
             </button>
         </div>
     </form>
+
+    <section class="pushSettings" id="pushSettings" aria-labelledby="pushSettingsTitle">
+        <h2 id="pushSettingsTitle" data-i18n="push.title"><?= htmlspecialchars($translator->translate('push.title'), ENT_QUOTES, 'UTF-8') ?></h2>
+        <p class="accountSettingsHint" data-i18n="push.hint"><?= htmlspecialchars($translator->translate('push.hint'), ENT_QUOTES, 'UTF-8') ?></p>
+        <p class="pushSettingsStatus" data-push-status data-i18n="push.loading" role="status" aria-live="polite"><?= htmlspecialchars($translator->translate('push.loading'), ENT_QUOTES, 'UTF-8') ?></p>
+        <div class="pushSettingsActions">
+            <button class="pushSettingsButton" type="button" data-push-enable data-i18n="push.enable" disabled><?= htmlspecialchars($translator->translate('push.enable'), ENT_QUOTES, 'UTF-8') ?></button>
+            <button class="pushSettingsButton" type="button" data-push-disable data-i18n="push.disable" hidden disabled><?= htmlspecialchars($translator->translate('push.disable'), ENT_QUOTES, 'UTF-8') ?></button>
+        </div>
+    </section>
 </div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\AuthController;
 use App\Controllers\NotificationController;
+use App\Controllers\PushSubscriptionController;
 use App\Controllers\ReminderController;
 use App\Controllers\RepeatController;
 use App\Controllers\SettingsController;
@@ -12,6 +13,9 @@ use App\Http\Router;
 use App\Middleware\AuthMiddleware;
 
 return static function (Router $router): void {
+    $router->post('/api/push/status', [PushSubscriptionController::class, 'status'], [AuthMiddleware::class]);
+    $router->post('/api/push/subscribe', [PushSubscriptionController::class, 'subscribe'], [AuthMiddleware::class]);
+    $router->post('/api/push/unsubscribe', [PushSubscriptionController::class, 'unsubscribe'], [AuthMiddleware::class]);
     $router->post('/api/tasks', [TaskController::class, 'create'], [AuthMiddleware::class]);
     $router->post('/api/tasks/create', [TaskController::class, 'create'], [AuthMiddleware::class]);
     $router->post('/api/tasks/toggle', [TaskController::class, 'toggle'], [AuthMiddleware::class]);
