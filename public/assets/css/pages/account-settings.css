@@ -165,6 +165,51 @@ html.dark-mode .accountSettingsStatus.isError {
     color: #ff7b83;
 }
 
+.pushSettings {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #8d9ca4;
+}
+
+.pushSettings h2 {
+    margin: 0 0 16px;
+    font-size: 18px;
+}
+
+.pushSettings .accountSettingsHint {
+    margin: 0;
+    text-align: start;
+}
+
+.pushSettingsStatus {
+    margin: 16px 0;
+    font-size: 14px;
+}
+
+.pushSettingsStatus.isError { color: #c62828; }
+html.dark-mode .pushSettingsStatus.isError { color: #ff7b83; }
+
+.pushSettingsActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.pushSettingsButton {
+    min-height: 44px;
+    padding: 10px 24px;
+    border: 1px solid currentColor;
+    border-radius: 9px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.pushSettingsButton:focus-visible { outline: 2px solid #29b6cb; outline-offset: 3px; }
+.pushSettingsButton:disabled { cursor: default; opacity: 0.6; }
+.pushSettingsButton[hidden] { display: none; }
+
 @media (max-width: 620px) {
     .accountSettingsPage {
         padding: 24px 16px 40px;

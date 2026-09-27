@@ -16,6 +16,7 @@ import { initTaskCompletion } from './modules/task-completion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
 import { initAccountSettings } from './modules/account-settings.js';
+import { initPushNotifications } from './modules/push-notifications.js';
 import { initProfileBirthDate } from './modules/profile-birth-date.js';
 import { initRecurringTasks } from './modules/recurring-tasks.js';
 
@@ -35,6 +36,7 @@ function initDashboardView() {
     initHomeDayRefresh(signal);
     initActivityFilter(signal);
     initAccountSettings(signal);
+    initPushNotifications(signal);
     initProfileBirthDate(signal);
     initRecurringTasks(signal);
 
