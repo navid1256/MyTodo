@@ -3,7 +3,7 @@ import {
     formatDateKey,
     parseDateKey,
     startOfDay
-} from '../utils/date-utils.js';
+} from '../../utils/date-utils.js';
 import {
     CALENDAR_SYSTEM,
     createCalendarMonthDate,
@@ -16,8 +16,8 @@ import {
     getCalendarMonthStart,
     getCalendarWeekdayNames,
     getCalendarYearMonth
-} from '../utils/calendar-core.js';
-import { translate } from '../utils/i18n.js';
+} from '../../utils/calendar-core.js';
+import { translate } from '../../utils/i18n.js';
 
 const MINIMUM_JALALI_YEAR = 1300;
 

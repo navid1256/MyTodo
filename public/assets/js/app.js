@@ -3,7 +3,7 @@ import '@fontsource/vazirmatn/arabic-600.css';
 
 import { initTheme } from './modules/theme.js';
 import { initNavigation } from './modules/navigation.js';
-import { initProfileMenu } from './modules/profile-menu.js';
+import { initProfileMenu } from './modules/profile/profile-menu.js';
 import { initAvatarPicker } from './modules/avatar/avatar-picker.js';
 import { initTaskModal } from './modules/task-modal.js';
 import { initDateTimePicker } from './modules/date-time/date-time-picker.js';
@@ -17,7 +17,7 @@ import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
 import { initAccountSettings } from './modules/account-settings.js';
 import { initPushNotifications } from './modules/push-notifications.js';
-import { initProfileBirthDate } from './modules/profile-birth-date.js';
+import { initProfileBirthDate } from './modules/profile/profile-birth-date.js';
 import { initRecurringTasks } from './modules/recurring-tasks.js';
 
 let dashboardViewController = null;

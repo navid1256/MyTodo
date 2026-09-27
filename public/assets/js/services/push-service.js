@@ -1,6 +1,6 @@
 import { sendJsonFormRequest } from './api-client.js';
 
-export function sendPushRequest(action, csrfToken, fields = {}, signal) {
+export function sendPushRequest(action, csrfToken, fields = {}, signal = null) {
     const data = new FormData();
     data.set('csrf_token', csrfToken);
     Object.entries(fields).forEach(([key, value]) => data.set(key, value));

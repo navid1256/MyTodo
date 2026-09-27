@@ -4,7 +4,7 @@ import { translate } from '../utils/i18n.js';
 export function decodeApplicationServerKey(key) {
     const base64 = key.replaceAll('-', '+').replaceAll('_', '/');
     const binary = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
-    return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return Uint8Array.from(binary, (character) => character.codePointAt(0));
 }
 
 export function getPushBrowserState(browser = window) {
@@ -34,9 +34,9 @@ async function getReadyRegistration() {
     }
 }
 
-export function initPushNotifications(signal) {
+export function initPushNotifications(signal = null) {
     const panel = document.getElementById('pushSettings');
-    if (!panel || signal.aborted) return;
+    if (!panel || signal?.aborted) return;
     const enableButton = panel.querySelector('[data-push-enable]');
     const disableButton = panel.querySelector('[data-push-disable]');
     const status = panel.querySelector('[data-push-status]');
