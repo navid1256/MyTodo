@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Exceptions\NotificationValidationException;
 use PDO;
 
 final class NotificationRepository
@@ -96,6 +97,22 @@ final class NotificationRepository
 
     public function update(int $notificationId, int $offsetValue, string $offsetUnit, string $remindAt): bool
     {
+        // The service holds the reminder row lock while this check blocks in-flight edits.
+        $inFlight = $this->pdo->prepare(
+            "SELECT id FROM task_reminder_deliveries
+             WHERE reminder_id = :notification_id AND status = 'leased' LIMIT 1 FOR UPDATE"
+        );
+        $inFlight->execute([':notification_id' => $notificationId]);
+        if ($inFlight->fetchColumn() !== false) {
+            throw new NotificationValidationException('A notification currently being sent cannot be edited.');
+        }
+
+        // A rescheduled reminder is a new delivery intent; old browser outcomes cannot be reused.
+        $clearDeliveries = $this->pdo->prepare(
+            'DELETE FROM task_reminder_deliveries WHERE reminder_id = :notification_id'
+        );
+        $clearDeliveries->execute([':notification_id' => $notificationId]);
+
         $statement = $this->pdo->prepare(
             "UPDATE task_reminders
              SET offset_value = :offset_value,

@@ -5,8 +5,8 @@
 - کلیدهای VAPID و ثبت/حذف Subscription پیاده‌سازی شده‌اند.
 - کنترل فعال/غیرفعال‌سازی در Account Settings قرار دارد و مستقل از Save است.
 - Service Worker فعلاً فقط برای Push است؛ Cache آفلاین و نصب PWA هنوز پیاده‌سازی نشده‌اند.
-- Sender مستقل و تست آفلاین آن اضافه شده‌اند؛ هنوز از هیچ Route یا Worker فراخوانی نمی‌شود و هیچ Reminder واقعی ارسال نمی‌کند.
-- ارسال زمان‌بندی‌شده Reminder، Retry، Cron، Badge خوانده‌نشده و Pagination هنوز مراحل بعدی هستند.
+- Sender مستقل و لایه رزرو/ثبت نتیجه Reminder اضافه شده‌اند؛ هنوز هیچ Worker یا Route ارسال واقعی آن‌ها را فراخوانی نمی‌کند.
+- سیاست Retry در Service آماده است؛ اجرای زمان‌بندی‌شده، Cron، Badge خوانده‌نشده و Pagination هنوز مراحل بعدی هستند.
 - `sent` در آینده به معنی پذیرش توسط سرویس Push خواهد بود، نه تضمین نمایش یا خواندن توسط کاربر.
 
 ## کلیدهای VAPID
@@ -42,6 +42,8 @@ Migration دیتابیس موجود:
 این Migration در دیتابیس Development فعلی اعمال شده است؛ روی همان دیتابیس دوباره اجرا نشود. برای نصب تازه، Schema به‌روز `Database/mytodo.sql` همین جدول را دارد و نیازی به اجرای مجدد این Migration نیست.
 
 Rollback اختیاری در `Database/migrations/rollbacks/20260927_create_push_subscriptions.sql` همه Subscriptionها را پاک می‌کند؛ فقط برای بازگردانی عمدی اجرا شود.
+
+Migration مرحلهٔ رزرو: `Database/migrations/20260928_create_task_reminder_deliveries.sql` در دیتابیس Development فعلی نیز اعمال شده است؛ روی همان دیتابیس دوباره اجرا نشود. برای نصب تازه، `Database/mytodo.sql` این جدول را دارد. این Migration فقط جدول جدید می‌سازد و داده‌های موجود User، Task یا Reminder را تغییر نمی‌دهد. فایل Rollback متناظر جدول و تاریخچهٔ ارسال‌های آن را حذف می‌کند؛ فقط برای بازگردانی عمدی اجرا شود. پیش از استقرار کد جدید روی هر دیتابیس قدیمی دیگر، Migration را اعمال کنید.
 
 ## API
 
@@ -81,6 +83,16 @@ Retention فعلی سرویس Push (`TTL`) برابر ۳۶۰۰ ثانیه است
 
 پکیج `nyholm/psr7` Factory استاندارد PSR-17 را فراهم می‌کند؛ Symfony HTTP Client نصب‌شده از طریق Adapter استاندارد PSR-18 استفاده می‌شود. نسخه پکیج‌های قبلی تغییر نکرده است. این انتخاب و روش Mock مطابق [راهنمای رسمی Nyholm](https://github.com/Nyholm/psr7) و [راهنمای HTTP Client در Symfony](https://symfony.com/doc/7.4/http_client.html) است.
 
+## رزرو و ثبت نتیجه Reminder — مرحله ۲
+
+`ReminderDispatchService` با `ReminderDeliveryRepository` کار می‌کند. هر Reminder رسیده برای هر Subscription متعلق به صاحب Task فقط یک رکورد `task_reminder_deliveries` دارد. شمارنده تلاش، زمان تلاش، Claim Token و نتیجه هر مرورگر جداست. کار تکمیل‌شده، Reminder لغوشده و Series متوقف/لغوشده رزرو نمی‌شود؛ Taskهای باقی‌مانده از Series تکمیل‌شده همچنان می‌توانند اعلان داشته باشند.
+
+ابتدا مرورگرهای واجد شرایط پیدا می‌شوند و سپس هر رکورد به‌صورت اتمی برای Worker رزرو می‌شود. Claim Token مانع ثبت نتیجه توسط Worker قدیمی پس از پایان رزرو است. یک پذیرش از سرویس Push، وضعیت Reminder را `sent` می‌کند؛ بقیه مرورگرها فقط نتیجه خودشان را می‌گیرند و مرورگر موفق دوباره ارسال نمی‌شود. این `sent` تضمین نمایش در دستگاه نیست.
+
+پاسخ‌های 408/429/5xx حداکثر **سه تلاش کلی** برای همان مرورگر دارند: پس از تلاش اول ۶۰ ثانیه، پس از تلاش دوم ۳۰۰ ثانیه تأخیر. 404/410 موجب حذف Subscription منقضی می‌شود، مگر کلیدهای آن در فاصله ارسال به‌روزرسانی شده باشند. اگر پاسخ HTTP وجود نداشته باشد، یا رزروی بیش از پنج دقیقه بی‌نتیجه بماند، وضعیت `unknown` است و خودکار Retry نمی‌شود؛ نتیجه نامعلوم ممکن است قبلاً به سرویس Push رسیده باشد. Reminder بدون مرورگر ثبت‌شده `failed` می‌شود. ویرایش Reminder ناموفق، سوابق ارسال زمان قبلی را پاک می‌کند؛ ویرایش در زمان ارسال فعال رد می‌شود.
+
+این مرحله فقط آماده‌سازی و نگهداری نتیجه است؛ هنوز Sender به این Service وصل نشده و هیچ Cron/Worker فعال نشده است. مرحلهٔ بعد ساخت `process/send-reminders.php`، اجرای CLI، ساخت Payload و آزمون واقعی دو Worker روی دیتابیس مشترک است. Claim و قفل دیتابیس مانع رزرو دوبارهٔ رکورد در حال پردازش می‌شوند، اما تضمین Exactly-once در قطع ارتباط پس از پذیرش سرویس Push ممکن نیست.
+
 تست آفلاین با کلیدهای عمومی و ثابتِ مخصوص آزمون، Encryption واقعی و HTTP/DNS شبیه‌سازی‌شده اجرا می‌شود؛ نه کلید خصوصی برنامه را می‌خواند، نه به سرویس Push متصل می‌شود، نه دیتابیس را تغییر می‌دهد:
 
 ```powershell
@@ -112,6 +124,7 @@ try {
 php tests/Backend/push-subscription.test.php
 php tests/Backend/push-api.test.php
 php tests/Backend/push-subscription.integration.php
+php tests/Backend/reminder-delivery.integration.php
 node --test tests/Frontend/push-notifications.test.mjs tests/Frontend/push-worker.test.mjs
 ```
 
