@@ -380,6 +380,7 @@ return [
     'push.request_failed' => 'تنظیمات اعلان ذخیره نشد. دوباره تلاش کنید.',
     'push.worker_failed' => 'سرویس اعلان مرورگر راه‌اندازی نشد. صفحه را تازه‌سازی کرده و دوباره تلاش کنید.',
     'push.cleanup_failed' => 'حذف اشتراک مرورگر انجام نشد. دوباره غیرفعال‌سازی را امتحان کنید.',
+    'push.reminder.due_at' => 'موعد: {date}',
     'settings.title' => 'تنظیمات حساب',
     'settings.form_label' => 'تنظیمات حساب',
     'settings.calendar_system' => 'سیستم تقویم :',
