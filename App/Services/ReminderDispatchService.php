@@ -40,6 +40,14 @@ final class ReminderDispatchService
         return $this->repository->reserveReadyDeliveries($at, $limit);
     }
 
+    /** Rechecks a reserved browser immediately before provider I/O. */
+    public function claimIsSendable(array $claim, ?DateTimeImmutable $now = null): bool
+    {
+        $now = ($now ?? new DateTimeImmutable('now', new DateTimeZone('UTC')))->setTimezone(new DateTimeZone('UTC'));
+
+        return $this->repository->claimIsSendable($claim, $now->format(self::DATETIME_FORMAT));
+    }
+
     /**
      * Records one claimed provider result; the claim token prevents stale workers
      * from changing another worker's result. Ambiguous outcomes are never retried.

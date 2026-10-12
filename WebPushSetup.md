@@ -5,8 +5,8 @@
 - کلیدهای VAPID و ثبت/حذف Subscription پیاده‌سازی شده‌اند.
 - کنترل فعال/غیرفعال‌سازی در Account Settings قرار دارد و مستقل از Save است.
 - Service Worker فعلاً فقط برای Push است؛ Cache آفلاین و نصب PWA هنوز پیاده‌سازی نشده‌اند.
-- Sender مستقل و لایه رزرو/ثبت نتیجه Reminder اضافه شده‌اند؛ هنوز هیچ Worker یا Route ارسال واقعی آن‌ها را فراخوانی نمی‌کند.
-- سیاست Retry در Service آماده است؛ اجرای زمان‌بندی‌شده، Cron، Badge خوانده‌نشده و Pagination هنوز مراحل بعدی هستند.
+- Sender مستقل، لایه رزرو/ثبت نتیجه و Worker CLI اضافه شده‌اند؛ Worker فقط با گزینهٔ صریح `--send` ارسال واقعی می‌کند و هنوز Cron یا Route عمومی ارسال ندارد.
+- سیاست Retry در Service آماده است؛ آزمون هم‌زمانی دو پردازش، ارسال واقعیِ کنترل‌شده، Cron، Badge خوانده‌نشده و Pagination هنوز مراحل بعدی هستند.
 - `sent` در آینده به معنی پذیرش توسط سرویس Push خواهد بود، نه تضمین نمایش یا خواندن توسط کاربر.
 
 ## کلیدهای VAPID
@@ -63,9 +63,9 @@ Endpoint با Hash یکتا ثبت می‌شود؛ User-Agent محدودشده �
 
 ## Sender مستقل — مرحله ۱
 
-قرارداد در `App/Notifications/NotificationSender.php` و پیاده‌سازی در `WebPushNotificationSender.php` است. متد `send` فقط برای یک Subscription ارسال می‌کند؛ مسئول خواندن دیتابیس، مالکیت User، زمان‌بندی Cron، ثبت `sent` یا Retry نیست. Worker آینده باید Subscription متعلق به صاحب همان Reminder را از Repository بگیرد؛ هیچ Route عمومی برای ارسال مستقیم اضافه نشده است.
+قرارداد در `App/Notifications/NotificationSender.php` و پیاده‌سازی در `WebPushNotificationSender.php` است. متد `send` فقط برای یک Subscription ارسال می‌کند؛ مسئول خواندن دیتابیس، مالکیت User، زمان‌بندی Cron، ثبت `sent` یا Retry نیست. Worker از Repository فقط Subscription متعلق به صاحب همان Reminder را می‌گیرد؛ هیچ Route عمومی برای ارسال مستقیم اضافه نشده است.
 
-ورودی Subscription همان فیلدهای دیتابیس `endpoint`، `p256dh` و `auth` است. Payload فقط شامل `title`، `body`، `tag` و `url` است؛ فیلد اضافی ارسال نمی‌شود. متن UTF-8 و حجم JSON بررسی می‌شوند. لینک کلیک باید مسیر داخلی `/notifications`، `/manage-tasks` یا `/` باشد؛ Query مجاز است. این قرارداد با Service Worker فعلی یکسان است. ساخت عنوان، Due Time و Tag مخصوص هر Reminder در مرحله Worker انجام خواهد شد.
+ورودی Subscription همان فیلدهای دیتابیس `endpoint`، `p256dh` و `auth` است. Payload فقط شامل `title`، `body`، `tag` و `url` است؛ فیلد اضافی ارسال نمی‌شود. متن UTF-8 و حجم JSON بررسی می‌شوند. لینک کلیک باید مسیر داخلی `/notifications`، `/manage-tasks` یا `/` باشد؛ Query مجاز است. این قرارداد با Service Worker فعلی یکسان است. Worker عنوان Task، Due Time در منطقه زمانی/تقویم ذخیره‌شده و Tag یکتای Reminder را می‌سازد؛ کلیک فعلاً صفحهٔ Manage Tasks را باز می‌کند، نه خود Task.
 
 نتیجه از نوع `NotificationSendResult` است و فقط Outcome و HTTP Status را نگه می‌دارد، نه Endpoint، کلید، Payload یا خطای خام سرویس:
 
@@ -91,7 +91,19 @@ Retention فعلی سرویس Push (`TTL`) برابر ۳۶۰۰ ثانیه است
 
 پاسخ‌های 408/429/5xx حداکثر **سه تلاش کلی** برای همان مرورگر دارند: پس از تلاش اول ۶۰ ثانیه، پس از تلاش دوم ۳۰۰ ثانیه تأخیر. 404/410 موجب حذف Subscription منقضی می‌شود، مگر کلیدهای آن در فاصله ارسال به‌روزرسانی شده باشند. اگر پاسخ HTTP وجود نداشته باشد، یا رزروی بیش از پنج دقیقه بی‌نتیجه بماند، وضعیت `unknown` است و خودکار Retry نمی‌شود؛ نتیجه نامعلوم ممکن است قبلاً به سرویس Push رسیده باشد. Reminder بدون مرورگر ثبت‌شده `failed` می‌شود. ویرایش Reminder ناموفق، سوابق ارسال زمان قبلی را پاک می‌کند؛ ویرایش در زمان ارسال فعال رد می‌شود.
 
-این مرحله فقط آماده‌سازی و نگهداری نتیجه است؛ هنوز Sender به این Service وصل نشده و هیچ Cron/Worker فعال نشده است. مرحلهٔ بعد ساخت `process/send-reminders.php`، اجرای CLI، ساخت Payload و آزمون واقعی دو Worker روی دیتابیس مشترک است. Claim و قفل دیتابیس مانع رزرو دوبارهٔ رکورد در حال پردازش می‌شوند، اما تضمین Exactly-once در قطع ارتباط پس از پذیرش سرویس Push ممکن نیست.
+Worker اکنون Sender را به این Service وصل می‌کند، اما Cron هنوز فعال نشده است. Claim و قفل دیتابیس برای جلوگیری از رزرو دوبارهٔ رکورد در حال پردازش هستند؛ آزمون هم‌زمانی دو پردازش روی دیتابیس مشترک هنوز باقی است و تضمین Exactly-once در قطع ارتباط پس از پذیرش سرویس Push ممکن نیست. Worker پیش از هر ارسال، تغییر وضعیت Task/Rule/Reminder و تغییر Subscription یا تاریخ Task را دوباره کنترل می‌کند؛ Pause پس از آغاز درخواست HTTP نمی‌تواند آن درخواستِ درحال‌ارسال را پس بگیرد.
+
+## Worker CLI — مرحله ۳
+
+`App/Services/ReminderNotificationWorker.php` Deliveryهای رسیده را رزرو، اعتبارسنجی و به Sender تحویل می‌دهد. CLI در هر اجرا حداکثر **۱۰ Delivery** را پردازش می‌کند: با سقف ۱۵ ثانیه برای هر درخواست HTTP، این اندازه از مهلت پنج‌دقیقه‌ای Claim کمتر می‌ماند. Payload عنوان Task و موعد آن را در Timezone و تقویم ذخیره‌شدهٔ User نشان می‌دهد. تقویم Jalali همیشه نام ماه و اعداد فارسی دارد، حتی اگر زبان رابط English باشد. در اجرای پس‌زمینه، Language=`default` به English برمی‌گردد چون زبان Browser در Worker موجود نیست. خطای ساخت Payload قبل از تماس با سرویس Push، Retry محدود می‌گیرد؛ خطای مبهم در تماس HTTP خودکار تکرار نمی‌شود. ظرفیت ۱۰ Delivery در هر اجرا باید در آزمون بار برای ۵۰ تا ۱۰۰ کاربر سنجیده شود.
+
+برای مشاهدهٔ راهنما بدون دست‌زدن به دیتابیس یا ارسال Push:
+
+```powershell
+php process/send-reminders.php --help
+```
+
+گزینهٔ `--send` ارسال **واقعی** را برای تمام Reminderهای رسیدهٔ واجد شرایط فعال می‌کند؛ آن را فقط پس از آماده‌کردن حساب آزمایشی و تأیید مرحلهٔ آزمون واقعی اجرا کنید. Cron/Windows Task Scheduler هنوز تنظیم نشده‌اند. خروجی Worker فقط شمارنده‌های تجمیعی است و کلیدها، Endpoint، متن Task یا خطای خام سرویس Push را نشان نمی‌دهد.
 
 تست آفلاین با کلیدهای عمومی و ثابتِ مخصوص آزمون، Encryption واقعی و HTTP/DNS شبیه‌سازی‌شده اجرا می‌شود؛ نه کلید خصوصی برنامه را می‌خواند، نه به سرویس Push متصل می‌شود، نه دیتابیس را تغییر می‌دهد:
 
@@ -125,6 +137,8 @@ php tests/Backend/push-subscription.test.php
 php tests/Backend/push-api.test.php
 php tests/Backend/push-subscription.integration.php
 php tests/Backend/reminder-delivery.integration.php
+php tests/Backend/reminder-worker.integration.php
+php tests/Backend/reminder-worker-cli.test.php
 node --test tests/Frontend/push-notifications.test.mjs tests/Frontend/push-worker.test.mjs
 ```
 

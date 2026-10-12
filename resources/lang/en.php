@@ -380,6 +380,7 @@ return [
     'push.request_failed' => 'Notification settings could not be updated. Try again.',
     'push.worker_failed' => 'The notification worker could not start. Reload and try again.',
     'push.cleanup_failed' => 'The browser subscription could not be removed. Try disabling it again.',
+    'push.reminder.due_at' => 'Due at {date}',
     'settings.title' => 'Account Settings',
     'settings.form_label' => 'Account settings',
     'settings.calendar_system' => 'Calendar System :',
