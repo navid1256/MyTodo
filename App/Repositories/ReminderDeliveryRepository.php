@@ -129,8 +129,10 @@ final class ReminderDeliveryRepository
             $lock = $this->pdo->prepare('SELECT reminder_id, status, claimed_at FROM task_reminder_deliveries WHERE id = :id FOR UPDATE');
             $lock->execute([':id' => $id]);
             $row = $lock->fetch(PDO::FETCH_ASSOC);
-            if ($row === false || ($cutoff === null && !in_array($row['status'], ['pending', 'retryable'], true))
-                || ($cutoff !== null && ($row['status'] !== 'leased' || $row['claimed_at'] > $cutoff))) {
+            if (
+                $row === false || ($cutoff === null && !in_array($row['status'], ['pending', 'retryable'], true))
+                || ($cutoff !== null && ($row['status'] !== 'leased' || $row['claimed_at'] > $cutoff))
+            ) {
                 $this->pdo->commit();
                 return;
             }
@@ -211,8 +213,12 @@ final class ReminderDeliveryRepository
                        AND t.is_done = 0 AND (rule.id IS NULL OR rule.status IN ('active', 'completed'))"
                 );
                 $update->execute([
-                    ':token' => $token, ':claimed_at' => $now, ':last_attempt_at' => $now,
-                    ':id' => $id, ':retry_at' => $now, ':due_at' => $now,
+                    ':token' => $token,
+                    ':claimed_at' => $now,
+                    ':last_attempt_at' => $now,
+                    ':id' => $id,
+                    ':retry_at' => $now,
+                    ':due_at' => $now,
                 ]);
                 if ($update->rowCount() !== 1) {
                     $this->pdo->commit();
@@ -364,15 +370,20 @@ final class ReminderDeliveryRepository
                  WHERE id = :id AND claim_token = :token'
             );
             $update->execute([
-                ':status' => $status, ':next_at' => $nextAttemptAt, ':http_status' => $httpStatus,
+                ':status' => $status,
+                ':next_at' => $nextAttemptAt,
+                ':http_status' => $httpStatus,
                 ':sent_at' => $status === 'sent' ? $now : null,
-                ':id' => $id, ':token' => $token,
+                ':id' => $id,
+                ':token' => $token,
             ]);
 
             // Compare keys too: an old rejected request must not delete a refreshed subscription.
             $subscriptionParameters = [
-                ':id' => $row['subscription_id'], ':user_id' => $row['user_id'],
-                ':p256dh' => $claim['p256dh'], ':auth' => $claim['auth'],
+                ':id' => $row['subscription_id'],
+                ':user_id' => $row['user_id'],
+                ':p256dh' => $claim['p256dh'],
+                ':auth' => $claim['auth'],
             ];
             if ($status === 'expired') {
                 $delete = $this->pdo->prepare(

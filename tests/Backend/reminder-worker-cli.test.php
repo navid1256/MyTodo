@@ -19,8 +19,15 @@ function runReminderCommand(array $arguments): array
 }
 
 [$helpStatus, $helpOutput] = runReminderCommand(['--help']);
-if ($helpStatus !== 0 || !str_contains($helpOutput, '--send')) {
-    throw new RuntimeException('The CLI help must explain explicit sending.');
+if ($helpStatus !== 0 || !str_contains($helpOutput, '--send') || !str_contains($helpOutput, 'REMINDER_WORKERS')) {
+    throw new RuntimeException('The CLI help must explain explicit sending and configurable concurrency.');
+}
+
+foreach ([['--worker=1'], ['--send', '--worker=0'], ['--send', '--worker=17'], ['--send', '--worker=1', '--extra']] as $arguments) {
+    [$status] = runReminderCommand($arguments);
+    if ($status !== 2) {
+        throw new RuntimeException('Malformed child arguments must be rejected before database or provider I/O.');
+    }
 }
 [$noSendStatus, $noSendOutput, $noSendError] = runReminderCommand([]);
 if ($noSendStatus !== 2 || $noSendOutput !== '' || !str_contains($noSendError, '--send')) {
