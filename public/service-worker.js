@@ -81,10 +81,15 @@ self.addEventListener('notificationclick', (event) => {
             const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
             if (existing) {
                 diagnostics?.stages.push('window-found', 'navigating');
-                await existing.navigate(url.href);
-                diagnostics?.stages.push('navigation-complete', 'focusing');
-                await existing.focus();
-                diagnostics?.stages.push('focus-complete');
+                const navigatedClient = await existing.navigate(url.href);
+                diagnostics?.stages.push('navigation-complete');
+                if (navigatedClient) {
+                    diagnostics?.stages.push('focusing');
+                    await navigatedClient.focus();
+                    diagnostics?.stages.push('focus-complete');
+                } else {
+                    diagnostics?.stages.push('focus-skipped-no-client');
+                }
             } else {
                 diagnostics?.stages.push('opening-window');
                 await self.clients.openWindow(url.href);
@@ -93,7 +98,7 @@ self.addEventListener('notificationclick', (event) => {
         } catch (error) {
             if (diagnostics) {
                 const allowedNames = ['Error', 'TypeError', 'InvalidAccessError', 'SecurityError',
-                    'AbortError', 'InvalidStateError', 'NotAllowedError', 'NotSupportedError', 'NetworkError'];
+                    'AbortError', 'InvalidStateError', 'NotAllowedError', 'NotSupportedError', 'NetworkError', 'NotFoundError'];
                 diagnostics.errorName = allowedNames.includes(error?.name) ? error.name : 'Error';
             }
             throw error;

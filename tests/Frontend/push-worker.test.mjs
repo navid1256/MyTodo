@@ -84,7 +84,7 @@ test('test click records navigation and focus of an existing application window'
     const calls = [];
     const client = {
         url: 'https://mytodo.php/account-settings',
-        navigate: async (url) => { calls.push(['navigate', url]); },
+        navigate: async (url) => { calls.push(['navigate', url]); return client; },
         focus: async () => { calls.push(['focus']); }
     };
     const worker = createWorker({ windows: [client] });
@@ -183,4 +183,47 @@ test('ordinary close events do not log or extend work and test close tolerates u
     });
     await pending;
     assert.equal(unavailable.logs.length, 1);
+});
+
+test('click focuses the client returned by navigation instead of the stale original client', async () => {
+    const calls = [];
+    const navigatedClient = { focus: async () => { calls.push('focused-current-client'); } };
+    const originalClient = {
+        url: 'https://mytodo.php/account-settings',
+        navigate: async (url) => { calls.push(url); return navigatedClient; },
+        focus: async () => { throw new DOMException('The client was not found.', 'NotFoundError'); }
+    };
+    const worker = createWorker({ windows: [originalClient] });
+    await clickTestNotification(worker);
+    assert.deepEqual(calls, ['https://mytodo.php/notifications', 'focused-current-client']);
+    assert.deepEqual(worker.opened, []);
+    assert.equal(worker.diagnostics.at(-1).errorName, null);
+    assert.equal(worker.diagnostics.at(-1).stages.at(-1), 'focus-complete');
+});
+
+test('navigation returning null never focuses the stale client or opens a duplicate tab', async () => {
+    const worker = createWorker({ windows: [{
+        url: 'https://mytodo.php/account-settings',
+        navigate: async () => null,
+        focus: async () => assert.fail('A navigation with no returned client must not focus the old client')
+    }] });
+    await clickTestNotification(worker);
+    assert.deepEqual(worker.opened, []);
+    assert.equal(worker.diagnostics.at(-1).errorName, null);
+    assert.equal(worker.diagnostics.at(-1).stages.at(-1), 'focus-skipped-no-client');
+});
+
+test('a missing navigated client preserves NotFoundError without logging its message', async () => {
+    const failure = new DOMException('Sensitive client details', 'NotFoundError');
+    const navigatedClient = { focus: async () => { throw failure; } };
+    const worker = createWorker({ windows: [{
+        url: 'https://mytodo.php/account-settings',
+        navigate: async () => navigatedClient,
+        focus: async () => assert.fail('Only the navigated client may be focused')
+    }] });
+    await assert.rejects(clickTestNotification(worker), (error) => error === failure);
+    assert.equal(worker.diagnostics.at(-1).errorName, 'NotFoundError');
+    assert.equal(worker.diagnostics.at(-1).stages.at(-1), 'focusing');
+    assert.ok(!JSON.stringify(worker.diagnostics).includes('Sensitive'));
+    assert.deepEqual(worker.opened, []);
 });
