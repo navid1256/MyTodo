@@ -99,6 +99,23 @@ try {
     checkConcurrent((int) $pdo->query("SELECT peak_workers FROM `{$prefix}metrics`")->fetchColumn() === 4, 'Overlapping launches must preserve the four-worker ceiling.');
     $elapsed = (hrtime(true) - $startedAt) / 1_000_000_000;
     echo sprintf("PASS 4 concurrent workers, 200 fake deliveries, no duplicate sends, overlapping launcher/slot excluded (%.2fs)\n", $elapsed);
+
+    // Two direct workers racing for one explicit pair must still produce only one fake send.
+    $task->execute();
+    $reminder->execute([':task' => $testPdo->lastInsertId()]);
+    $targetReminder = (int) $testPdo->lastInsertId();
+    $task->execute();
+    $reminder->execute([':task' => $testPdo->lastInsertId()]);
+    $unrelatedReminder = (int) $testPdo->lastInsertId();
+    $children[] = startFixtureWorker($prefix, '--target=' . $targetReminder . ':1:1');
+    $children[] = startFixtureWorker($prefix, '--target=' . $targetReminder . ':1:2');
+    $targetSecond = finishFixtureWorker(array_pop($children));
+    $targetFirst = finishFixtureWorker(array_pop($children));
+    checkConcurrent($targetFirst['summary']['accepted'] + $targetSecond['summary']['accepted'] === 1, 'Concurrent target reservations must accept only one delivery.');
+    checkConcurrent((int) $pdo->query("SELECT COUNT(*) FROM `{$prefix}sends` WHERE tag = 'mytodo-reminder-{$targetReminder}'")->fetchColumn() === 1, 'The targeted reminder must not produce duplicate or second-browser sends.');
+    checkConcurrent((int) $pdo->query("SELECT COUNT(*) FROM `{$prefix}task_reminder_deliveries` WHERE reminder_id = {$unrelatedReminder}")->fetchColumn() === 0, 'Targeted workers must not enqueue the unrelated due reminder.');
+    checkConcurrent((int) $pdo->query("SELECT COUNT(*) FROM `{$prefix}task_reminder_deliveries` WHERE reminder_id = {$targetReminder} AND status = 'sent' AND attempt_count = 1 AND subscription_id = 1")->fetchColumn() === 1, 'Only the selected target may be claimed and recorded once.');
+    echo "PASS concurrent targeted workers: one fake send, selected browser only, unrelated due reminder untouched\n";
 } finally {
     // Wait for children before removing only the exact fixture tables created above.
     $childCleanupFailed = false;

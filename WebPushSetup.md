@@ -139,6 +139,25 @@ try {
 
 ## آزمون مرورگر
 
+### ارسال واقعیِ محدود به یک Reminder و یک مرورگر
+
+برای آزمون کنترل‌شده، اجرای عمومی `--send` استفاده نشود. حالت زیر فقط یک جفت مشخص را پردازش می‌کند؛ مقدارهای جایگزین عمداً غیرعددی هستند تا کپیِ بدون انتخاب شناسه‌های واقعی باعث ارسال نشود:
+
+```powershell
+php process/send-reminders.php --send --reminder-id=REMINDER_ID --subscription-id=SUBSCRIPTION_ID
+```
+
+- `ReminderWorkerArguments` پیش از بارگذاری Environment یا اتصال دیتابیس، هر دو شناسهٔ مثبت را لازم می‌داند. شناسهٔ ناقص، تکراری، نامعتبر یا ترکیب آن‌ها با `--worker=N` با کد خروج ۲ رد می‌شود؛ این خطا هرگز به اجرای صف عمومی تبدیل نمی‌شود. ترتیب دو گزینهٔ شناسه مهم نیست.
+- `ReminderDeliveryRepository::reserveTargetDelivery()` فقط Reminder رسیده و Subscription متعلق به صاحب همان Task را بررسی می‌کند. قفل Reminder پیش از قفل‌های دیگر گرفته می‌شود؛ سپس حداکثر یک Delivery همان جفت ساخته و با منطق اتمی مشترک رزرو می‌شود. Task تکمیل‌شده، Reminder لغوشده یا آینده، Series متوقف/لغوشده و مقصد ناموجود یا با مالک متفاوت ارسال نمی‌شوند.
+- `ReminderDispatchService::reserveTarget()` هیچ پاک‌سازی صف عمومی، منقضی‌کردن Claimهای سایر رکوردها یا Fan-out به مرورگرهای دیگر انجام نمی‌دهد. Claim موجودِ `leased` یا نتیجهٔ `unknown` نیز در حالت محدود به‌زور دوباره ارسال نمی‌شود. ارسال موفق قبلی تکرار نمی‌شود و Retry فقط با رعایت زمان و سقف تلاش فعلی ممکن است.
+- `ReminderNotificationWorker::runTarget()` همان ساخت Payload، کنترل دوبارهٔ Sendability، Sender واقعی و ثبت نتیجهٔ اجرای عادی را به کار می‌برد. تفاوت فقط انتخاب محدود Claim است. در CLI این متد فقط یک‌بار و بدون Pool یا حلقهٔ تخلیه اجرا می‌شود و همان قفل Launcher را می‌گیرد.
+- خروجی JSON شامل `mode: targeted` و شمارنده‌های تجمیعی است؛ شناسه‌های محرمانه، Endpoint و کلیدها چاپ نمی‌شوند. `claimed: 0` یعنی مورد قابل ارسال پیدا نشده و به معنی ارسال موفق نیست. برای پذیرش سرویس Push، `accepted: 1` انتظار می‌رود؛ نمایش در مرورگر و ثبت در Sent Notifications جداگانه باید بررسی شوند.
+- این حالت ابزار CLI دارای دسترسی سرور است، نه API کاربر؛ شناسه‌ها باید به Reminder آزمایشی و مرورگر تأییدشدهٔ همان حساب محدود شوند. پس از انتخاب شناسه‌ها و پیش از ارسال واقعی، مالکیت و زمان Reminder دوباره بررسی شوند. Scheduler فعلاً غیرفعال بماند.
+
+اعتبارسنجی CLI ابتدا با تست شکست‌خورده و سپس پیاده‌سازی بررسی شد. آزمون Worker روی جدول‌های موقتِ همین اتصال با Sender ساختگی، دست‌نخوردن Taskها، Reminderهای دیگر، مرورگر دوم و Claim قدیمیِ نامرتبط را تأیید کرد. حذف آزمایشی شرط مالکیت، تست را شکست داد و شرط بلافاصله برگردانده شد. آزمون چندپردازشی با جدول‌های دارای پیشوند تصادفی نیز فقط یک ارسال ساختگی برای رقابت روی جفت واحد ثبت کرد؛ جدول‌های همان آزمون پاک شدند و داده‌های اصلی استفاده نشدند. هر ۱۲ برنامهٔ آزمون Backend مرتبط و ۳۱ تست Frontend پاس شدند. هنوز این حالت روی Reminder و Subscription واقعی اجرا نشده است؛ Task و مرورگر آزمون باید مشخص شوند.
+
+### ثبت و غیرفعال‌سازی مرورگر
+
 1. Apache، MySQL و Vite را روشن کنید و `https://mytodo.php/account-settings` را باز کنید.
 2. هنگام ورود به صفحه هیچ Permission Prompt نباید باز شود.
 3. روی Enable Notifications بزنید و مجوز را Allow کنید.
@@ -175,6 +194,7 @@ php tests/Backend/push-subscription.integration.php
 php tests/Backend/reminder-delivery.integration.php
 php tests/Backend/reminder-worker.integration.php
 php tests/Backend/reminder-worker-cli.test.php
+php tests/Backend/reminder-worker-arguments.test.php
 php tests/Backend/reminder-worker-runner.test.php
 php tests/Backend/reminder-worker-config.test.php
 php tests/Backend/reminder-worker-pool.test.php

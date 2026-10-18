@@ -19,11 +19,17 @@ function runReminderCommand(array $arguments): array
 }
 
 [$helpStatus, $helpOutput] = runReminderCommand(['--help']);
-if ($helpStatus !== 0 || !str_contains($helpOutput, '--send') || !str_contains($helpOutput, 'REMINDER_WORKERS')) {
+if ($helpStatus !== 0 || !str_contains($helpOutput, '--send') || !str_contains($helpOutput, 'REMINDER_WORKERS')
+    || !str_contains($helpOutput, '--reminder-id') || !str_contains($helpOutput, '--subscription-id')) {
     throw new RuntimeException('The CLI help must explain explicit sending and configurable concurrency.');
 }
 
-foreach ([['--worker=1'], ['--send', '--worker=0'], ['--send', '--worker=17'], ['--send', '--worker=1', '--extra']] as $arguments) {
+foreach ([['--worker=1'], ['--send', '--worker=0'], ['--send', '--worker=17'], ['--send', '--worker=1', '--extra'],
+    ['--send', '--reminder-id=1'], ['--send', '--subscription-id=1'],
+    ['--send', '--reminder-id=0', '--subscription-id=1'],
+    ['--send', '--reminder-id=1', '--subscription-id=1oops'],
+    ['--send', '--worker=1', '--reminder-id=1', '--subscription-id=1'],
+] as $arguments) {
     [$status] = runReminderCommand($arguments);
     if ($status !== 2) {
         throw new RuntimeException('Malformed child arguments must be rejected before database or provider I/O.');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Config\EnvironmentLoader;
 use App\Database\Database;
+use App\Exceptions\ReminderWorkerException;
 use App\Notifications\NotificationSender;
 use App\Notifications\NotificationSendResult;
 use App\Repositories\ReminderDeliveryRepository;
@@ -151,4 +152,67 @@ $beforeBadSettings = count($sender->calls);
 $badSettings = $worker->run(10, $now);
 checkWorker($badSettings['retryable'] === 2 && count($sender->calls) === $beforeBadSettings, 'Payload preparation failures must not call the provider and must have a bounded retry.');
 
-echo "PASS reminder worker payload, ownership, result recording and per-browser retry (fake sender, temporary MySQL tables)\n";
+// Targeted execution must leave unrelated reminders, browsers and abandoned leases untouched.
+$pdo->exec("UPDATE user_settings SET timezone = 'UTC', calendar_system = 'gregorian', language = 'english' WHERE user_id = 1");
+$pdo->exec("INSERT INTO tasks VALUES
+    (108, 1, NULL, 'Targeted fixture', '2026-09-28 11:00:00', 1, 0),
+    (109, 1, NULL, 'Unrelated old lease', '2026-09-28 11:00:00', 1, 0),
+    (110, 1, NULL, 'Unrelated cancelled reminder', '2026-09-28 11:00:00', 1, 0),
+    (111, 2, NULL, 'Another owner', '2026-09-28 11:00:00', 1, 0),
+    (112, 1, NULL, 'Future target', '2026-09-29 11:00:00', 1, 0),
+    (113, 1, NULL, 'Completed target', '2026-09-28 11:00:00', 1, 1),
+    (114, 1, 1, 'Paused target', '2026-09-28 11:00:00', 1, 0)");
+$pdo->exec("INSERT INTO task_reminders (id, task_id, status, remind_at) VALUES
+    (208, 108, 'pending', '2026-09-28 10:00:00'),
+    (209, 109, 'pending', '2026-09-28 10:00:00'),
+    (210, 110, 'cancelled', '2026-09-28 10:00:00'),
+    (211, 111, 'pending', '2026-09-28 10:00:00'),
+    (212, 112, 'pending', '2026-09-29 10:00:00'),
+    (213, 113, 'pending', '2026-09-28 10:00:00'),
+    (214, 114, 'pending', '2026-09-28 10:00:00')");
+$pdo->exec("INSERT INTO push_subscriptions (id, user_id, endpoint, p256dh, auth) VALUES
+    (303, 2, 'https://fcm.googleapis.com/other-owner', 'key-c', 'auth-c')");
+$pdo->exec("INSERT INTO task_reminder_deliveries (reminder_id, subscription_id, status, claimed_at, claim_token) VALUES
+    (208, 302, 'pending', NULL, NULL),
+    (209, 301, 'leased', '2026-09-28 09:00:00', 'unrelated-lease'),
+    (210, 301, 'pending', NULL, NULL)");
+
+/** Snapshots all rows outside one reminder/browser tuple in this connection's temporary tables. */
+function snapshotUntargetedRows(PDO $pdo): array
+{
+    return [
+        $pdo->query('SELECT * FROM tasks ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+        $pdo->query('SELECT * FROM task_reminders WHERE id <> 208 ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+        $pdo->query('SELECT * FROM task_reminder_deliveries WHERE reminder_id <> 208 OR subscription_id <> 301 ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+        $pdo->query('SELECT * FROM push_subscriptions WHERE id <> 301 ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+    ];
+}
+
+$untargeted = snapshotUntargetedRows($pdo);
+$beforeTargetSend = count($sender->calls);
+$targetSummary = $worker->runTarget(208, 301, $now);
+checkWorker($targetSummary['claimed'] === 1 && $targetSummary['accepted'] === 1, 'Targeted execution must process exactly the selected pair.');
+checkWorker(count($sender->calls) === $beforeTargetSend + 1 && $sender->calls[$beforeTargetSend]['endpoint'] === 'https://fcm.googleapis.com/a', 'Only the selected owned browser may receive the targeted fake send.');
+checkWorker($sender->calls[$beforeTargetSend]['payload']['title'] === 'Targeted fixture', 'The selected reminder must supply the real worker payload.');
+checkWorker($pdo->query('SELECT status FROM task_reminders WHERE id = 208')->fetchColumn() === 'sent', 'Targeted execution must persist the real reminder result.');
+checkWorker(snapshotUntargetedRows($pdo) === $untargeted, 'Targeted execution must not change any unrelated task, reminder, browser, delivery or lease.');
+checkWorker($worker->runTarget(208, 301, $now)['claimed'] === 0, 'Repeating an accepted target must not send again.');
+
+foreach ([[208, 303], [211, 301], [212, 301], [213, 301], [214, 301], [999, 301], [208, 999], [209, 301]] as [$reminderId, $subscriptionId]) {
+    $summary = $worker->runTarget($reminderId, $subscriptionId, $now);
+    checkWorker($summary['claimed'] === 0, 'Mismatched, missing, future, completed, paused or already-leased targets must not send.');
+}
+checkWorker(snapshotUntargetedRows($pdo) === $untargeted, 'Rejected targeted runs must not perform shared-queue cleanup.');
+checkWorker(count($sender->calls) === $beforeTargetSend + 1, 'Invalid or repeated targets must never contact the provider.');
+
+foreach ([[0, 301], [208, -1]] as [$reminderId, $subscriptionId]) {
+    try {
+        $worker->runTarget($reminderId, $subscriptionId, $now);
+        throw new RuntimeException('Non-positive targets must be rejected.');
+    } catch (ReminderWorkerException) {
+        // Invalid direct service calls must not begin a delivery reservation.
+    }
+}
+checkWorker(snapshotUntargetedRows($pdo) === $untargeted, 'Invalid direct calls must leave unrelated rows untouched.');
+
+echo "PASS reminder worker payload, ownership, targeted isolation, result recording and per-browser retry (fake sender, temporary MySQL tables)\n";

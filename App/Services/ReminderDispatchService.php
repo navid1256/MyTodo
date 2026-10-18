@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Notifications\NotificationSendResult;
+use App\Exceptions\ReminderWorkerException;
 use App\Repositories\ReminderDeliveryRepository;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -38,6 +39,17 @@ final class ReminderDispatchService
         $this->repository->enqueueDueReminders($at, $limit);
 
         return $this->repository->reserveReadyDeliveries($at, $limit);
+    }
+
+    /** Reserves only the explicit pair without changing any other queue entry or abandoned lease. */
+    public function reserveTarget(int $reminderId, int $subscriptionId, ?DateTimeImmutable $now = null): array
+    {
+        if ($reminderId < 1 || $subscriptionId < 1) {
+            throw new ReminderWorkerException('Targeted delivery requires positive reminder and subscription IDs.');
+        }
+        $now = ($now ?? new DateTimeImmutable('now', new DateTimeZone('UTC')))->setTimezone(new DateTimeZone('UTC'));
+
+        return $this->repository->reserveTargetDelivery($reminderId, $subscriptionId, $now->format(self::DATETIME_FORMAT));
     }
 
     /** Rechecks a reserved browser immediately before provider I/O. */

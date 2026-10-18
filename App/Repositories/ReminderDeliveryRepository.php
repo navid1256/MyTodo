@@ -192,52 +192,109 @@ final class ReminderDeliveryRepository
         $claims = [];
 
         foreach ($candidates->fetchAll(PDO::FETCH_ASSOC) as $candidate) {
-            $id = (int) $candidate['id'];
-            $token = bin2hex(random_bytes(16));
-            $this->pdo->beginTransaction();
-            try {
-                $parentLock = $this->pdo->prepare('SELECT id FROM task_reminders WHERE id = :id FOR UPDATE');
-                $parentLock->execute([':id' => $candidate['reminder_id']]);
-                $update = $this->pdo->prepare(
-                    "UPDATE task_reminder_deliveries AS d
-                     JOIN task_reminders AS r ON r.id = d.reminder_id
-                     JOIN tasks AS t ON t.id = r.task_id
-                     JOIN push_subscriptions AS p ON p.id = d.subscription_id AND p.user_id = t.user_id
-                     LEFT JOIN task_repeat_rules AS rule ON rule.id = t.repeat_rule_id
-                     SET d.status = 'leased', d.claim_token = :token,
-                         d.claimed_at = :claimed_at, d.last_attempt_at = :last_attempt_at,
-                         d.next_attempt_at = NULL, d.attempt_count = d.attempt_count + 1
-                     WHERE d.id = :id AND (d.status = 'pending'
-                         OR (d.status = 'retryable' AND d.next_attempt_at <= :retry_at))
-                       AND r.status IN ('pending', 'sent') AND r.remind_at <= :due_at
-                       AND t.is_done = 0 AND (rule.id IS NULL OR rule.status IN ('active', 'completed'))"
-                );
-                $update->execute([
-                    ':token' => $token,
-                    ':claimed_at' => $now,
-                    ':last_attempt_at' => $now,
-                    ':id' => $id,
-                    ':retry_at' => $now,
-                    ':due_at' => $now,
-                ]);
-                if ($update->rowCount() !== 1) {
-                    $this->pdo->commit();
-                    continue;
-                }
-                $claim = $this->findClaim((int) $id, $token);
-                $attempt = $this->pdo->prepare(
-                    'UPDATE task_reminders SET attempt_count = attempt_count + 1, last_attempt_at = :at WHERE id = :id'
-                );
-                $attempt->execute([':at' => $now, ':id' => $claim['reminder_id']]);
-                $this->pdo->commit();
+            $claim = $this->leaseDeliveryCandidate($candidate, $now);
+            if ($claim !== null) {
                 $claims[] = $claim;
-            } catch (Throwable $exception) {
-                $this->pdo->rollBack();
-                throw $exception;
             }
         }
 
         return $claims;
+    }
+
+    /** Enqueues and reserves only one due, same-owner reminder/browser pair, with no shared cleanup. */
+    public function reserveTargetDelivery(int $reminderId, int $subscriptionId, string $now): array
+    {
+        $this->pdo->beginTransaction();
+        try {
+            // Match the parent-first lock order used by ordinary delivery reservations.
+            $parentLock = $this->pdo->prepare('SELECT id FROM task_reminders WHERE id = :id FOR UPDATE');
+            $parentLock->execute([':id' => $reminderId]);
+            $lock = $this->pdo->prepare(
+                "SELECT r.status FROM task_reminders AS r
+                 JOIN tasks AS t ON t.id = r.task_id
+                 JOIN push_subscriptions AS p ON p.user_id = t.user_id AND p.id = :subscription_id
+                 LEFT JOIN task_repeat_rules AS rule ON rule.id = t.repeat_rule_id
+                 WHERE r.id = :reminder_id AND r.status IN ('pending', 'sent')
+                   AND r.remind_at <= :now AND t.is_done = 0
+                   AND (rule.id IS NULL OR rule.status IN ('active', 'completed')) FOR UPDATE"
+            );
+            $lock->execute([':reminder_id' => $reminderId, ':subscription_id' => $subscriptionId, ':now' => $now]);
+            $status = $lock->fetchColumn();
+            if ($status === false) {
+                $this->pdo->commit();
+                return [];
+            }
+            if ($status === 'pending') {
+                $insert = $this->pdo->prepare(
+                    'INSERT INTO task_reminder_deliveries (reminder_id, subscription_id)
+                     VALUES (:reminder_id, :subscription_id)
+                     ON DUPLICATE KEY UPDATE status = task_reminder_deliveries.status'
+                );
+                $insert->execute([':reminder_id' => $reminderId, ':subscription_id' => $subscriptionId]);
+            }
+            $delivery = $this->pdo->prepare(
+                'SELECT d.id, d.reminder_id FROM task_reminder_deliveries AS d
+                 WHERE d.reminder_id = :reminder_id AND d.subscription_id = :subscription_id'
+            );
+            $delivery->execute([':reminder_id' => $reminderId, ':subscription_id' => $subscriptionId]);
+            $candidate = $delivery->fetch(PDO::FETCH_ASSOC);
+            $this->pdo->commit();
+        } catch (Throwable $exception) {
+            $this->pdo->rollBack();
+            throw $exception;
+        }
+        $claim = $candidate === false ? null : $this->leaseDeliveryCandidate($candidate, $now);
+
+        return $claim === null ? [] : [$claim];
+    }
+
+    /** Rechecks and leases one exact delivery atomically for both targeted and pooled runs. */
+    private function leaseDeliveryCandidate(array $candidate, string $now): ?array
+    {
+        $id = (int) $candidate['id'];
+        $token = bin2hex(random_bytes(16));
+        $this->pdo->beginTransaction();
+        try {
+            $parentLock = $this->pdo->prepare('SELECT id FROM task_reminders WHERE id = :id FOR UPDATE');
+            $parentLock->execute([':id' => $candidate['reminder_id']]);
+            $update = $this->pdo->prepare(
+                "UPDATE task_reminder_deliveries AS d
+                 JOIN task_reminders AS r ON r.id = d.reminder_id
+                 JOIN tasks AS t ON t.id = r.task_id
+                 JOIN push_subscriptions AS p ON p.id = d.subscription_id AND p.user_id = t.user_id
+                 LEFT JOIN task_repeat_rules AS rule ON rule.id = t.repeat_rule_id
+                 SET d.status = 'leased', d.claim_token = :token,
+                     d.claimed_at = :claimed_at, d.last_attempt_at = :last_attempt_at,
+                     d.next_attempt_at = NULL, d.attempt_count = d.attempt_count + 1
+                 WHERE d.id = :id AND (d.status = 'pending'
+                     OR (d.status = 'retryable' AND d.next_attempt_at <= :retry_at))
+                   AND r.status IN ('pending', 'sent') AND r.remind_at <= :due_at
+                   AND t.is_done = 0 AND (rule.id IS NULL OR rule.status IN ('active', 'completed'))"
+            );
+            $update->execute([
+                ':token' => $token,
+                ':claimed_at' => $now,
+                ':last_attempt_at' => $now,
+                ':id' => $id,
+                ':retry_at' => $now,
+                ':due_at' => $now,
+            ]);
+            if ($update->rowCount() !== 1) {
+                $this->pdo->commit();
+                return null;
+            }
+            $claim = $this->findClaim($id, $token);
+            $attempt = $this->pdo->prepare(
+                'UPDATE task_reminders SET attempt_count = attempt_count + 1, last_attempt_at = :at WHERE id = :id'
+            );
+            $attempt->execute([':at' => $now, ':id' => $claim['reminder_id']]);
+            $this->pdo->commit();
+
+            return $claim;
+        } catch (Throwable $exception) {
+            $this->pdo->rollBack();
+            throw $exception;
+        }
     }
 
     /** Reads the owned subscription snapshot associated with a successful claim. */

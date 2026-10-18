@@ -37,10 +37,17 @@ try {
     $locks = new ReminderWorkerLockRepository($pdo, $prefix);
     $argument = $argv[2] ?? '';
     $isLauncher = $argument === '--launch';
-    if (!$isLauncher && preg_match('/\A--worker=([1-4])\z/', $argument, $matches) !== 1) {
+    $target = [];
+    $isTarget = preg_match('/\A--target=([1-9][0-9]*):([1-9][0-9]*):([1-4])\z/', $argument, $target) === 1;
+    if (!$isLauncher && !$isTarget && preg_match('/\A--worker=([1-4])\z/', $argument, $matches) !== 1) {
         throw new RuntimeException('Invalid fixture process arguments.');
     }
-    $slot = $isLauncher ? 0 : (int) $matches[1];
+    $slot = 0;
+    if ($isTarget) {
+        $slot = (int) $target[3];
+    } elseif (!$isLauncher) {
+        $slot = (int) $matches[1];
+    }
     $lockSlot = $isLauncher ? 'launcher' : 'worker-' . $slot;
     if (!$locks->acquire($lockSlot)) {
         echo json_encode(['status' => 'busy']);
@@ -58,7 +65,9 @@ try {
                     new UserSettingsService(new UserSettingsRepository($pdo)),
                     dirname(__DIR__, 3) . '/resources/lang'
                 );
-                $summary = (new ReminderWorkerRunner())->run(static fn(): array => $worker->run(1), 45);
+                $summary = $isTarget
+                    ? $worker->runTarget((int) $target[1], (int) $target[2])
+                    : (new ReminderWorkerRunner())->run(static fn(): array => $worker->run(1), 45);
             } finally {
                 $pdo->exec("UPDATE {$prefix}metrics SET active_workers = active_workers - 1");
             }

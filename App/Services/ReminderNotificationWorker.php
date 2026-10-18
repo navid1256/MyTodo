@@ -27,7 +27,18 @@ final class ReminderNotificationWorker
     /** Processes one bounded batch and reports only aggregate, non-sensitive outcomes. */
     public function run(int $limit = 100, ?DateTimeImmutable $now = null): array
     {
-        $claims = $this->dispatch->reserveBatch($limit, $now);
+        return $this->processClaims($this->dispatch->reserveBatch($limit, $now), $now);
+    }
+
+    /** Processes at most one explicit reminder/browser pair without draining the shared queue. */
+    public function runTarget(int $reminderId, int $subscriptionId, ?DateTimeImmutable $now = null): array
+    {
+        return $this->processClaims($this->dispatch->reserveTarget($reminderId, $subscriptionId, $now), $now);
+    }
+
+    /** Applies the same payload, sendability and result policy to already-reserved deliveries. */
+    private function processClaims(array $claims, ?DateTimeImmutable $now): array
+    {
         $summary = [
             'claimed' => count($claims),
             'accepted' => 0,
