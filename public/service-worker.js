@@ -27,24 +27,45 @@ self.addEventListener('push', (event) => {
     }));
 });
 
-/** Temporarily stores only the latest test click's stages, excluding payloads and raw errors. */
-async function saveTestClickDiagnostics(diagnostics) {
+/** Temporarily stores the latest test event entry or click result without sensitive data. */
+async function saveTestClickDiagnostics(diagnostics, phase = 'result') {
     try {
         const cache = await self.caches.open('mytodo-push-click-debug-v1');
-        await cache.put(new URL('/__mytodo_push_click_debug__', self.location.origin).href,
+        const path = phase === 'entry' ? '/__mytodo_push_click_debug_entry__' : '/__mytodo_push_click_debug__';
+        await cache.put(new URL(path, self.location.origin).href,
             new Response(JSON.stringify(diagnostics), { headers: { 'Content-Type': 'application/json' } }));
     } catch {
         // Diagnostic storage must not change the notification's navigation outcome.
     }
 }
 
+/** Builds allowlisted metadata only for explicitly tagged test notification events. */
+function createTestNotificationDiagnostics(notification, eventName) {
+    const traceId = /^mytodo-push-test-([0-9a-f]{16})$/.exec(notification.tag || '')?.[1];
+    const isClick = eventName === 'notificationclick';
+    return traceId ? {
+        event: isClick ? 'push_test_click' : 'push_test_close', entryPoint: eventName, traceId,
+        stages: [isClick ? 'click-received' : 'close-received'], errorName: null
+    } : null;
+}
+
+/** Records an entry snapshot immediately without awaiting storage before navigation. */
+function recordTestNotificationEntry(diagnostics) {
+    const snapshot = { ...diagnostics, stages: [...diagnostics.stages] };
+    console.info('MYTODO_PUSH_DIAGNOSTIC', JSON.stringify(snapshot));
+    return saveTestClickDiagnostics(snapshot, 'entry');
+}
+
+// Register temporary test observers during initial evaluation, never from DevTools.
+self.addEventListener('notificationclose', (event) => {
+    const diagnostics = createTestNotificationDiagnostics(event.notification, 'notificationclose');
+    if (diagnostics) event.waitUntil(recordTestNotificationEntry(diagnostics));
+});
+
 // Temporary instrumentation is restricted to explicitly tagged test notifications.
 self.addEventListener('notificationclick', (event) => {
-    const traceId = /^mytodo-push-test-([0-9a-f]{16})$/.exec(event.notification.tag || '')?.[1];
-    const diagnostics = traceId ? {
-        event: 'push_test_click', entryPoint: 'notificationclick', traceId,
-        stages: ['click-received'], errorName: null
-    } : null;
+    const diagnostics = createTestNotificationDiagnostics(event.notification, 'notificationclick');
+    const entrySaved = diagnostics ? recordTestNotificationEntry(diagnostics) : null;
     let url = new URL('/notifications', self.location.origin);
     try {
         const requested = new URL(event.notification.data?.url, self.location.origin);
@@ -77,7 +98,10 @@ self.addEventListener('notificationclick', (event) => {
             }
             throw error;
         } finally {
-            if (diagnostics) await saveTestClickDiagnostics(diagnostics);
+            if (diagnostics) {
+                await entrySaved;
+                await saveTestClickDiagnostics(diagnostics);
+            }
         }
     })());
 });

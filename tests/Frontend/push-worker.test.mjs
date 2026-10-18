@@ -6,24 +6,29 @@ import vm from 'node:vm';
 const source = await readFile(new URL('../../public/service-worker.js', import.meta.url), 'utf8');
 
 /** Creates an isolated worker with optional window clients and test-only diagnostic storage. */
-function createWorker({ windows = [], failDiagnosticStorage = false } = {}) {
+function createWorker({ windows = [], failDiagnosticStorage = false, matchWindows = async () => windows } = {}) {
     const handlers = {};
     const notifications = [];
     const opened = [];
     const diagnostics = [];
+    const entries = [];
+    const logs = [];
     const self = {
         location: { origin: 'https://mytodo.php' },
         addEventListener: (event, handler) => { handlers[event] = handler; },
         registration: { showNotification: async (title, options) => { notifications.push({ title, ...options }); } },
-        clients: { matchAll: async () => windows, openWindow: async (url) => { opened.push(url); } },
+        clients: { matchAll: matchWindows, openWindow: async (url) => { opened.push(url); } },
         caches: { open: async () => {
             if (failDiagnosticStorage) throw new Error('Storage unavailable');
-            return { put: async (url, response) => { diagnostics.push(await response.json()); } };
+            return { put: async (url, response) => {
+                const reports = new URL(url).pathname === '/__mytodo_push_click_debug_entry__' ? entries : diagnostics;
+                reports.push(await response.json());
+            } };
         } },
         skipWaiting: async () => {}
     };
-    vm.runInNewContext(source, { self, URL, Response });
-    return { handlers, notifications, opened, diagnostics };
+    vm.runInNewContext(source, { self, URL, Response, console: { info: (...args) => logs.push(args) } });
+    return { handlers, notifications, opened, diagnostics, entries, logs };
 }
 
 /** Dispatches a test notification click and waits for all of its lifetime work. */
@@ -112,4 +117,70 @@ test('diagnostic storage failure does not break clicking and ordinary reminders 
     const ordinary = createWorker();
     await clickTestNotification(ordinary, 'mytodo-reminder-7');
     assert.equal(ordinary.diagnostics.length, 0);
+    assert.equal(ordinary.entries.length, 0);
+    assert.equal(ordinary.logs.length, 0);
+});
+
+test('test click records its entry before window lookup finishes without delaying navigation', async () => {
+    let releaseWindows;
+    const windowLookup = new Promise((resolve) => { releaseWindows = resolve; });
+    const worker = createWorker({ matchWindows: () => windowLookup });
+    const completion = clickTestNotification(worker);
+    await new Promise((resolve) => setImmediate(resolve));
+    try {
+        assert.deepEqual(worker.entries, [{
+            event: 'push_test_click', entryPoint: 'notificationclick', traceId: '0123456789abcdef',
+            stages: ['click-received'], errorName: null
+        }]);
+        assert.equal(worker.diagnostics.length, 0);
+        assert.deepEqual(JSON.parse(worker.logs[0][1]), worker.entries[0]);
+    } finally {
+        releaseWindows([]);
+        await completion;
+    }
+    assert.equal(worker.diagnostics.at(-1)?.stages.at(-1), 'window-opened');
+    assert.deepEqual(worker.entries[0].stages, ['click-received']);
+});
+
+test('test close handler is registered during evaluation and records only safe entry metadata', async () => {
+    const worker = createWorker();
+    assert.equal(typeof worker.handlers.notificationclose, 'function');
+    let pending;
+    worker.handlers.notificationclose({
+        notification: {
+            tag: 'mytodo-push-test-0123456789abcdef',
+            data: { url: 'https://mytodo.php/notifications?private=value' },
+            body: 'Sensitive message'
+        },
+        waitUntil: (promise) => { pending = promise; }
+    });
+    await pending;
+    assert.deepEqual(worker.entries, [{
+        event: 'push_test_close', entryPoint: 'notificationclose', traceId: '0123456789abcdef',
+        stages: ['close-received'], errorName: null
+    }]);
+    assert.deepEqual(JSON.parse(worker.logs[0][1]), worker.entries[0]);
+    assert.deepEqual(worker.opened, []);
+    assert.equal(worker.diagnostics.length, 0);
+    assert.ok(!JSON.stringify(worker.entries).includes('Sensitive'));
+    assert.ok(!JSON.stringify(worker.logs).includes('private'));
+});
+
+test('ordinary close events do not log or extend work and test close tolerates unavailable storage', async () => {
+    const ordinary = createWorker();
+    ordinary.handlers.notificationclose({
+        notification: { tag: 'mytodo-reminder-7' },
+        waitUntil: () => assert.fail('Ordinary close events must not start diagnostic work')
+    });
+    assert.equal(ordinary.entries.length, 0);
+    assert.equal(ordinary.logs.length, 0);
+
+    const unavailable = createWorker({ failDiagnosticStorage: true });
+    let pending;
+    unavailable.handlers.notificationclose({
+        notification: { tag: 'mytodo-push-test-0123456789abcdef' },
+        waitUntil: (promise) => { pending = promise; }
+    });
+    await pending;
+    assert.equal(unavailable.logs.length, 1);
 });
