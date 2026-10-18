@@ -33,9 +33,13 @@
 
 .main .view .sentNotificationsPage .notificationsContent {
     position: static;
-    margin-top: 56px;
+    margin-top: 0;
     padding: 0;
     overflow: visible;
+}
+
+.main .view .sentNotificationsPage .content .notificationsList > li:first-child {
+    border-top: 0;
 }
 
 html.dark-mode .sentNotificationsPage {
@@ -641,10 +645,6 @@ html.dark-mode .sentNotificationsPageHeaderIcon {
 
     .sentNotificationsPageHeaderIcon {
         font-size: 34px;
-    }
-
-    .main .view .sentNotificationsPage .notificationsContent {
-        margin-top: 42px;
     }
 
     .notificationsPage {

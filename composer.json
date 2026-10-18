@@ -13,6 +13,9 @@
     "require": {
         "hekmatinasser/verta": "^2.1",
         "minishlink/web-push": "^11.0",
+        "nyholm/psr7": "^1.8",
+        "symfony/http-client": "^7.4",
+        "symfony/http-foundation": "^6.4",
         "vlucas/phpdotenv": "^5.7"
     },
     "autoload": {

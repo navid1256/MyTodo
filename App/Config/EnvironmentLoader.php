@@ -31,7 +31,7 @@ final class EnvironmentLoader
         $dotenv->required('APP_ENV')->allowedValues(['local', 'testing', 'production']);
     }
 
-    public static function get(string $key): string
+    public static function get(string $key, ?string $default = null): string
     {
         $processValue = getenv($key);
         if ($processValue !== false) {
@@ -44,6 +44,10 @@ final class EnvironmentLoader
 
         if (array_key_exists($key, $_ENV)) {
             return (string) $_ENV[$key];
+        }
+
+        if ($default !== null) {
+            return $default;
         }
 
         throw new EnvironmentVariableException("Environment variable {$key} is not configured.");
