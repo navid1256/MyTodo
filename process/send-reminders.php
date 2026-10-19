@@ -44,7 +44,8 @@ try {
     exit(2);
 }
 $workerSlot = $command->workerSlot;
-$targeted = $command->reminderId !== null;
+$isTargeted = $command->reminderId !== null;
+$isLauncher = $workerSlot === null && !$isTargeted;
 
 try {
     EnvironmentLoader::load($rootPath);
@@ -60,55 +61,50 @@ try {
     $locks = new ReminderWorkerLockRepository($pdo);
     $lockSlot = $workerSlot === null ? 'launcher' : 'worker-' . $workerSlot;
     if (!$locks->acquire($lockSlot)) {
-        fwrite(STDOUT, $workerSlot === null && !$targeted
-            ? "Reminder worker: previous launcher is still active.\n"
-            : json_encode(['status' => 'busy']) . "\n");
+        if ($isLauncher) {
+            fwrite(STDOUT, "Reminder worker: previous launcher is still active.\n");
+        } else {
+            fwrite(STDOUT, json_encode(['status' => 'busy']) . "\n");
+        }
         exit(0);
     }
     try {
-        if ($workerSlot !== null || $targeted) {
+        if ($isLauncher) {
+            $childCommand = [PHP_BINARY, '-d', 'display_errors=0', __FILE__, '--send'];
+            $summary = (new ReminderWorkerPool())->run($childCommand, $workerConfiguration->workers);
+        } else {
             $worker = new ReminderNotificationWorker(
                 new ReminderDispatchService(new ReminderDeliveryRepository($pdo)),
                 new WebPushNotificationSender($pushConfiguration, new PushSubscriptionValidator()),
                 new UserSettingsService(new UserSettingsRepository($pdo)),
                 $rootPath . '/resources/lang'
             );
-            // Argument validation guarantees that targeted IDs are both present and positive.
-            $summary = $targeted
-                ? $worker->runTarget((int) $command->reminderId, (int) $command->subscriptionId)
-                : (new ReminderWorkerRunner())->run(
+            if ($isTargeted) {
+                // Argument validation guarantees that both target IDs are present and positive.
+                $summary = $worker->runTarget((int) $command->reminderId, (int) $command->subscriptionId);
+            } else {
+                $summary = (new ReminderWorkerRunner())->run(
                     static fn(): array => $worker->run(1),
                     $workerConfiguration->runtimeSeconds
                 );
+            }
             $report = ['status' => 'completed', 'summary' => $summary];
-            if ($targeted) {
+            if ($isTargeted) {
                 $report['mode'] = 'targeted';
             }
             fwrite(STDOUT, json_encode($report) . "\n");
-        } else {
-            $summary = (new ReminderWorkerPool())->run(
-                [PHP_BINARY, '-d', 'display_errors=0', __FILE__, '--send'],
-                $workerConfiguration->workers
-            );
         }
     } finally {
         $locks->release($lockSlot);
     }
-    if ($workerSlot !== null || $targeted) {
+    if (!$isLauncher) {
         exit(0);
     }
-    fwrite(STDOUT, sprintf(
-        "Reminder worker: claimed=%d accepted=%d retryable=%d expired=%d failed=%d unknown=%d skipped=%d busy_workers=%d failed_workers=%d\n",
-        $summary['claimed'],
-        $summary['accepted'],
-        $summary['retryable'],
-        $summary['expired'],
-        $summary['failed'],
-        $summary['unknown'],
-        $summary['skipped'],
-        $summary['busy_workers'],
-        $summary['failed_workers']
-    ));
+    $summaryFields = [];
+    foreach ($summary as $counter => $count) {
+        $summaryFields[] = $counter . '=' . $count;
+    }
+    fwrite(STDOUT, 'Reminder worker: ' . implode(' ', $summaryFields) . "\n");
     exit($summary['failed_workers'] > 0 ? 1 : 0);
 } catch (Throwable $exception) {
     // The CLI never prints endpoints, key material, task titles or raw provider errors.

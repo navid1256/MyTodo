@@ -9,6 +9,7 @@ use App\Exceptions\PushSubscriptionValidationException;
 use App\Localization\Translator;
 use App\Notifications\NotificationSender;
 use App\Notifications\NotificationSendResult;
+use App\Notifications\ReminderDeliverySummary;
 use DateTimeImmutable;
 use DateTimeZone;
 use Hekmatinasser\Verta\Verta;
@@ -39,15 +40,7 @@ final class ReminderNotificationWorker
     /** Applies the same payload, sendability and result policy to already-reserved deliveries. */
     private function processClaims(array $claims, ?DateTimeImmutable $now): array
     {
-        $summary = [
-            'claimed' => count($claims),
-            'accepted' => 0,
-            'retryable' => 0,
-            'expired' => 0,
-            'failed' => 0,
-            'unknown' => 0,
-            'skipped' => 0,
-        ];
+        $summary = ReminderDeliverySummary::create(count($claims));
         $settingsByUser = [];
         $translators = [];
 

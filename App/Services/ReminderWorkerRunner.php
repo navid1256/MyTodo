@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Notifications\ReminderDeliverySummary;
 use Closure;
 use InvalidArgumentException;
 
@@ -17,18 +18,13 @@ final class ReminderWorkerRunner
         }
         $monotonicClock ??= static fn(): float => hrtime(true) / 1_000_000_000;
         $deadline = $monotonicClock() + $runtimeSeconds;
-        $summary = [
-            'claimed' => 0, 'accepted' => 0, 'retryable' => 0, 'expired' => 0,
-            'failed' => 0, 'unknown' => 0, 'skipped' => 0,
-        ];
+        $summary = ReminderDeliverySummary::create();
         $emptyReads = 0;
 
         while ($monotonicClock() < $deadline) {
             // Each callback reserves just-in-time and obtains a fresh UTC timestamp.
             $batch = $processOne();
-            foreach ($summary as $outcome => $count) {
-                $summary[$outcome] = $count + ($batch[$outcome] ?? 0);
-            }
+            $summary = ReminderDeliverySummary::merge($summary, $batch);
             $emptyReads = ($batch['claimed'] ?? 0) === 0 ? $emptyReads + 1 : 0;
             if ($emptyReads >= 3) {
                 break;
