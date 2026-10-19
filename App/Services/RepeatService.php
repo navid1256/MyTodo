@@ -290,7 +290,8 @@ final class RepeatService
     /**
      * Split a recurring series at the selected occurrence. The selected task
      * becomes occurrence zero of a new rule; history and completed siblings
-     * remain attached to the terminal old rule.
+     * remain attached to the terminal old rule. The operation time protects
+     * history independently of the selected task's replacement date.
      *
      * @param array<string, mixed> $repeatConfig
      * @param array<int, mixed> $reminders
@@ -326,11 +327,12 @@ final class RepeatService
             }
             $preparedRule = $this->validator->validate($repeatConfig, $dueAt);
             $preparedReminders = $this->reminderService->prepareTaskReminders($reminders, $dueAt, $hasTime);
+            $operationTime = new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone());
             $this->repeatRuleRepository->completeForSplit($oldRuleId, $userId);
             $deletedTaskIds = $this->taskRepository->deleteIncompleteFromOccurrence(
                 $oldRuleId,
                 $userId,
-                $this->ruleMapper->toDatabaseDateTime($dueAt),
+                $this->ruleMapper->toDatabaseDateTime($operationTime),
                 (int) $task->repeat_occurrence_number,
                 $taskId
             );
@@ -353,7 +355,7 @@ final class RepeatService
 
             $generatedCount = $this->generateInitialWindow(
                 $newRuleId,
-                (new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone()))->modify('+30 days')
+                $operationTime->modify('+30 days')
             );
             $updatedTask = $this->taskRepository->findById($taskId, $userId);
 

@@ -244,6 +244,59 @@ try {
         true,
         []
     ));
+
+    // Splits follow occurrence order, not the selected task's original or replacement date.
+    foreach (['forward' => [14, 22], 'backward' => [14, -7], 'previously moved' => [24, 22]] as $scenario => [$selectedDay, $replacementDay]) {
+        $replacementDate = $editNow->modify($replacementDay . ' days')->setTime(11, 0);
+        $splitData = $editRuleData;
+        $splitData['start_at'] = $editNow->modify('+1 day')->setTimezone($utc)->format('Y-m-d H:i:s');
+        $splitData['next_occurrence_at'] = $splitData['start_at'];
+        $sourceRuleId = $ruleRepository->create($splitData);
+        $splitTasks = [];
+        foreach ([0 => 25, 1 => $selectedDay, 2 => -2, 3 => 21, 4 => 28, 5 => 29] as $number => $days) {
+            $taskDate = $editNow->modify($days . ' days')->setTimezone($utc)->format('Y-m-d H:i:s');
+            $splitTasks[$number] = $taskRepository->create($userA, 'Split boundary fixture', $taskDate, true, $sourceRuleId, $number);
+            $reminderRepository->create($splitTasks[$number], 0, 'minute', $taskDate);
+        }
+        $taskRepository->updateStatus($splitTasks[4], $userA, true, $editNow->setTimezone($utc)->format('Y-m-d H:i:s'));
+        assertLifecycleException(RepeatRuleNotFoundException::class, fn() => $service->updateThisAndFuture(
+            $splitTasks[1], $userB, 'Unauthorized split', $replacementDate, true, [],
+            ['frequency' => 'daily', 'ends' => ['type' => 'endlessly']]
+        ));
+        assertLifecycleValue('active', $ruleRepository->findByIdForUserForUpdate($sourceRuleId, $userA)->status, $scenario . ': rejected ownership must leave the rule active.');
+
+        $split = $service->updateThisAndFuture(
+            $splitTasks[1], $userA, 'Split boundary edit', $replacementDate, true, [],
+            ['frequency' => 'daily', 'ends' => ['type' => 'endlessly']]
+        );
+        assertLifecycleValue([$splitTasks[3], $splitTasks[5]], $split['deleted_task_ids'], $scenario . ': delete only later incomplete future occurrences.');
+        foreach ([3, 5] as $number) {
+            assertLifecycleValue(null, $taskRepository->findById($splitTasks[$number], $userA), $scenario . ': replaced siblings must not remain on the old rule.');
+            assertLifecycleValue([], $reminderRepository->getByTaskId($splitTasks[$number]), $scenario . ': deleted sibling reminders must cascade.');
+        }
+        foreach ([0, 2, 4] as $number) {
+            assertLifecycleValue($sourceRuleId, (int) $taskRepository->findById($splitTasks[$number], $userA)->repeat_rule_id, $scenario . ': earlier occurrences, history and completed tasks must keep their rule.');
+            assertLifecycleValue(1, count($reminderRepository->getByTaskId($splitTasks[$number])), $scenario . ': preserved reminders must survive.');
+        }
+        $selectedTask = $taskRepository->findById($splitTasks[1], $userA);
+        assertLifecycleValue((int) $split['repeat_rule_id'], (int) $selectedTask->repeat_rule_id, $scenario . ': selected task must move to the new rule.');
+        assertLifecycleValue(0, (int) $selectedTask->repeat_occurrence_number, $scenario . ': selected task must become occurrence zero.');
+        assertLifecycleValue($replacementDate->setTimezone($utc)->format('Y-m-d H:i:s'), $selectedTask->due_at, $scenario . ': selected task must retain the requested replacement date.');
+        assertLifecycleValue('Foreign edit', $taskRepository->findById($foreignEditTask, $userB)->title, $scenario . ': another user\'s task must remain unchanged.');
+    }
+
+    // Repository cutoff is inclusive at the exact operation second, not the preceding second.
+    $cutoffDate = $editNow->setTimezone($utc);
+    $cutoffAt = $cutoffDate->format('Y-m-d H:i:s');
+    $boundaryRuleId = $ruleRepository->create($editRuleData);
+    $selectedBoundaryTask = $taskRepository->create($userA, 'Selected boundary', $databaseEditDueAt, true, $boundaryRuleId, 0);
+    $beforeCutoffTask = $taskRepository->create($userA, 'Past boundary', $cutoffDate->modify('-1 second')->format('Y-m-d H:i:s'), true, $boundaryRuleId, 1);
+    $atCutoffTask = $taskRepository->create($userA, 'Exact boundary', $cutoffAt, true, $boundaryRuleId, 2);
+    $reminderRepository->create($beforeCutoffTask, 0, 'minute', $cutoffAt);
+    $reminderRepository->create($atCutoffTask, 0, 'minute', $cutoffAt);
+    assertLifecycleValue([$atCutoffTask], $taskRepository->deleteIncompleteFromOccurrence($boundaryRuleId, $userA, $cutoffAt, 1, $selectedBoundaryTask), 'The exact operation cutoff must be included while the preceding second is preserved.');
+    assertLifecycleValue(1, count($reminderRepository->getByTaskId($beforeCutoffTask)), 'The past boundary reminder must survive.');
+    assertLifecycleValue([], $reminderRepository->getByTaskId($atCutoffTask), 'The exact boundary reminder must cascade.');
     assertLifecycleValue(true, $pdo->inTransaction(), 'Edit calls must preserve the outer fixture transaction.');
 } finally {
     if ($pdo->inTransaction()) {
