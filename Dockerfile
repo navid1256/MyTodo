@@ -25,8 +25,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 COPY composer.json composer.lock ./
 # Application changes must not invalidate the dependency download layer.
-RUN --mount=type=cache,target=/tmp/composer-cache \
-    composer install --no-dev --prefer-dist --no-interaction --no-progress --no-scripts --no-plugins --no-autoloader
+RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --no-scripts --no-plugins --no-autoloader
 COPY App/ ./App/
 RUN composer dump-autoload --no-dev --classmap-authoritative --no-scripts --no-plugins \
     && composer check-platform-reqs --no-dev
@@ -34,7 +33,7 @@ RUN composer dump-autoload --no-dev --classmap-authoritative --no-scripts --no-p
 FROM node:24-bookworm-slim@sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5 AS assets
 WORKDIR /build
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 COPY vite.config.js ./
 COPY public/assets/ ./public/assets/
 RUN npm run build

@@ -13,6 +13,12 @@ BuildKit builds Composer dependencies and Vite assets in separate stages. Local
 `.env` files, TLS/VAPID keys, databases, uploads, and development dependencies are
 not copied into the runtime image. Only `public/` is served over HTTP.
 
+Dependency installs use Docker's normal layer cache, not BuildKit cache mounts.
+Railway requires service-specific IDs for cache mounts; avoiding them keeps this
+Dockerfile portable between the web service, future scheduler, and local Docker.
+Lockfiles are copied before application code so code-only changes can still reuse
+the dependency installation layers.
+
 Official PHP 8.3, Node 24, and Composer images are pinned to verified multi-platform
 digests. Review and update the digests regularly, then rebuild and retest for
 security updates. Composer and npm dependencies are installed from their lockfiles;
