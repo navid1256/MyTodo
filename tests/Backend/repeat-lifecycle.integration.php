@@ -14,30 +14,36 @@ use App\Services\RepeatRuleUpdateData;
 use App\Services\RepeatScheduleCalculator;
 use App\Services\RepeatService;
 
-// Never load application bootstrap or .env: an explicitly configured test database is mandatory.
-$dsn = getenv('MYTODO_TEST_DSN');
-$username = getenv('MYTODO_TEST_DB_USER');
-$password = getenv('MYTODO_TEST_DB_PASSWORD');
-if ($dsn === false || $dsn === '' || $username === false || $username === '' || $password === false) {
-    echo "SKIP repeat-lifecycle integration: set MYTODO_TEST_DSN, MYTODO_TEST_DB_USER, and MYTODO_TEST_DB_PASSWORD for an existing migrated MySQL database ending in _test (an empty password is allowed). No database connection was opened.\n";
-    exit(0);
-}
-
-if (!str_starts_with($dsn, 'mysql:')) {
-    fwrite(STDERR, "REFUSED repeat-lifecycle integration: use an explicit mysql: DSN with one database name ending in _test.\n");
-    exit(1);
-}
-
-$databaseNames = [];
-foreach (explode(';', substr($dsn, 6)) as $part) {
-    [$key, $value] = array_pad(explode('=', $part, 2), 2, '');
-    if (strtolower(trim($key)) === 'dbname') {
-        $databaseNames[] = trim($value);
+// The default entrypoint still requires a dedicated _test database.
+// The separate isolated runner may supply only a fully prepared, table-restricted connection.
+$isolated = isset($isolatedRepeatConnection)
+    && $isolatedRepeatConnection instanceof IsolatedRepeatTestConnection
+    && $isolatedRepeatConnection->isReady();
+if (!$isolated) {
+    $dsn = getenv('MYTODO_TEST_DSN');
+    $username = getenv('MYTODO_TEST_DB_USER');
+    $password = getenv('MYTODO_TEST_DB_PASSWORD');
+    if ($dsn === false || $dsn === '' || $username === false || $username === '' || $password === false) {
+        echo "SKIP repeat-lifecycle integration: set MYTODO_TEST_DSN, MYTODO_TEST_DB_USER, and MYTODO_TEST_DB_PASSWORD for an existing migrated MySQL database ending in _test (an empty password is allowed). No database connection was opened.\n";
+        exit(0);
     }
-}
-if (count($databaseNames) !== 1 || preg_match('/\A[A-Za-z0-9_]+_test\z/', $databaseNames[0]) !== 1) {
-    fwrite(STDERR, "REFUSED repeat-lifecycle integration: the DSN must name exactly one database ending in _test. No database connection was opened.\n");
-    exit(1);
+
+    if (!str_starts_with($dsn, 'mysql:')) {
+        fwrite(STDERR, "REFUSED repeat-lifecycle integration: use an explicit mysql: DSN with one database name ending in _test.\n");
+        exit(1);
+    }
+
+    $databaseNames = [];
+    foreach (explode(';', substr($dsn, 6)) as $part) {
+        [$key, $value] = array_pad(explode('=', $part, 2), 2, '');
+        if (strtolower(trim($key)) === 'dbname') {
+            $databaseNames[] = trim($value);
+        }
+    }
+    if (count($databaseNames) !== 1 || preg_match('/\A[A-Za-z0-9_]+_test\z/', $databaseNames[0]) !== 1) {
+        fwrite(STDERR, "REFUSED repeat-lifecycle integration: the DSN must name exactly one database ending in _test. No database connection was opened.\n");
+        exit(1);
+    }
 }
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
@@ -62,11 +68,11 @@ function assertLifecycleException(string $exceptionClass, callable $operation): 
     throw new RuntimeException('Expected ' . $exceptionClass);
 }
 
-$pdo = new PDO($dsn, $username, $password, [
+$pdo = $isolated ? $isolatedRepeatConnection : new PDO($dsn, $username, $password, [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_EMULATE_PREPARES => false,
 ]);
-assertLifecycleValue($databaseNames[0], $pdo->query('SELECT DATABASE()')->fetchColumn(), 'Connected database must match the validated test DSN.');
+assertLifecycleValue($isolated ? 'mytodo' : $databaseNames[0], $pdo->query('SELECT DATABASE()')->fetchColumn(), 'Connected database must match the authorized target.');
 $tableEngines = $pdo->query(
     "SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
      AND TABLE_NAME IN ('users', 'tasks', 'task_repeat_rules', 'task_repeat_reminder_templates', 'task_reminders')"
@@ -157,31 +163,42 @@ try {
     }
     assertLifecycleValue(true, $pdo->inTransaction(), 'Lifecycle calls must not commit the outer fixture transaction.');
 
+    // Edit validation uses the real clock; keep these fixtures inside the next generation window.
+    $editNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Tehran'));
+    $editDueAt = $editNow->modify('+14 days')->setTime(11, 0);
+    $originalEditAt = $editDueAt->modify('-2 hours');
+    $siblingEditAt = $originalEditAt->modify('+7 days');
+    $utc = new DateTimeZone('UTC');
+    $databaseOriginalEditAt = $originalEditAt->setTimezone($utc)->format('Y-m-d H:i:s');
+    $databaseSiblingEditAt = $siblingEditAt->setTimezone($utc)->format('Y-m-d H:i:s');
+    $databaseEditDueAt = $editDueAt->setTimezone($utc)->format('Y-m-d H:i:s');
+    $editWeekDays = [(int) $editDueAt->format('w')];
     $editRuleData = $ruleData;
     $editRuleData['user_id'] = $userA;
     $editRuleData['title'] = 'Edit fixture';
-    $editRuleData['start_at'] = '2026-09-30 09:00:00';
-    $editRuleData['next_occurrence_at'] = '2026-09-30 09:00:00';
+    $editRuleData['start_at'] = $databaseOriginalEditAt;
+    $editRuleData['next_occurrence_at'] = $databaseOriginalEditAt;
+    $editRuleData['week_days'] = $editWeekDays;
     $editRule = $ruleRepository->create($editRuleData);
-    $selectedEditTask = $taskRepository->create($userA, 'Before edit', '2026-09-30 09:00:00', true, $editRule, 1);
-    $siblingEditTask = $taskRepository->create($userA, 'Sibling task', '2026-10-07 09:00:00', true, $editRule, 2);
-    $reminderRepository->create($selectedEditTask, 30, 'minute', '2026-09-30 08:30:00');
-    $reminderRepository->create($siblingEditTask, 30, 'minute', '2026-10-07 08:30:00');
-    $foreignEditTask = $taskRepository->create($userB, 'Foreign edit', '2026-09-30 09:00:00', true, $ruleB, 10);
+    $selectedEditTask = $taskRepository->create($userA, 'Before edit', $databaseOriginalEditAt, true, $editRule, 1);
+    $siblingEditTask = $taskRepository->create($userA, 'Sibling task', $databaseSiblingEditAt, true, $editRule, 2);
+    $reminderRepository->create($selectedEditTask, 30, 'minute', $originalEditAt->modify('-30 minutes')->setTimezone($utc)->format('Y-m-d H:i:s'));
+    $reminderRepository->create($siblingEditTask, 30, 'minute', $siblingEditAt->modify('-30 minutes')->setTimezone($utc)->format('Y-m-d H:i:s'));
+    $foreignEditTask = $taskRepository->create($userB, 'Foreign edit', $databaseOriginalEditAt, true, $ruleB, 10);
     $originalRule = $ruleRepository->findByIdForUserForUpdate($editRule, $userA);
 
     $singleEdit = $service->updateSingleOccurrence(
         $selectedEditTask,
         $userA,
         'After edit',
-        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        $editDueAt,
         true,
         [['value' => 15, 'unit' => 'minute']]
     );
     assertLifecycleValue('single', $singleEdit['scope'], 'Single edit must identify its scope.');
     $editedTask = $taskRepository->findById($selectedEditTask, $userA);
     assertLifecycleValue('After edit', $editedTask->title, 'Single edit must update only the selected title.');
-    assertLifecycleValue('2026-09-30 07:30:00', $editedTask->due_at, 'Single edit must canonicalize due_at to UTC.');
+    assertLifecycleValue($databaseEditDueAt, $editedTask->due_at, 'Single edit must canonicalize due_at to UTC.');
     assertLifecycleValue($editRule, (int) $editedTask->repeat_rule_id, 'Single edit must preserve the repeat rule.');
     assertLifecycleValue(1, (int) $editedTask->repeat_occurrence_number, 'Single edit must preserve the occurrence number.');
     assertLifecycleValue(1, count($reminderRepository->getByTaskId($selectedEditTask)), 'Single edit must replace reminders.');
@@ -192,11 +209,11 @@ try {
         $selectedEditTask,
         $userA,
         'Split edit',
-        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        $editDueAt,
         true,
         [['value' => 30, 'unit' => 'minute']],
         [
-            'frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly'],
+            'frequency' => 'weekly', 'week_days' => $editWeekDays, 'ends' => ['type' => 'endlessly'],
         ],
     );
     assertLifecycleValue('future', $futureEdit['scope'], 'Future edit must identify its scope.');
@@ -206,16 +223,16 @@ try {
     $splitRule = $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA);
     assertLifecycleValue('active', $splitRule->status, 'The new split rule must be active.');
     assertLifecycleValue(true, (int) $futureEdit['generated_count'] > 0, 'The split rule must generate its initial 30-day window.');
-    $service->pauseRule((int) $futureEdit['repeat_rule_id'], $userA, $now);
+    $service->pauseRule((int) $futureEdit['repeat_rule_id'], $userA, $editNow);
     $pausedEdit = $service->updateRule(new RepeatRuleUpdateData([
         'repeat_rule_id' => (int) $futureEdit['repeat_rule_id'],
         'user_id' => $userA,
         'title' => 'Paused split edit',
-        'due_at' => new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        'due_at' => $editDueAt,
         'has_time' => true,
-        'repeat_config' => ['frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly']],
+        'repeat_config' => ['frequency' => 'weekly', 'week_days' => $editWeekDays, 'ends' => ['type' => 'endlessly']],
         'reminders' => [['value' => 15, 'unit' => 'minute']],
-        'now' => $now,
+        'now' => $editNow,
     ]));
     assertLifecycleValue('paused', $pausedEdit['status'], 'Paused rule edits must stay paused.');
     assertLifecycleValue(null, $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA)->next_occurrence_at, 'Paused edits must clear the cursor until Resume.');
@@ -223,14 +240,15 @@ try {
         $foreignEditTask,
         $userA,
         'Should fail',
-        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        $editDueAt,
         true,
         []
     ));
+    assertLifecycleValue(true, $pdo->inTransaction(), 'Edit calls must preserve the outer fixture transaction.');
 } finally {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
 }
 
-echo "PASS repeat-lifecycle integration: ownership, pause/resume/cancel, reminders, cursor/count, terminal states, and outer transaction verified; fixtures rolled back.\n";
+echo "PASS repeat-lifecycle integration: ownership, pause/resume/cancel, single/future/paused edits, reminders, cursor/count, terminal states, and outer transaction verified; fixtures rolled back.\n";

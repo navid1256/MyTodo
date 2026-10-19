@@ -203,7 +203,8 @@ assertValidationFails(
 );
 
 // Exercise real service/repository SQL against a fresh in-memory database.
-// SQLite cannot verify MySQL row locks; the opt-in integration test covers that dialect.
+// SQLite cannot verify MySQL row locks or MySQL UPDATE aliases used by attachToRule.
+// Full single/future/rule edit flows belong in repeat-lifecycle.integration.php.
 final class LifecycleTestPdo extends PDO
 {
     public function __construct()

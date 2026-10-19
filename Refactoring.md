@@ -6,7 +6,7 @@
 
 این سند برنامه کارهای آینده و محل ثبت پیشرفت آن‌هاست؛ ساخت آن به معنی اجرای مراحل، رفع باگ‌ها یا پاس‌شدن دوباره تست‌ها نیست. در مرحله تدوین فقط همین فایل ایجاد شد؛ تغییرات و نتایج اجرای بعدی زیر شناسه همان کار ثبت می‌شوند. کامیت را کاربر انجام می‌دهد.
 
-وضعیت فعلی: T01 تکمیل شده است؛ T02 و تمام موارد B و R همچنان باز هستند.
+وضعیت فعلی: T01 و T02 تکمیل شده‌اند؛ تمام موارد B و R همچنان باز هستند.
 
 ## ۱. هدف و قواعد اجرا
 
@@ -65,12 +65,35 @@
 
 ### T02 — مشخص‌کردن مرز SQLite و MySQL
 
-- [ ] **اولویت P1 — پیش‌نیاز: ندارد؛ قبل از تأیید نهایی B01 و B07 لازم است.**
+- [x] **اولویت P1 — پیش‌نیاز: ندارد؛ قبل از تأیید نهایی B01 و B07 لازم است.**
 - **محل:** `tests/Backend/repeat-backend.test.php`، کلاس `LifecycleTestPdo` در خط ۲۰۷؛ `tests/Backend/repeat-lifecycle.integration.php`؛ `App/Repositories/TaskRepository.php`، تابع `attachToRule()` در خط ۲۹۸.
 - **مشکل و دلیل:** Adapter فعلی فقط `FOR UPDATE` را حذف می‌کند؛ بعضی Queryهای MySQL روی SQLite اجرا نمی‌شوند و SQLite نیز رفتار قفل ردیف MySQL را اثبات نمی‌کند.
 - **تغییر پیشنهادی و نتیجه:** تست محاسبات و قراردادها در SQLite حفظ شود؛ مسیر کامل ویرایش و رقابت قفل‌ها به آزمون MySQL ایزوله سپرده شوند. کد تولید صرفاً برای سازگارکردن تست SQLite تغییر نکند.
 - **معیار پذیرش و تست:** هر تست محیط مورد نیاز و حالت `SKIP`/`REFUSED` روشن داشته باشد؛ Skip یا توقف Adapter به‌عنوان Pass محصول ثبت نشود و مسیر کامل ویرایش در محیط سازگار پوشش بگیرد.
-- **محدودیت فعلی:** Integration موجود به DSN صریح MySQL و نام دیتابیس پایان‌یافته به `_test` نیاز دارد. این Guard نباید برای اجرای تست روی دیتابیس اصلی تضعیف شود؛ دسترسی یا نوشتن داده واقعی بدون اجازه جدید ممنوع است.
+- **محدودیت:** اجرای مستقیم Integration همچنان به DSN صریح MySQL و نام دیتابیس پایان‌یافته به `_test` نیاز دارد. این Guard حذف نشده است؛ مسیر جداگانه ایزوله زیر، با اجازه صریح کاربر برای `mytodo` اضافه شد و هرگونه نوشتن Fixture را به جدول‌های جدا محدود می‌کند.
+
+#### نتیجه اجرای T02؛ MySQL واقعی با جدول‌های ایزوله در mytodo
+
+- **تاریخ و نسخه:** ۲۰۲۶-۱۰-۱۹؛ کد مبنا `7cb6c7d` به‌همراه تغییرات فعلی تست‌ها.
+- [x] مرز Adapter در `repeat-backend.test.php` روشن شد: حذف `FOR UPDATE` به معنی شبیه‌سازی قفل‌ها یا پشتیبانی از `UPDATE` با Alias در MySQL نیست؛ کد تولید برای سازگارکردن SQLite تغییر نکرد.
+- [x] فایل `tests/Backend/repeat-lifecycle-cli.test.php` اضافه شد و ۱۳ Guard را بررسی کرد: تنظیمات مفقود/خالی، DSN غیر MySQL، نام دیتابیس غیرتستی/نامعتبر، نام خالی و `dbname` تکراری. داده‌ها ساختگی‌اند، تنظیمات تست ارث‌رسیده حذف می‌شوند و پردازش فرزند فقط در صورت نبود درایور PDO اجازه اجرای Guardها را دارد؛ اتصال دیتابیس حتی در صورت خراب‌شدن Guard مجاز نیست.
+- [x] تفاوت ویندوز در انتقال مقدار خالی به پردازش فرزند در Harness تست برطرف شد؛ مقادیر ساختگی با `putenv()` داخل همان PHP فرزند تنظیم می‌شوند تا رمز خالی با رمز تعریف‌نشده اشتباه نشود. Guard اصلی Integration تغییر نکرد.
+- [x] انقضای Fixture ویرایش بازتولید شد: اعتبارسنجی واقعی Reminder، تاریخ ثابت `2026-09-30` را رد کرد. Fixture ویرایش Integration به ۱۴ روز آینده در ساعت محلی تهران منتقل شد؛ تاریخ Taskها، Reminderها، روز هفته و انتظار UTC همگی از همان مبنا محاسبه می‌شوند. اعتبارسنجی Reminder برای این تاریخ در SQLite حافظه‌ای موفق بود؛ این بررسی اجرای SQL کامل MySQL نیست.
+- [x] ۱۳ تست Guard، سه تست Backend مربوط به Repeat، دو رندر `english all full` و `persian all partial` و Syntax سه فایل PHP تغییرکرده پاس شدند. تست Guard موفق، به معنی Pass خود Integration نیست.
+- [x] پس از درخواست صریح کاربر برای استفاده از `mytodo`، مسیر `repeat-lifecycle-isolated.integration.php --database=mytodo` اضافه و اجرا شد. این مسیر تنظیمات موجود پروژه را می‌خواند و فقط به نام دقیق `mytodo` متصل می‌شود؛ اجرای بدون آرگومان یا با نام دیگر با `REFUSED` و کد دو رد می‌شود.
+- [x] کلاس آزمایشی `fixtures/isolated-repeat-test-connection.php` ساختار واقعی پنج جدول را همراه Indexها و Foreign Keyهای داخلی در جدول‌های خالی با پیشوند تصادفی کپی می‌کند؛ هیچ رکورد واقعی یا Trigger کپی نمی‌شود و هیچ FK به جدول اصلی باقی نمی‌ماند. Queryهای Repositoryها به این جدول‌ها هدایت می‌شوند؛ نام خارج از فهرست، چند Statement و نحو پشتیبانی‌نشده رد می‌شوند. بررسی‌های آفلاین هدایت و رد SQL نیز پاس شدند.
+- [x] همان سناریوهای موجود Integration، بدون نسخه‌برداری از منطق تست، روی MySQL واقعی پاس شدند: مالکیت، Pause/Resume/Cancel، ویرایش Single/Future/Paused Rule، Reminderها، Cursor/Count، وضعیت‌های نهایی و حفظ تراکنش بیرونی. Fixtureها Rollback شدند و هر پنج جدول ایزوله پس از اجرا حذف شدند.
+- [x] تعداد رکوردها، checksum محتوای داده و hash ساختار هر پنج جدول اصلی قبل و بعد یکسان بود. بررسی جداگانه نیز صفر بودن جدول‌های باقی‌مانده برای پیشوند اجرای `mytodo_repeat_214695674a91a837_` را تأیید کرد؛ جدول‌های آزمایشی در اجرای مجدد از کد بازسازی می‌شوند، نه از داده کاربران.
+- **قرارداد نتیجه:** Guard مستقیم بدون تنظیمات با خروجی `SKIP` و کد خروج صفر خاتمه می‌یابد؛ ورودی ناامن با `REFUSED` و کد یک رد می‌شود. در حالت ایزوله، موفقیت نهایی فقط پس از اجرای Suite، پاک‌سازی و یکسان‌بودن Snapshot با پیام `PASS isolated Repeat integration on mytodo` و Exit Code صفر ثبت می‌شود؛ صرف صفر بودن Exit Code یا Pass تست Guard کافی نیست.
+- **محدودیت پوشش:** Integration فعلی تک‌اتصالی است؛ موفقیت آن اثبات نبود Deadlock نیست. رقابت چند اتصال در B07 بررسی خواهد شد. این مرحله هیچ‌یک از باگ‌های B را رفع نکرده است و آزمون کامل مرورگر یا آمادگی Deploy را اثبات نمی‌کند؛ Push/Cron، Migration و ساخت دیتابیس اجرا نشدند. داده و Schema جدول‌های اصلی تغییر نکردند.
+- **پیام کامیت پیشنهادی:** `test(repeat): validate lifecycle with isolated MySQL fixtures`
+
+| محیط | فرمان اصلی | چه چیزی را بررسی می‌کند؟ | چه چیزی را اثبات نمی‌کند؟ |
+|---|---|---|---|
+| SQLite در حافظه | `php tests/Backend/repeat-backend.test.php` | محاسبات و مسیرهای سازگار Lifecycle | قفل و نحو کامل SQL در MySQL |
+| CLI بدون درایور PDO | `php tests/Backend/repeat-lifecycle-cli.test.php` | تفکیک Skip/Refused و رد مقصد ناامن پیش از اتصال | اجرای دیتابیس یا موفقیت ویرایش واقعی |
+| MySQL تست، با مجوز و تنظیمات صریح | `php tests/Backend/repeat-lifecycle.integration.php` | مسیرهای واقعی موجود و Rollback Fixtureها | مرورگر، Push و رقابت چنداتصالی |
+| MySQL موجود mytodo، با مجوز صریح | `php tests/Backend/repeat-lifecycle-isolated.integration.php --database=mytodo` | همان Suite روی کپی خالی Schema واقعی، همراه FK، کنترل داده اصلی و پاک‌سازی | کار با رکوردهای واقعی، رفتار Triggerهای احتمالی، مرورگر و رقابت چنداتصالی |
 
 ## ۴. مرحله دوم: رفع مشکلات رفتاری
 
@@ -249,6 +272,7 @@ Authentication، CSRF، شرط مالکیت داخل Queryها و عدم نما�
 php tests/Backend/repeat-backend.test.php
 php tests/Backend/repeat-controller-contract.test.php
 php tests/Backend/repeat-repository-contract.test.php
+php tests/Backend/repeat-lifecycle-cli.test.php
 
 node --test tests/Frontend/recurring-tasks.test.mjs tests/Frontend/recurring-navigation.test.mjs tests/Frontend/repeat-rule-edit.test.mjs tests/Frontend/repeat-task-edit.test.mjs tests/Frontend/repeat-service.test.mjs tests/Frontend/repeat-rule-for-month.test.mjs
 ```
@@ -264,7 +288,7 @@ php tests/Backend/recurring-page.test.php persian all partial
 
 ### بررسی‌های جداگانه و نیازمند محیط مناسب
 
-- [ ] **MySQL:** مسیر کامل Edit و رقابت عملیات روی Fixtureهای ایزوله، پس از آماده‌بودن محیط مجاز تست؛ `MYTODO_TEST_DSN`، `MYTODO_TEST_DB_USER` و `MYTODO_TEST_DB_PASSWORD` پیش‌نیاز Integration موجودند. اطلاعات اتصال و رمز در سند یا گزارش نوشته نشوند.
+- [ ] **MySQL:** مسیرهای مربوط به هر اصلاح B باید پس از همان اصلاح روی Fixtureهای ایزوله دوباره بررسی شوند؛ تأیید اولیه T02 جایگزین این رگرسیون نیست. مسیر مستقیم به `MYTODO_TEST_DSN`، `MYTODO_TEST_DB_USER` و `MYTODO_TEST_DB_PASSWORD` و دیتابیس `_test` نیاز دارد؛ مسیر ایزوله mytodo از تنظیمات پروژه و آرگومان صریح `--database=mytodo` استفاده می‌کند و اجرای آن نیازمند مجوز است. رقابت چنداتصالی B07 جداگانه بررسی شود. اطلاعات اتصال و رمز در سند یا گزارش نوشته نشوند.
 - [ ] **مرورگر:** فارسی/انگلیسی، LTR/RTL، Gregorian/Jalali، دو ویرایش متوالی، Focus مدال، Navigation AJAX، خطای API و دکمه‌های مشترک Completed/Add New Task بررسی شوند.
 - [ ] **Reminder و Push:** سازگاری ایجاد/حذف Reminder و اثر وضعیت Rule ابتدا با Sender ساختگی بررسی شود؛ صحت این تست‌ها به معنی رسیدن اعلان واقعی به مرورگر نیست.
 - [ ] **Cron و ارسال واقعی:** فقط در مرحله و با اجازه جداگانه بررسی شوند؛ آماده‌بودن کد یا تست ساختگی معادل فعال‌بودن Scheduler و تحویل اعلان نیست.
