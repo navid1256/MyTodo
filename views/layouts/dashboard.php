@@ -77,6 +77,10 @@ if ($isPartial) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
     <title><?= htmlspecialchars($translator->translate('app.name'), ENT_QUOTES, 'UTF-8') ?></title>
+    <?php $productionAssets = ViteHelper::isDevelopment() ? null : ViteHelper::productionAssets(dirname(__DIR__, 2)); ?>
+    <?php foreach ($productionAssets['stylesheets'] ?? [] as $stylesheet): ?>
+        <link rel="stylesheet" href="<?= htmlspecialchars($stylesheet, ENT_QUOTES, 'UTF-8') ?>">
+    <?php endforeach; ?>
     <script>
         try {
             if (localStorage.getItem('mytodo-theme') === 'dark') {
@@ -148,7 +152,7 @@ if ($isPartial) {
         <script type="module" src="<?= ViteHelper::developmentAssetUrl('@vite/client') ?>"></script>
         <script type="module" src="<?= ViteHelper::developmentAssetUrl('assets/js/app.js') ?>"></script>
     <?php else: ?>
-        <script type="module" src="/assets/js/app.js"></script>
+        <script type="module" src="<?= htmlspecialchars($productionAssets['script'], ENT_QUOTES, 'UTF-8') ?>"></script>
     <?php endif; ?>
 </body>
 

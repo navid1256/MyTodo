@@ -54,6 +54,9 @@ A simple and interactive Todo list application built with PHP, MySQL, and AJAX.
 
 ## 📝 Usage
 
+For the Railway-compatible Docker image, build instructions, runtime variables,
+and persistence requirements, see [docker/README.md](docker/README.md).
+
 1. **Access the application** - Navigate to the application URL in your browser
 2. **Create an account** - Register or login
 3. **Add tasks** - Click "Add Todo" and enter your task

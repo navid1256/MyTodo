@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 
 const DEV_HOST = 'mytodo.php';
@@ -6,7 +7,26 @@ const DEV_PORT = 5180;
 const DEV_ORIGIN = `https://${DEV_HOST}:${DEV_PORT}`;
 const BACKEND_ORIGIN = `https://${DEV_HOST}`;
 
-export default defineConfig(({ mode }) => {
+// Builds deployable assets without requiring the local development TLS certificate.
+export default defineConfig(({ command, mode }) => {
+    const configuration = {
+        root: 'public',
+        publicDir: false,
+        base: command === 'build' ? '/build/' : '/',
+        build: {
+            outDir: 'build',
+            emptyOutDir: true,
+            manifest: 'manifest.json',
+            rolldownOptions: {
+                input: fileURLToPath(new URL('./public/assets/js/app.js', import.meta.url)),
+            },
+        },
+    };
+
+    if (command === 'build') {
+        return configuration;
+    }
+
     const environment = loadEnv(mode, process.cwd(), 'MYTODO_');
     const certificatePath = environment.MYTODO_VITE_CERT_PATH;
     const privateKeyPath = environment.MYTODO_VITE_KEY_PATH;
@@ -20,7 +40,7 @@ export default defineConfig(({ mode }) => {
     }
 
     return {
-        root: 'public',
+        ...configuration,
         server: {
             host: DEV_HOST,
             port: DEV_PORT,
