@@ -45,14 +45,17 @@ ENV APP_ENV=production APP_DEBUG=false APP_TIMEZONE=UTC PORT=8080
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/zz-mytodo.ini
 COPY docker/health.php /usr/local/share/mytodo/health.php
+# mod_php requires prefork; never inherit a second active MPM.
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
-    && a2enmod headers rewrite \
+    && a2dismod mpm_event mpm_worker \
+    && a2enmod mpm_prefork headers rewrite \
     && printf 'Listen ${PORT}\n' > /etc/apache2/ports.conf \
     && printf 'ServerName localhost\nServerTokens Prod\nServerSignature Off\n' > /etc/apache2/conf-available/mytodo.conf \
     && a2enconf mytodo \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && mkdir -p /var/run/apache2 /var/lock/apache2 /var/www/html/storage/logs /var/www/html/public/storage/avatars \
-    && chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/www/html/storage /var/www/html/public/storage
+    && chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/www/html/storage /var/www/html/public/storage \
+    && apache2ctl -t
 
 # Copy only runtime files; never ship local uploads, keys, tests, or development tooling.
 COPY --from=dependencies /build/vendor/ ./vendor/

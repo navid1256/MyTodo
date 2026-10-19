@@ -38,6 +38,15 @@ Illuminate dependencies on PHP 8.4; dependency upgrades are outside this change.
 - Port: `PORT`, default `8080`; Apache listens on that environment variable.
 - Keep the web service, MySQL, and the future scheduler in the same region.
 
+The Apache PHP module uses only `mpm_prefork`. The web stage explicitly disables
+`mpm_event` and `mpm_worker`, enables prefork, and checks the Apache configuration
+during the build. The runtime smoke test also verifies that prefork is the only
+loaded MPM. A successful local check does not replace checking the deployed image.
+
+If a temporary diagnostic Custom Start Command was added while investigating
+`More than one MPM loaded`, remove it before deploying the corrected image so
+the Dockerfile's `apache2-foreground` command is used again.
+
 Provide these runtime variables through Railway Variables, never build arguments:
 
 ```text

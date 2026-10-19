@@ -12,6 +12,15 @@ function checkDockerRuntime(bool $condition, string $message): void
 }
 
 checkDockerRuntime(PHP_OS_FAMILY === 'Linux' && posix_geteuid() === 33, 'The container must run as the non-root www-data user.');
+// Reject conflicting MPMs before checking HTTP endpoints or application assets.
+exec('apache2ctl -M 2>&1', $apacheModuleOutput, $apacheModuleExitCode);
+$apacheModules = implode("\n", $apacheModuleOutput);
+checkDockerRuntime($apacheModuleExitCode === 0, 'Apache module configuration must be valid.');
+checkDockerRuntime(
+    preg_match_all('/^\s*mpm_\w+_module\b/m', $apacheModules) === 1
+    && str_contains($apacheModules, 'mpm_prefork_module'),
+    'Apache must load only the prefork MPM required by mod_php.'
+);
 foreach (['curl', 'fileinfo', 'gd', 'gmp', 'mbstring', 'openssl', 'pdo_mysql', 'Zend OPcache'] as $extension) {
     checkDockerRuntime(extension_loaded($extension), "Missing runtime extension: {$extension}");
 }
@@ -72,4 +81,4 @@ if (($argv[1] ?? '') === '--proxy-session') {
     );
     echo "PASS custom PORT and secure session cookies behind the TLS proxy (unreachable fixture database)\n";
 }
-echo "PASS non-root Docker runtime, extensions, immutable code, excluded secrets, assets and PHP liveness\n";
+echo "PASS non-root Docker runtime, prefork-only Apache, extensions, immutable code, excluded secrets, assets and PHP liveness\n";
