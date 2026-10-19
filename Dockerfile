@@ -46,9 +46,20 @@ COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/zz-mytodo.ini
 COPY docker/health.php /usr/local/share/mytodo/health.php
 # mod_php requires prefork; never inherit a second active MPM.
+# Freeze module selection so restored base-image symlinks cannot load another MPM.
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && a2dismod mpm_event mpm_worker \
     && a2enmod mpm_prefork headers rewrite \
+    && printf '%s\n' 'Include /etc/apache2/mods-available/mpm_prefork.load' > /etc/apache2/mytodo-modules.conf \
+    && find /etc/apache2/mods-enabled -maxdepth 1 -name '*.load' ! -name 'mpm_*.load' -printf 'Include %p\n' \
+        | sort >> /etc/apache2/mytodo-modules.conf \
+    && printf '%s\n' 'Include /etc/apache2/mods-available/mpm_prefork.conf' >> /etc/apache2/mytodo-modules.conf \
+    && find /etc/apache2/mods-enabled -maxdepth 1 -name '*.conf' ! -name 'mpm_*.conf' -printf 'Include %p\n' \
+        | sort >> /etc/apache2/mytodo-modules.conf \
+    && sed -i \
+        -e 's@^IncludeOptional mods-enabled/\*.load$@Include /etc/apache2/mytodo-modules.conf@' \
+        -e 's@^IncludeOptional mods-enabled/\*.conf$@# Module configuration is included by mytodo-modules.conf.@' \
+        /etc/apache2/apache2.conf \
     && printf 'Listen ${PORT}\n' > /etc/apache2/ports.conf \
     && printf 'ServerName localhost\nServerTokens Prod\nServerSignature Off\n' > /etc/apache2/conf-available/mytodo.conf \
     && a2enconf mytodo \

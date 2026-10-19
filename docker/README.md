@@ -39,9 +39,20 @@ Illuminate dependencies on PHP 8.4; dependency upgrades are outside this change.
 - Keep the web service, MySQL, and the future scheduler in the same region.
 
 The Apache PHP module uses only `mpm_prefork`. The web stage explicitly disables
-`mpm_event` and `mpm_worker`, enables prefork, and checks the Apache configuration
-during the build. The runtime smoke test also verifies that prefork is the only
-loaded MPM. A successful local check does not replace checking the deployed image.
+`mpm_event` and `mpm_worker`, enables prefork, and generates
+`/etc/apache2/mytodo-modules.conf` from the enabled non-MPM modules plus prefork.
+This explicit include list replaces both `mods-enabled` load/config wildcards:
+even if event/worker symlinks reappear, neither their modules nor their incompatible
+configuration is included. Enable any additional module before generating this
+list, then rebuild the image; runtime `a2enmod` is intentionally not supported.
+Apache configuration is checked during the build, and the runtime smoke test also
+verifies that prefork is the only loaded MPM.
+
+The reported Railway build passed `apache2ctl -t`, while the reported runtime had
+both event and prefork links. The cause of that filesystem difference is not yet
+proven; a cache/export/unpack issue is a hypothesis, not a confirmed diagnosis.
+The regression below reproduces the conflicting-link state without depending on
+that hypothesis. Local success does not replace checking the deployed image.
 
 If a temporary diagnostic Custom Start Command was added while investigating
 `More than one MPM loaded`, remove it before deploying the corrected image so
@@ -96,6 +107,17 @@ docker exec mytodo-runtime-check php tests/Backend/docker-runtime.smoke.php
 docker stop mytodo-runtime-check
 docker rm mytodo-runtime-check
 ```
+
+Run the restored-MPM-link regression in a separate disposable container. Root is
+used only to create the test fixture; the web image still runs as `www-data`:
+
+```powershell
+docker run --rm --network none --user root --mount "type=bind,source=$PWD/tests,target=/var/www/html/tests,readonly" --entrypoint sh mytodo-web:dev tests/Backend/docker-apache-mpm.regression.sh
+```
+
+This test deliberately restores event and worker `.load` and `.conf` symlinks,
+then verifies that Apache configuration remains valid and only prefork is loaded.
+It does not access MySQL or send notifications.
 
 ## Persistent data and release boundaries
 
