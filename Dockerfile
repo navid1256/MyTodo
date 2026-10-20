@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 
+# Railway passes this non-secret build argument; normal builds remain web-only.
+ARG MYTODO_IMAGE_VARIANT=web
+
 # Pin official multi-platform images; update these digests deliberately for security patches.
 FROM php:8.3-apache-bookworm@sha256:b79a53c3fb1dd4b9f350a8d99d84951512b6c21044e61bbecfee8af030b3722e AS php-base
 
@@ -15,6 +18,21 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 FROM composer:2@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac AS composer-binary
+
+FROM php-base AS scheduler-binary
+# Pin both the release and its official GitHub SHA-256 asset digests.
+RUN set -eu; \
+    architecture="$(dpkg --print-architecture)"; \
+    case "$architecture" in \
+        amd64) checksum=d2d7c97fbfefc763d5bbcbbb3f8d61f9dd3410ce5d05a737c414994b80b8cdd0 ;; \
+        arm64) checksum=a1c0af9872e8de89a1ce5c1b596e26c42917d5a2cf914d98faee2e28156899e2 ;; \
+        *) echo 'Unsupported scheduler architecture.' >&2; exit 1 ;; \
+    esac; \
+    curl --fail --silent --show-error --location --retry 3 --proto '=https' \
+        "https://github.com/aptible/supercronic/releases/download/v0.2.50/supercronic-linux-${architecture}" \
+        --output /usr/local/bin/supercronic; \
+    printf '%s  %s\n' "$checksum" /usr/local/bin/supercronic | sha256sum --check; \
+    chmod 0755 /usr/local/bin/supercronic
 
 FROM php-base AS dependencies
 COPY --from=composer-binary /usr/bin/composer /usr/local/bin/composer
@@ -85,3 +103,15 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl --fail --silent --show-error --max-time 3 "http://127.0.0.1:${PORT}/healthz" || exit 1
 CMD ["apache2-foreground"]
+
+# A separate always-on service runs cron, never Apache or the web healthcheck.
+FROM web AS scheduler
+COPY --from=scheduler-binary /usr/local/bin/supercronic /usr/local/bin/supercronic
+COPY --chmod=0755 docker/start-scheduler.sh /usr/local/bin/mytodo-scheduler
+COPY --chmod=0444 docker/scheduler.crontab /etc/mytodo.crontab
+ENV TZ=UTC
+HEALTHCHECK NONE
+CMD ["/usr/local/bin/mytodo-scheduler"]
+
+# Keep the web service unchanged unless its build explicitly selects scheduler.
+FROM ${MYTODO_IMAGE_VARIANT} AS runtime

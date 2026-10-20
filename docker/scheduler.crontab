@@ -1,0 +1,4 @@
+# Five-field schedules use UTC. Do not add secrets or a username column here.
+# Each command inherits the scheduler service's runtime environment.
+* * * * * /usr/local/bin/php -d display_errors=0 /var/www/html/process/send-reminders.php --send
+0 0 * * * /usr/local/bin/php -d display_errors=0 /var/www/html/process/generate-repeat-tasks.php

@@ -272,7 +272,7 @@ button:focus {
     z-index: 100;
     top: clamp(20px, calc(50% - 430px), 90px);
     left: 50%;
-    width: min(440px, calc(100% - 40px));
+    width: min(450px, calc(100% - 40px));
     padding: 14px 20px;
     box-sizing: border-box;
     transform: translateX(-50%);
@@ -394,4 +394,3 @@ button:focus {
     white-space: nowrap;
     border: 0;
 }
-
