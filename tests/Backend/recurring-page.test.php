@@ -120,6 +120,7 @@ checkRecurringPage($xpath->query('//*[@id="recurringTasksStatus" and @role="stat
 checkRecurringPage($xpath->query('//a[@data-repeat-filter="' . $expectedFilter . '" and @aria-current="page"]')->length === 1, 'Current filter must normalize and be accessible.');
 foreach ($rows as $row) {
     $payload = json_decode($row->getAttribute('data-repeat-rule'), true, 512, JSON_THROW_ON_ERROR);
+    checkRecurringPage(($payload['start_at'] ?? '') === '2099-01-01T09:30', 'The rule edit input must use the saved user timezone, not an offset-less UTC value.');
     $expectedReminders = $row->getAttribute('data-repeat-rule-id') === '1'
         ? [['value' => 30, 'unit' => 'minute'], ['value' => 1, 'unit' => 'hour']]
         : [];

@@ -297,6 +297,58 @@ try {
     assertLifecycleValue([$atCutoffTask], $taskRepository->deleteIncompleteFromOccurrence($boundaryRuleId, $userA, $cutoffAt, 1, $selectedBoundaryTask), 'The exact operation cutoff must be included while the preceding second is preserved.');
     assertLifecycleValue(1, count($reminderRepository->getByTaskId($beforeCutoffTask)), 'The past boundary reminder must survive.');
     assertLifecycleValue([], $reminderRepository->getByTaskId($atCutoffTask), 'The exact boundary reminder must cascade.');
+    // Exercise the real task-row payload and title-only edit round trip in both UI languages.
+    require_once dirname(__DIR__, 2) . '/views/components/task-items.php';
+    foreach (['UTC', 'Asia/Tehran', 'America/Los_Angeles'] as $timezoneName) {
+        $displayTimezone = new DateTimeZone($timezoneName);
+        foreach ([true, false] as $hasTime) {
+            $localDate = $editNow->setTimezone($displayTimezone)->modify('+14 days')->setTime($hasTime ? 23 : 0, $hasTime ? 45 : 0);
+            $storedDate = $localDate->setTimezone($utc)->format('Y-m-d H:i:s');
+            $timezoneRuleData = $editRuleData;
+            $timezoneRuleData['start_at'] = $storedDate;
+            $timezoneRuleData['next_occurrence_at'] = $storedDate;
+            $timezoneRuleData['timezone'] = 'America/New_York';
+            $timezoneRuleData['has_time'] = $hasTime;
+            $timezoneRuleId = $ruleRepository->create($timezoneRuleData);
+            $timezoneTaskId = $taskRepository->create($userA, 'Timezone fixture', $storedDate, $hasTime, $timezoneRuleId, 0);
+            foreach (['english', 'persian'] as $language) {
+                $task = $taskRepository->findById($timezoneTaskId, $userA);
+                $task->edit_payload = $service->getTaskEditPayload($timezoneTaskId, $userA);
+                $translator = new App\Localization\Translator($language, dirname(__DIR__, 2) . '/resources/lang');
+                ob_start();
+                renderSingleTaskItem($task, 'manage-tasks', true, true, $displayTimezone, $translator);
+                $taskHtml = ob_get_clean();
+                preg_match('/data-task-edit-payload>(.*?)<\/script>/s', $taskHtml, $payloadMatch);
+                $input = json_decode($payloadMatch[1], true, 512, JSON_THROW_ON_ERROR);
+                assertLifecycleValue($localDate->format('Y-m-d\TH:i'), $input['due_at'], $timezoneName . ': the form must receive the local day and time in ' . $language . '.');
+                $parsedDate = App\Helpers\TimezoneHelper::parseCanonicalDateTime($input['due_at'], $displayTimezone);
+                $service->updateSingleOccurrence($timezoneTaskId, $userA, 'Title only', $parsedDate, $hasTime, []);
+                assertLifecycleValue($storedDate, $taskRepository->findById($timezoneTaskId, $userA)->due_at, 'A title-only edit must not change UTC storage, including tasks without time.');
+            }
+
+            // A user timezone change must not silently redefine the schedule's timezone or anchor.
+            $ruleRepository->updateStatus($timezoneRuleId, $userA, 'paused', null);
+            $service->updateRule(new RepeatRuleUpdateData([
+                'repeat_rule_id' => $timezoneRuleId, 'user_id' => $userA, 'title' => 'Rule title only',
+                'due_at' => $localDate, 'has_time' => $hasTime,
+                'repeat_config' => ['frequency' => 'weekly', 'week_days' => [1], 'ends' => ['type' => 'endlessly']],
+                'reminders' => [],
+            ]));
+            $savedRule = $ruleRepository->findByIdForUserForUpdate($timezoneRuleId, $userA);
+            assertLifecycleValue($storedDate, $savedRule->start_at, 'A rule title edit must preserve the UTC anchor.');
+            assertLifecycleValue('America/New_York', $savedRule->timezone, 'A rule title edit must preserve the schedule timezone.');
+            $ruleRepository->updateStatus($timezoneRuleId, $userA, 'active', $storedDate);
+            $activeEdit = $service->updateRule(new RepeatRuleUpdateData([
+                'repeat_rule_id' => $timezoneRuleId, 'user_id' => $userA, 'title' => 'Active rule title only',
+                'due_at' => $localDate, 'has_time' => $hasTime,
+                'repeat_config' => ['frequency' => 'weekly', 'week_days' => [1], 'ends' => ['type' => 'endlessly']],
+                'reminders' => [],
+            ]));
+            $savedRule = $ruleRepository->findByIdForUserForUpdate((int) $activeEdit['repeat_rule_id'], $userA);
+            assertLifecycleValue($storedDate, $savedRule->start_at, 'An active split must preserve the submitted UTC anchor.');
+            assertLifecycleValue('America/New_York', $savedRule->timezone, 'An active split must also preserve the original schedule timezone.');
+        }
+    }
     assertLifecycleValue(true, $pdo->inTransaction(), 'Edit calls must preserve the outer fixture transaction.');
 } finally {
     if ($pdo->inTransaction()) {

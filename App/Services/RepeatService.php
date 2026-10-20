@@ -321,6 +321,8 @@ final class RepeatService
                 throw new RepeatRuleStateException('This recurring task is no longer editable.');
             }
 
+            // The form uses the user's timezone; the new series keeps the original schedule timezone.
+            $dueAt = DateTimeImmutable::createFromInterface($dueAt)->setTimezone(new DateTimeZone((string) $oldRule->timezone));
             $trimmedTitle = trim($title);
             if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
                 throw new RepeatValidationException(self::INVALID_TASK_TITLE);
@@ -382,6 +384,7 @@ final class RepeatService
     /**
      * Edit a rule from the recurring-rules page. Active rules split at their
      * first future incomplete occurrence; paused rules retain their identity.
+     * Convert the submitted instant to the stored schedule timezone before validating or saving it.
      *
      * @param array<string, mixed> $repeatConfig
      * @param array<int, mixed> $reminders
@@ -398,17 +401,19 @@ final class RepeatService
                 throw new RepeatRuleStateException('Completed or cancelled recurring rules cannot be edited.');
             }
 
+            $ruleDueAt = DateTimeImmutable::createFromInterface($update->dueAt)
+                ->setTimezone(new DateTimeZone((string) $storedRule->timezone));
             $trimmedTitle = trim($update->title);
             if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
                 throw new RepeatValidationException(self::INVALID_TASK_TITLE);
             }
-            $preparedRule = $this->validator->validate($update->repeatConfig, $update->dueAt);
-            $preparedReminders = $this->reminderService->prepareTaskReminders($update->reminders, $update->dueAt, $update->hasTime);
+            $preparedRule = $this->validator->validate($update->repeatConfig, $ruleDueAt);
+            $preparedReminders = $this->reminderService->prepareTaskReminders($update->reminders, $ruleDueAt, $update->hasTime);
             $ruleData = [
                 'title' => $trimmedTitle,
-                'start_at' => $this->ruleMapper->toDatabaseDateTime($update->dueAt),
+                'start_at' => $this->ruleMapper->toDatabaseDateTime($ruleDueAt),
                 'has_time' => $update->hasTime,
-                'timezone' => $update->dueAt->getTimezone()->getName(),
+                'timezone' => $ruleDueAt->getTimezone()->getName(),
                 'frequency' => $preparedRule['frequency'],
                 'interval' => $preparedRule['interval'],
                 'unit' => $preparedRule['unit'],
@@ -459,7 +464,7 @@ final class RepeatService
                 $selectedId,
                 $update->userId,
                 $trimmedTitle,
-                $update->dueAt,
+                $ruleDueAt,
                 $update->hasTime,
                 $update->reminders,
                 $update->repeatConfig
@@ -467,7 +472,10 @@ final class RepeatService
         });
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Builds an owned, editable task payload with an explicit UTC instant; the row renderer localizes form values.
+     * @return array<string, mixed>|null
+     */
     public function getTaskEditPayload(int $taskId, int $userId): ?array
     {
         $task = $this->taskRepository->findById($taskId, $userId);
@@ -491,7 +499,7 @@ final class RepeatService
         return [
             'task_id' => (int) $task->id,
             'title' => (string) $task->title,
-            'due_at' => $task->due_at === null ? '' : (new DateTimeImmutable((string) $task->due_at, TimezoneHelper::getApplicationTimezone()))->format('Y-m-d\\TH:i'),
+            'due_at' => $task->due_at === null ? '' : (new DateTimeImmutable((string) $task->due_at, TimezoneHelper::getApplicationTimezone()))->format('Y-m-d\TH:i:s\Z'),
             'has_time' => (bool) $task->has_time,
             'repeat_rule_id' => (int) $task->repeat_rule_id,
             'repeat_occurrence_number' => (int) $task->repeat_occurrence_number,
