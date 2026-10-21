@@ -460,7 +460,7 @@ final class RepeatService
                 $selectedId = (int) $selected->id;
             }
 
-            return $this->updateThisAndFuture(
+            $result = $this->updateThisAndFuture(
                 $selectedId,
                 $update->userId,
                 $trimmedTitle,
@@ -468,7 +468,11 @@ final class RepeatService
                 $update->hasTime,
                 $update->reminders,
                 $update->repeatConfig
-            ) + ['scope' => 'rule'];
+            );
+            // Delegating the split does not change the caller's rule-edit scope.
+            $result['scope'] = 'rule';
+
+            return $result;
         });
     }
 

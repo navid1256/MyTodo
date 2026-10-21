@@ -235,6 +235,7 @@ try {
         'now' => $editNow,
     ]));
     assertLifecycleValue('paused', $pausedEdit['status'], 'Paused rule edits must stay paused.');
+    assertLifecycleValue('rule', $pausedEdit['scope'], 'Paused rule edits must identify the rule scope.');
     assertLifecycleValue(null, $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA)->next_occurrence_at, 'Paused edits must clear the cursor until Resume.');
     assertLifecycleException(RepeatRuleNotFoundException::class, fn() => $service->updateSingleOccurrence(
         $foreignEditTask,
@@ -344,6 +345,9 @@ try {
                 'repeat_config' => ['frequency' => 'weekly', 'week_days' => [1], 'ends' => ['type' => 'endlessly']],
                 'reminders' => [],
             ]));
+            assertLifecycleValue('rule', $activeEdit['scope'], 'Active rule edits must identify the rule scope rather than the delegated future scope.');
+            assertLifecycleValue($timezoneRuleId, $activeEdit['old_repeat_rule_id'], 'Overriding scope must retain the original split rule ID.');
+            assertLifecycleValue($timezoneTaskId, $activeEdit['task']['id'], 'Overriding scope must retain the edited task payload.');
             $savedRule = $ruleRepository->findByIdForUserForUpdate((int) $activeEdit['repeat_rule_id'], $userA);
             assertLifecycleValue($storedDate, $savedRule->start_at, 'An active split must preserve the submitted UTC anchor.');
             assertLifecycleValue('America/New_York', $savedRule->timezone, 'An active split must also preserve the original schedule timezone.');
