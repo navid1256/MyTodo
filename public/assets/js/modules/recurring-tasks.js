@@ -1,5 +1,6 @@
 import {
     cancelRepeatRule,
+    fetchRecurringRows,
     pauseRepeatRule,
     resumeRepeatRule
 } from '../services/repeat-service.js';
@@ -225,6 +226,38 @@ function handleAction(container, actionButton, signal) {
         });
 }
 
+/** Atomically replaces one saved rule's display and edit data using the existing localized server view. */
+async function refreshEditedRow(container, row, repeatRuleId, signal) {
+    const requestToken = Symbol('refresh');
+    pendingRows.set(row, requestToken);
+    const restoreFocus = row.contains(document.activeElement);
+    setRowBusy(row, true);
+    setPageMessage(container, translate('recurring.message.processing', {}, 'Updating recurring task…'));
+    try {
+        const html = await fetchRecurringRows(signal);
+        if (isStale(container, row, signal, requestToken)) return;
+        const template = document.createElement('template');
+        template.innerHTML = html;
+        const nextRow = [...template.content.querySelectorAll('.recurringRule')]
+            .find(candidate => Number(candidate.dataset.repeatRuleId) === repeatRuleId);
+        if (!nextRow || Number(JSON.parse(nextRow.dataset.repeatRule || '{}').id) !== repeatRuleId) {
+            throw new Error('The refreshed recurring row is missing.');
+        }
+        const focusStayedOnRow = row.contains(document.activeElement) || document.activeElement === document.body;
+        row.replaceWith(nextRow);
+        pendingRows.delete(row);
+        if (restoreFocus && focusStayedOnRow) nextRow.querySelector('[data-repeat-action="edit"]')?.focus();
+        setPageMessage(container, translate('recurring.message.updated', {}, 'Recurring task updated.'));
+    } catch {
+        if (isStale(container, row, signal, requestToken)) return;
+        pendingRows.delete(row);
+        row.removeAttribute('aria-busy');
+        // Saving already succeeded: keep obsolete actions disabled instead of editing the old split rule.
+        setPageMessage(container, translate('recurring.message.saved_refresh_failed', {}, 'Saved, but the row could not be refreshed. Please reload before continuing.'));
+    }
+}
+
+/** Registers delegated row actions and discards edit events from previous dashboard views. */
 export function initRecurringTasks(signal) {
     if (signal?.aborted) {
         return;
@@ -247,24 +280,17 @@ export function initRecurringTasks(signal) {
         }
     };
     container.addEventListener('click', listener, signal ? { signal } : undefined);
+    // The row is refreshed only after a successful save originating from this view.
     const updateListener = (event) => {
         const previousRuleId = String(event.detail?.previousRuleId || '');
         const response = event.detail?.response || {};
+        const repeatRuleId = Number(response.repeat_rule_id);
+        if (signal?.aborted || response.success !== true || !Number.isInteger(repeatRuleId) || repeatRuleId < 1
+            || (event.detail?.container && event.detail.container !== container)) return;
         const row = [...container.querySelectorAll('.recurringRule')]
             .find((candidate) => candidate.dataset.repeatRuleId === previousRuleId);
         if (!row) return;
-        const title = response.task?.title || response.title;
-        if (title) {
-            const heading = row.querySelector('.recurringRuleMain h2');
-            if (heading) heading.textContent = title;
-        }
-        if (response.status) renderRuleState(row, response.status);
-        if (response.repeat_rule_id && response.repeat_rule_id !== Number(previousRuleId)) {
-            row.dataset.repeatRuleId = String(response.repeat_rule_id);
-            row.dataset.repeatStatus = 'active';
-            renderRuleState(row, 'active');
-        }
-        setPageMessage(container, translate('recurring.message.updated', {}, 'Recurring task updated.'));
+        refreshEditedRow(container, row, repeatRuleId, signal);
     };
     document.addEventListener('recurring-rule:updated', updateListener, signal ? { signal } : undefined);
     registeredContainers.set(container, signal || null);

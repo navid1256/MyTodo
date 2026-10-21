@@ -42,6 +42,13 @@ class FakeElement {
   appendChild(child) { child.parentElement = this; this.children.push(child); return child; }
   removeChild(child) { this.children = this.children.filter(item => item !== child); child.parentElement = null; }
   remove() { this.parentElement?.removeChild(this); }
+  // Replaces one row without changing its surrounding list or delegated listeners.
+  replaceWith(next) {
+    const parent = this.parentElement;
+    parent.children[parent.children.indexOf(this)] = next;
+    next.parentElement = parent;
+    this.parentElement = null;
+  }
   contains(element) { return this === element || this.children.some(child => child.contains(element)); }
   addEventListener(type, listener, options) {
     this.listeners.push({ type, listener, signal: options?.signal });
@@ -77,7 +84,16 @@ class FakeElement {
 
 class FakeDocument extends FakeElement {
   constructor() { super('document'); this.meta = new FakeElement('meta', { name: 'csrf-token', content: 'csrf' }); }
-  createElement(tagName) { return new FakeElement(tagName); }
+  // Supplies a prepared server fragment; HTML parsing itself is verified in the browser.
+  createElement(tagName) {
+    if (tagName === 'template') return { content: this.fragment, innerHTML: '' };
+    return new FakeElement(tagName);
+  }
+  // Delivers the same document-level events used by the modal and recurring list.
+  dispatchEvent(event) {
+    this.listeners.filter(item => item.type === event.type).forEach(item => item.listener(event));
+    return true;
+  }
   getElementById(id) { return this.querySelector(`#${id}`); }
   querySelector(selector) {
     if (selector === 'meta[name="csrf-token"]') return this.meta;
@@ -170,5 +186,93 @@ test('an already-aborted signal does not register duplicate delegated handlers',
     recurringModule.initRecurringTasks(controller.signal);
     assert.equal(container.listeners.length, 0);
     assert.equal(row.querySelector('[data-repeat-action="pause"]').disabled, false);
+  });
+});
+
+for (const status of ['active', 'paused']) {
+  test(`${status}: two edits replace the entire row and reopen the latest rule payload`, async () => {
+    await withPage(status, async ({ document, container, row }) => {
+      const controller = new AbortController();
+      recurringModule.initRecurringTasks(controller.signal);
+      let previousId = 7;
+      for (const revision of [1, 2]) {
+        const id = status === 'active' ? 7 + revision : 7;
+        const payload = { id, title: `Saved ${revision}`, status, start_at: `2099-01-0${revision}T09:30`,
+          frequency: 'weekly', week_days: [revision], ends: { type: 'count', count: revision + 3 },
+          reminders: [{ value: revision * 15, unit: 'minute' }] };
+        const fresh = setupPage(status);
+        fresh.row.dataset.repeatRuleId = String(id);
+        fresh.row.dataset.repeatRule = JSON.stringify(payload);
+        fresh.row.querySelectorAll('[data-repeat-action]').forEach(button => { button.dataset.repeatRuleId = String(id); });
+        document.fragment = fresh.container;
+        globalThis.fetch = async (url, options) => {
+          assert.equal(url, '/recurring-tasks?partial=1&filter=all');
+          assert.equal(options.signal, controller.signal);
+          return { ok: true, json: async () => ({ activeView: 'recurring-tasks', html: '<section>fresh row</section>' }) };
+        };
+        document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+          container, previousRuleId: String(previousId), response: { success: true, scope: 'rule', repeat_rule_id: id }
+        } });
+        await new Promise(resolve => setImmediate(resolve));
+        const updated = container.querySelector('.recurringRule');
+        assert.equal(updated, fresh.row);
+        assert.equal(row.parentElement, null);
+        let opened;
+        document.addEventListener('recurring-rule:edit', event => { opened = event.detail.payload; }, { signal: controller.signal });
+        container.click(updated.querySelector('[data-repeat-action="edit"]'));
+        assert.deepEqual(opened, payload);
+        assert.ok(updated.querySelectorAll('[data-repeat-action]').every(button => button.dataset.repeatRuleId === String(id)));
+        row = updated;
+        previousId = id;
+      }
+      controller.abort();
+    });
+  });
+}
+
+test('a failed edit event leaves the valid row unchanged and does not refresh it', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    globalThis.fetch = () => { throw new Error('Unexpected refresh'); };
+    document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+      container, previousRuleId: '7', response: { success: false, repeat_rule_id: 8 }
+    } });
+    assert.equal(row.dataset.repeatRuleId, '7');
+    assert.equal(row.querySelector('[data-repeat-action="edit"]').disabled, false);
+    controller.abort();
+  });
+});
+
+test('navigation abort discards a late refresh response', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    let resolveRequest;
+    globalThis.fetch = () => new Promise(resolve => { resolveRequest = resolve; });
+    document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+      container, previousRuleId: '7', response: { success: true, repeat_rule_id: 8 }
+    } });
+    controller.abort();
+    resolveRequest({ ok: true, json: async () => ({ activeView: 'recurring-tasks', html: '<section>late</section>' }) });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(container.querySelector('.recurringRule'), row);
+    assert.equal(row.dataset.repeatRuleId, '7');
+  });
+});
+
+test('a refresh failure keeps old data but disables stale actions after a successful save', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    globalThis.fetch = async () => ({ ok: false });
+    document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+      container, previousRuleId: '7', response: { success: true, repeat_rule_id: 8 }
+    } });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(row.dataset.repeatRuleId, '7');
+    assert.ok(row.querySelectorAll('[data-repeat-action]').every(button => button.disabled));
+    assert.match(container.querySelector('#recurringTasksStatus').textContent, /saved.*reload/i);
+    controller.abort();
   });
 });
