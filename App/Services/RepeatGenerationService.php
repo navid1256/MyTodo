@@ -91,6 +91,7 @@ final class RepeatGenerationService
         ));
     }
 
+    /** Materializes eligible dates under the rule lock, preserving original identity and surviving repeat counts. */
     private function generateRuleOccurrencesInTransaction(
         int $repeatRuleId,
         DateTimeImmutable $horizon,
@@ -117,6 +118,8 @@ final class RepeatGenerationService
         $rule = $this->ruleMapper->toRuleArray($storedRule);
         $existingRepeatCount = $this->taskRepository->countRepeatsForRule($repeatRuleId, (int) $storedRule->user_id);
         $nextOccurrenceNumber = $this->taskRepository->getMaxOccurrenceNumber($repeatRuleId, (int) $storedRule->user_id) + 1;
+        $hasInitialOccurrence = $nextOccurrence == $seriesStart
+            && $this->taskRepository->hasInitialOccurrenceForRule($repeatRuleId, (int) $storedRule->user_id);
         $existingDates = array_fill_keys($this->taskRepository->getOccurrenceDatesForRule(
             $repeatRuleId,
             (int) $storedRule->user_id,
@@ -140,7 +143,8 @@ final class RepeatGenerationService
 
             $occurrence = $plan['occurrences'][0];
             $dueAt = $this->ruleMapper->toDatabaseDateTime($occurrence);
-            if (isset($existingDates[$dueAt])) {
+            $isInitialOccurrence = $occurrence == $seriesStart;
+            if (isset($existingDates[$dueAt]) || ($isInitialOccurrence && $hasInitialOccurrence)) {
                 $nextOccurrence = $this->scheduleCalculator->nextOccurrence($rule, $seriesStart, $occurrence);
                 continue;
             }
@@ -151,7 +155,7 @@ final class RepeatGenerationService
                 dueAt: $dueAt,
                 hasTime: (bool) $storedRule->has_time,
                 repeatRuleId: $repeatRuleId,
-                repeatOccurrenceNumber: $nextOccurrenceNumber + $generatedCount
+                repeatOccurrenceNumber: $isInitialOccurrence ? 0 : $nextOccurrenceNumber
             );
             $preparedReminders = $this->reminderService->prepareGeneratedTaskReminders(
                 $templates,
@@ -165,6 +169,9 @@ final class RepeatGenerationService
             }
 
             $generatedCount++;
+            if (!$isInitialOccurrence) {
+                $nextOccurrenceNumber++;
+            }
             $existingRepeatCount = $plan['generated_repeats'];
             if ($plan['next_occurrence'] === null || $generatedCount >= max(1, $occurrenceLimit)) {
                 break;

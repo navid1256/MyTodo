@@ -353,6 +353,55 @@ try {
             assertLifecycleValue('America/New_York', $savedRule->timezone, 'An active split must also preserve the original schedule timezone.');
         }
     }
+    // Exhausting Count or End Date generation must not close controls for already materialized future tasks.
+    $boundedStart = $editNow->modify('+1 day')->setTime(9, 0);
+    $boundedHorizon = $editNow->modify('+30 days');
+    foreach (['count', 'date'] as $endType) {
+        $ends = $endType === 'count'
+            ? ['type' => 'count', 'count' => 2]
+            : ['type' => 'date', 'date' => $boundedStart->modify('+2 days')->format('Y-m-d')];
+        $boundedConfig = ['frequency' => 'daily', 'ends' => $ends];
+        foreach (['pause', 'cancel', 'edit'] as $operation) {
+            $boundedRuleId = $service->createRule($userA, 'Bounded fixture', $boundedStart, true,
+                $service->prepareRule($boundedConfig, $boundedStart), [['offset_value' => 30, 'offset_unit' => 'minute']]);
+            $boundedTaskId = $taskRepository->create($userA, 'Bounded fixture', $boundedStart->setTimezone($utc)->format('Y-m-d H:i:s'), true, $boundedRuleId, 0);
+            assertLifecycleValue(2, $service->generateInitialWindow($boundedRuleId, $boundedHorizon), 'A bounded rule must materialize exactly two repeats.');
+            $boundedRule = $ruleRepository->findByIdForUserForUpdate($boundedRuleId, $userA);
+            assertLifecycleValue('active', $boundedRule->status, $endType . ': generation exhaustion must not end management.');
+            assertLifecycleValue(null, $boundedRule->next_occurrence_at, 'An exhausted rule must have no generation cursor.');
+            assertLifecycleValue(false, in_array($boundedRuleId, $ruleRepository->findDueRuleIds($boundedHorizon->setTimezone($utc)->format('Y-m-d H:i:s'), 500), true), 'Cron must not select an exhausted active rule.');
+            assertLifecycleValue(0, $service->generateInitialWindow($boundedRuleId, $boundedHorizon), 'Repeated generation must not add occurrences after exhaustion.');
+            assertLifecycleValue(2, $taskRepository->countRepeatsForRule($boundedRuleId, $userA), 'Repeated generation must preserve the configured repeat count.');
+            assertLifecycleValue(true, $service->getTaskEditPayload($boundedTaskId, $userA) !== null, 'The existing task edit button must remain available.');
+
+            if ($operation === 'edit') {
+                $service->updateSingleOccurrence($boundedTaskId, $userA, 'Bounded single edit', $boundedStart, true, []);
+                assertLifecycleValue('Bounded single edit', $taskRepository->findById($boundedTaskId, $userA)->title, 'Single occurrence editing must remain available.');
+                $boundedEdit = $service->updateRule(new RepeatRuleUpdateData([
+                    'repeat_rule_id' => $boundedRuleId, 'user_id' => $userA, 'title' => 'Bounded series edit',
+                    'due_at' => $boundedStart, 'has_time' => true, 'repeat_config' => $boundedConfig,
+                    'reminders' => [['value' => 30, 'unit' => 'minute']],
+                ]));
+                $newBoundedRuleId = (int) $boundedEdit['repeat_rule_id'];
+                assertLifecycleValue('active', $ruleRepository->findByIdForUserForUpdate($newBoundedRuleId, $userA)->status, 'Editing a bounded series must keep its replacement manageable.');
+                assertLifecycleValue(null, $ruleRepository->findByIdForUserForUpdate($newBoundedRuleId, $userA)->next_occurrence_at, 'The replacement must still respect its generation limit.');
+                assertLifecycleValue(2, $taskRepository->countRepeatsForRule($newBoundedRuleId, $userA), 'A split must not exceed the new repeat limit.');
+                assertLifecycleValue('completed', $ruleRepository->findByIdForUserForUpdate($boundedRuleId, $userA)->status, 'The old split rule must remain terminal.');
+                assertLifecycleException(RepeatRuleStateException::class, fn() => $service->resumeRule($boundedRuleId, $userA, $editNow));
+            } else {
+                $method = $operation === 'pause' ? 'pauseRule' : 'cancelRule';
+                $changed = $service->$method($boundedRuleId, $userA, $editNow);
+                assertLifecycleValue($operation === 'pause' ? 'paused' : 'cancelled', $changed['status'], 'An exhausted series must still accept lifecycle actions.');
+                assertLifecycleValue(3, count($changed['deleted_task_ids']), 'Lifecycle actions must remove only this series\' future tasks.');
+                foreach ($changed['deleted_task_ids'] as $deletedId) {
+                    assertLifecycleValue([], $reminderRepository->getByTaskId($deletedId), 'Deleted bounded tasks must leave no reminders.');
+                }
+                if ($operation === 'cancel') {
+                    assertLifecycleException(RepeatRuleStateException::class, fn() => $service->resumeRule($boundedRuleId, $userA, $editNow));
+                }
+            }
+        }
+    }
     assertLifecycleValue(true, $pdo->inTransaction(), 'Edit calls must preserve the outer fixture transaction.');
 } finally {
     if ($pdo->inTransaction()) {

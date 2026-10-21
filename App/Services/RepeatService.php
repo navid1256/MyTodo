@@ -154,7 +154,10 @@ final class RepeatService
         });
     }
 
-    /** @return array{status: string, generated_count: int, next_occurrence_at: string|null} */
+    /**
+     * Enables a paused series while keeping generation limits separate from terminal lifecycle states.
+     * @return array{status: string, generated_count: int, next_occurrence_at: string|null}
+     */
     public function resumeRule(int $repeatRuleId, int $userId, DateTimeImmutable $now): array
     {
         return $this->runInTransaction(function () use ($repeatRuleId, $userId, $now): array {
@@ -173,10 +176,10 @@ final class RepeatService
                     (int) $storedRule->user_id,
                     $this->taskRepository->countRepeatsForRule($repeatRuleId, $userId),
                     null,
-                    'completed'
+                    'active'
                 );
 
-                return ['status' => 'completed', 'generated_count' => 0, 'next_occurrence_at' => null];
+                return ['status' => 'active', 'generated_count' => 0, 'next_occurrence_at' => null];
             }
 
             $storedRule->status = 'active';
@@ -545,17 +548,19 @@ final class RepeatService
         }
     }
 
+    /** Finds the first eligible instant at or after Resume without replacing the original schedule anchor. */
     private function resolveResumeOccurrence(object $storedRule, DateTimeImmutable $now): ?DateTimeImmutable
     {
         $timezone = new DateTimeZone((string) $storedRule->timezone);
         $seriesStart = (new DateTimeImmutable((string) $storedRule->start_at, TimezoneHelper::getApplicationTimezone()))
             ->setTimezone($timezone);
         $localNow = $now->setTimezone($timezone);
-        $candidate = $this->scheduleCalculator->nextOccurrence(
-            $this->ruleMapper->toRuleArray($storedRule),
-            $seriesStart,
-            $localNow > $seriesStart ? $localNow : $seriesStart
-        );
+        // The calculator is strictly-after; stepping back one microsecond includes an exact due-time match.
+        $candidate = $localNow <= $seriesStart
+            ? $seriesStart
+            : $this->scheduleCalculator->nextOccurrence(
+                $this->ruleMapper->toRuleArray($storedRule), $seriesStart, $localNow->modify('-1 microsecond')
+            );
         $existingRepeatCount = $this->taskRepository->countRepeatsForRule((int) $storedRule->id, (int) $storedRule->user_id);
 
         return $this->isRuleExhausted($storedRule, $existingRepeatCount, $candidate) ? null : $candidate;

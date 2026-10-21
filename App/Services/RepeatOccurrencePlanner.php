@@ -13,6 +13,9 @@ final class RepeatOccurrencePlanner
     public function __construct(private readonly RepeatScheduleCalculator $scheduleCalculator) {}
 
     /**
+     * Plans an enabled series without closing its lifecycle; a null cursor alone marks generation exhaustion.
+     * Restoring the original occurrence does not spend the additional-repeat allowance.
+     *
      * @param array{
      *     interval: int,
      *     unit: string,
@@ -44,10 +47,12 @@ final class RepeatOccurrencePlanner
         while (
             count($occurrences) < $limit
             && $nextOccurrence <= $horizon
-            && $this->canGenerate($rule, $nextOccurrence, $generatedRepeats)
+            && $this->canGenerate($rule, $seriesStart, $nextOccurrence, $generatedRepeats)
         ) {
             $occurrences[] = $nextOccurrence;
-            $generatedRepeats++;
+            if ($nextOccurrence != $seriesStart) {
+                $generatedRepeats++;
+            }
             $nextOccurrence = $this->scheduleCalculator->nextOccurrence(
                 $rule,
                 $seriesStart,
@@ -55,12 +60,12 @@ final class RepeatOccurrencePlanner
             );
         }
 
-        if (!$this->canGenerate($rule, $nextOccurrence, $generatedRepeats)) {
+        if (!$this->canGenerate($rule, $seriesStart, $nextOccurrence, $generatedRepeats)) {
             return [
                 'occurrences' => $occurrences,
                 'generated_repeats' => $generatedRepeats,
                 'next_occurrence' => null,
-                'status' => 'completed',
+                'status' => 'active',
             ];
         }
 
@@ -73,15 +78,17 @@ final class RepeatOccurrencePlanner
     }
 
     /**
+     * Applies the series end rule while keeping occurrence zero separate from the repeat count.
      * @param array{ends: array{type: string, date: string|null, count: int|null}} $rule
      */
     private function canGenerate(
         array $rule,
+        DateTimeImmutable $seriesStart,
         DateTimeImmutable $occurrence,
         int $generatedRepeats
     ): bool {
         if ($rule['ends']['type'] === 'count') {
-            return $generatedRepeats < (int) $rule['ends']['count'];
+            return $occurrence == $seriesStart || $generatedRepeats < (int) $rule['ends']['count'];
         }
 
         if ($rule['ends']['type'] === 'date') {
