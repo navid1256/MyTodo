@@ -213,6 +213,47 @@ final class RepeatResumeTest extends TestCase
         self::assertNull($this->rules->findByIdForUserForUpdate($ruleId, $this->userId)->next_occurrence_at);
     }
 
+    /** Supplies storage expectations independently of the production calculator and timezone mapper. */
+    public static function dstSeriesCases(): iterable
+    {
+        yield 'spring gap does not shift later tasks' => ['2026-03-07 02:30:00', [
+            '2026-03-07 07:30:00', '2026-03-08 07:30:00', '2026-03-09 06:30:00',
+        ]];
+        yield 'fall repeated hour creates only one task' => ['2026-10-31 01:30:00', [
+            '2026-10-31 05:30:00', '2026-11-01 05:30:00', '2026-11-02 06:30:00',
+        ]];
+    }
+
+    /** Verifies that resumed tasks and their eligible reminder offsets persist as the correct UTC instants. */
+    #[DataProvider('dstSeriesCases')]
+    public function testDstSeriesPersistsTasksAndRemindersInUtc(string $startTime, array $expectedUtc): void
+    {
+        $start = new DateTimeImmutable($startTime, new DateTimeZone('America/New_York'));
+        $now = $start->modify('-1 hour');
+        $ruleId = $this->createSeries('daily', $start, 'count');
+        $this->tasks->create($this->userId, 'Original', $this->utc($start), true, $ruleId, 0);
+        $this->service->pauseRule($ruleId, $this->userId, $now);
+        $result = $this->service->resumeRule($ruleId, $this->userId, $now);
+        $rows = $this->rows($ruleId);
+        self::assertSame($expectedUtc, array_column($rows, 'due_at'));
+        self::assertSame([0, 1, 2], array_map('intval', array_column($rows, 'repeat_occurrence_number')));
+        self::assertSame(3, $result['generated_count']);
+        self::assertSame('active', $result['status']);
+        self::assertNull($result['next_occurrence_at']);
+        foreach ($rows as $row) {
+            $reminders = $this->reminders->getByTaskId((int) $row['id']);
+            self::assertCount(1, $reminders);
+            $expectedReminder = (new DateTimeImmutable($row['due_at'], new DateTimeZone('UTC')))->modify('-30 minutes');
+            self::assertSame($expectedReminder->format('Y-m-d H:i:s'), $reminders[0]->remind_at);
+        }
+        $storedRule = $this->rules->findByIdForUserForUpdate($ruleId, $this->userId);
+        self::assertSame('America/New_York', $storedRule->timezone);
+        self::assertSame(2, (int) $storedRule->generated_repeats);
+        self::assertSame(0, $this->service->generateUntil($now->modify('+30 days')));
+        self::assertSame($rows, $this->rows($ruleId));
+        self::assertTrue(self::$connection->inTransaction());
+    }
+
     /** Rejects a foreign owner without changing the series or committing the caller's transaction. */
     public function testResumeRejectsAnotherOwner(): void
     {
