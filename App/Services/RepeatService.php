@@ -224,6 +224,7 @@ final class RepeatService
     }
 
     /**
+     * Edits one occurrence after acquiring the owning rule lock before the task lock.
      * @param array<int, mixed> $reminders
      * @return array{task_id: int, repeat_rule_id: int, scope: string, task: array<string, mixed>, reminders: array<int, array{value: int, unit: string}>}
      */
@@ -236,19 +237,8 @@ final class RepeatService
         array $reminders
     ): array {
         return $this->runInTransaction(function () use ($taskId, $userId, $title, $dueAt, $hasTime, $reminders): array {
-            $task = $this->taskRepository->findRecurringByIdForUpdate($taskId, $userId);
-            if ($task === null) {
-                throw new RepeatRuleNotFoundException('Recurring task not found.');
-            }
-            if ((bool) $task->is_done) {
-                throw new RepeatRuleStateException('Completed recurring tasks cannot be edited.');
-            }
-
-            $repeatRuleId = (int) $task->repeat_rule_id;
-            $rule = $this->requireOwnedRuleForUpdate($repeatRuleId, $userId);
-            if (in_array((string) $rule->status, ['completed', 'cancelled'], true)) {
-                throw new RepeatRuleStateException('This recurring task is no longer editable.');
-            }
+            [$task, $rule] = $this->requireEditableOccurrenceForUpdate($taskId, $userId);
+            $repeatRuleId = (int) $rule->id;
 
             $trimmedTitle = trim($title);
             if ($trimmedTitle === '' || mb_strlen($trimmedTitle) > 255) {
@@ -295,6 +285,7 @@ final class RepeatService
      * becomes occurrence zero of a new rule; history and completed siblings
      * remain attached to the terminal old rule. The operation time protects
      * history independently of the selected task's replacement date.
+     * Locks the owning rule before the selected task and revalidates their relationship.
      *
      * @param array<string, mixed> $repeatConfig
      * @param array<int, mixed> $reminders
@@ -310,19 +301,8 @@ final class RepeatService
         array $repeatConfig
     ): array {
         return $this->runInTransaction(function () use ($taskId, $userId, $title, $dueAt, $hasTime, $repeatConfig, $reminders): array {
-            $task = $this->taskRepository->findRecurringByIdForUpdate($taskId, $userId);
-            if ($task === null) {
-                throw new RepeatRuleNotFoundException('Recurring task not found.');
-            }
-            if ((bool) $task->is_done) {
-                throw new RepeatRuleStateException('Completed recurring tasks cannot be edited.');
-            }
-
-            $oldRuleId = (int) $task->repeat_rule_id;
-            $oldRule = $this->requireOwnedRuleForUpdate($oldRuleId, $userId);
-            if (in_array((string) $oldRule->status, ['completed', 'cancelled'], true)) {
-                throw new RepeatRuleStateException('This recurring task is no longer editable.');
-            }
+            [$task, $oldRule] = $this->requireEditableOccurrenceForUpdate($taskId, $userId);
+            $oldRuleId = (int) $oldRule->id;
 
             // The form uses the user's timezone; the new series keeps the original schedule timezone.
             $dueAt = DateTimeImmutable::createFromInterface($dueAt)->setTimezone(new DateTimeZone((string) $oldRule->timezone));
@@ -513,6 +493,36 @@ final class RepeatService
             'reminders' => $reminders,
             'repeat_config' => $this->ruleMapper->toRuleArray($rule) + ['frequency' => (string) $rule->frequency],
         ];
+    }
+
+    /**
+     * Discovers the rule without a task lock, then locks Rule -> Task and rejects a stale association.
+     * @return array{object, object} The locked task and its ownership-checked, editable rule.
+     */
+    private function requireEditableOccurrenceForUpdate(int $taskId, int $userId): array
+    {
+        $reference = $this->taskRepository->findById($taskId, $userId);
+        if ($reference === null || $reference->repeat_rule_id === null) {
+            throw new RepeatRuleNotFoundException('Recurring task not found.');
+        }
+
+        $repeatRuleId = (int) $reference->repeat_rule_id;
+        $rule = $this->requireOwnedRuleForUpdate($repeatRuleId, $userId);
+        $task = $this->taskRepository->findRecurringByIdForUpdate($taskId, $userId);
+        if ($task === null) {
+            throw new RepeatRuleNotFoundException('Recurring task not found.');
+        }
+        if ((int) $task->repeat_rule_id !== $repeatRuleId) {
+            throw new RepeatRuleStateException('This recurring task is no longer editable.');
+        }
+        if ((bool) $task->is_done) {
+            throw new RepeatRuleStateException('Completed recurring tasks cannot be edited.');
+        }
+        if (in_array((string) $rule->status, ['completed', 'cancelled'], true)) {
+            throw new RepeatRuleStateException('This recurring task is no longer editable.');
+        }
+
+        return [$task, $rule];
     }
 
     private function requireOwnedRuleForUpdate(int $repeatRuleId, int $userId): object

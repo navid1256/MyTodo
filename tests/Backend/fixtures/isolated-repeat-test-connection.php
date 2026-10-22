@@ -13,9 +13,12 @@ final class IsolatedRepeatTestConnection extends PDO
     public readonly string $prefix;
     private array $createdTables = [];
 
-    /** Connects only to the explicitly authorized database, with a new fixture namespace. */
-    public function __construct()
+    /** Creates a new namespace, or joins an explicitly supplied fixture namespace without owning its cleanup. */
+    public function __construct(?string $fixturePrefix = null)
     {
+        if ($fixturePrefix !== null && preg_match('/\Amytodo_repeat_[a-f0-9]{16}_\z/', $fixturePrefix) !== 1) {
+            throw new InvalidArgumentException('Invalid shared Repeat fixture namespace.');
+        }
         EnvironmentLoader::load(dirname(__DIR__, 3));
         $configuration = require dirname(__DIR__, 3) . '/config/database.php';
         if ($configuration['driver'] !== 'mysql' || $configuration['database'] !== 'mytodo') {
@@ -29,7 +32,8 @@ final class IsolatedRepeatTestConnection extends PDO
             throw new RuntimeException('Unexpected database selected for isolated Repeat tests.');
         }
         parent::exec("SET time_zone = '+00:00'");
-        $this->prefix = 'mytodo_repeat_' . bin2hex(random_bytes(8)) . '_';
+        parent::exec('SET SESSION innodb_lock_wait_timeout = 5');
+        $this->prefix = $fixturePrefix ?? 'mytodo_repeat_' . bin2hex(random_bytes(8)) . '_';
     }
 
     /** Routes the supported repository SQL shapes to fixture tables and rejects unsupported targets. */
