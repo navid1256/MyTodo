@@ -105,6 +105,7 @@ function setupPage(status = 'active') {
   const document = new FakeDocument();
   const container = document.appendChild(new FakeElement('div', { class: 'recurringTasksContent' }));
   const row = container.appendChild(new FakeElement('article', { class: 'recurringRule', 'data-repeat-rule-id': '7', 'data-repeat-status': status }));
+  row.dataset.repeatRule = JSON.stringify({ id: 7, title: 'Morning task', status, reminders: [{ value: 15, unit: 'minute' }] });
   const main = row.appendChild(new FakeElement('div', { class: 'recurringRuleMain' }));
   main.appendChild(new FakeElement('h2', { textContent: 'Morning task' }));
   row.appendChild(new FakeElement('span', { class: 'recurringStatus', textContent: status }));
@@ -119,6 +120,7 @@ function setupPage(status = 'active') {
 globalThis.document = setupPage().document;
 globalThis.window = { confirm: () => true };
 const recurringModule = await import('../../public/assets/js/modules/recurring-tasks.js');
+const { applyTranslations } = await import('../../public/assets/js/utils/i18n.js');
 delete globalThis.document;
 
 async function withPage(status, callback) {
@@ -167,16 +169,73 @@ test('resume renders active Pause state and cancel leaves terminal history row w
 test('API failure restores controls and announces the translated error', async () => {
   await withPage('active', async ({ container, row }) => {
     globalThis.fetch = async () => { throw new Error('Server said no'); };
+    const edit = row.querySelector('[data-repeat-action="edit"]');
+    edit.disabled = true;
+    edit.setAttribute('aria-disabled', 'true');
     const controller = new AbortController();
     recurringModule.initRecurringTasks(controller.signal);
     const pause = row.querySelector('[data-repeat-action="pause"]');
     container.click(pause);
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(pause.disabled, false);
+    assert.equal(edit.disabled, true);
+    assert.equal(edit.getAttribute('aria-disabled'), 'true');
+    assert.equal(JSON.parse(row.dataset.repeatRule).status, 'active');
     assert.equal(container.querySelector('#recurringTasksStatus').textContent, 'Server said no');
     controller.abort();
   });
 });
+
+// Exercise the shared renderer with both supported languages without adding a browser-test dependency.
+for (const [language, labels] of Object.entries({
+  english: { edit: 'Edit', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', active: 'Active', paused: 'Paused', cancelled: 'Cancelled' },
+  persian: { edit: 'ویرایش', pause: 'توقف', resume: 'ادامه', cancel: 'لغو', active: 'فعال', paused: 'متوقف‌شده', cancelled: 'لغوشده' }
+})) {
+  test(`${language}: lifecycle results keep visible state and the next Edit payload consistent`, async () => {
+    await withPage('active', async ({ document, container, row }) => {
+      const translations = Object.fromEntries(Object.entries(labels).map(([key, value]) => [
+        `recurring.${['active', 'paused', 'cancelled'].includes(key) ? 'status' : 'action'}.${key}`, value
+      ]));
+      applyTranslations(translations, document);
+      const controller = new AbortController();
+      recurringModule.initRecurringTasks(controller.signal);
+      // Reinitializing the same live view must not send a second request for a click.
+      recurringModule.initRecurringTasks(controller.signal);
+      let requestCount = 0;
+      globalThis.fetch = async url => {
+        requestCount++;
+        const status = url.endsWith('pause') ? 'paused' : url.endsWith('resume') ? 'active' : 'cancelled';
+        return { ok: true, text: async () => JSON.stringify({ success: true, status }) };
+      };
+      try {
+        for (const [action, status] of [['pause', 'paused'], ['resume', 'active'], ['cancel', 'cancelled']]) {
+          container.click(row.querySelector(`[data-repeat-action="${action}"]`));
+          await new Promise(resolve => setImmediate(resolve));
+          assert.equal(row.dataset.repeatStatus, status);
+          assert.equal(row.querySelector('.recurringStatus').textContent, labels[status]);
+          const payload = JSON.parse(row.dataset.repeatRule);
+          assert.equal(payload.status, status);
+          assert.equal(payload.title, 'Morning task');
+          assert.deepEqual(payload.reminders, [{ value: 15, unit: 'minute' }]);
+          assert.equal(row.getAttribute('aria-busy'), null);
+          if (status !== 'cancelled') {
+            let opened;
+            document.addEventListener('recurring-rule:edit', event => { opened = event.detail.payload; }, { signal: controller.signal });
+            const edit = row.querySelector('[data-repeat-action="edit"]');
+            assert.equal(edit.textContent, labels.edit);
+            container.click(edit);
+            assert.equal(opened.status, status);
+          }
+        }
+        assert.equal(requestCount, 3);
+        assert.equal(row.querySelector('[data-repeat-action]'), null);
+      } finally {
+        controller.abort();
+        applyTranslations(Object.fromEntries(Object.keys(translations).map(key => [key, key.split('.').at(-1).replace(/^./, char => char.toUpperCase())])), document);
+      }
+    });
+  });
+}
 
 test('an already-aborted signal does not register duplicate delegated handlers', async () => {
   await withPage('active', async ({ container, row }) => {
@@ -258,6 +317,54 @@ test('navigation abort discards a late refresh response', async () => {
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(container.querySelector('.recurringRule'), row);
     assert.equal(row.dataset.repeatRuleId, '7');
+  });
+});
+
+// Late lifecycle results must not mutate a view that was aborted or removed by navigation.
+for (const change of ['abort', 'remove']) {
+  test(`${change}: a late lifecycle response leaves the obsolete row unchanged`, async () => {
+    await withPage('active', async ({ container, row }) => {
+      const controller = new AbortController();
+      recurringModule.initRecurringTasks(controller.signal);
+      let resolveRequest;
+      globalThis.fetch = () => new Promise(resolve => { resolveRequest = resolve; });
+      container.click(row.querySelector('[data-repeat-action="pause"]'));
+      if (change === 'abort') controller.abort(); else row.remove();
+      resolveRequest({ ok: true, text: async () => JSON.stringify({ success: true, status: 'paused' }) });
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(row.dataset.repeatStatus, 'active');
+      assert.equal(JSON.parse(row.dataset.repeatRule).status, 'active');
+      controller.abort();
+    });
+  });
+}
+
+test('a newer edit refresh wins when responses arrive out of order', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    const requests = [];
+    globalThis.fetch = () => new Promise(resolve => { requests.push(resolve); });
+    for (const id of [8, 9]) {
+      document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+        container, previousRuleId: '7', response: { success: true, repeat_rule_id: id }
+      } });
+    }
+    const fresh = setupPage('paused');
+    fresh.row.dataset.repeatRuleId = '9';
+    fresh.row.dataset.repeatRule = JSON.stringify({ id: 9, title: 'Latest saved title', status: 'paused' });
+    document.fragment = fresh.container;
+    const response = { ok: true, json: async () => ({ activeView: 'recurring-tasks', html: '<section>latest</section>' }) };
+    requests[1](response);
+    await new Promise(resolve => setImmediate(resolve));
+    requests[0](response);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(container.querySelector('.recurringRule'), fresh.row);
+    assert.equal(JSON.parse(fresh.row.dataset.repeatRule).title, 'Latest saved title');
+    assert.equal(fresh.row.getAttribute('aria-busy'), null);
+    assert.equal(fresh.row.querySelector('[data-repeat-action="resume"]').dataset.repeatRuleId, '9');
+    assert.equal(row.parentElement, null);
+    controller.abort();
   });
 });
 

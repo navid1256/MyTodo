@@ -118,11 +118,23 @@ function renderActions(row, status) {
     });
 }
 
+/** Reads object-shaped edit data without letting malformed metadata break delegated row actions. */
+function readRulePayload(row) {
+    try {
+        const payload = JSON.parse(row.dataset.repeatRule || '{}');
+        return payload && typeof payload === 'object' && !Array.isArray(payload) ? payload : {};
+    } catch {
+        return {};
+    }
+}
+
+/** Keeps the visible lifecycle state and the next Edit payload in sync without changing schedule fields. */
 function renderRuleState(row, status) {
     const safeStatus = ['active', 'paused', 'completed', 'cancelled'].includes(status)
         ? status
         : 'active';
     row.dataset.repeatStatus = safeStatus;
+    row.dataset.repeatRule = JSON.stringify({ ...readRulePayload(row), status: safeStatus });
     const statusBadge = row.querySelector('.recurringStatus');
     if (statusBadge) {
         statusBadge.dataset.i18n = `recurring.status.${safeStatus}`;
@@ -134,6 +146,20 @@ function renderRuleState(row, status) {
     }
     renderActions(row, safeStatus);
     row.removeAttribute('aria-busy');
+}
+
+/** Applies either a lifecycle result or an authoritative edited row through the same state renderer. */
+function applyRuleState(row, update) {
+    const nextRow = update.replacement || row;
+    const focusStayedOnRow = row.contains(document.activeElement) || document.activeElement === document.body;
+    renderRuleState(nextRow, update.status);
+    if (nextRow !== row) {
+        row.replaceWith(nextRow);
+        if (update.restoreFocus && focusStayedOnRow) {
+            nextRow.querySelector('[data-repeat-action="edit"]')?.focus();
+        }
+    }
+    pendingRows.delete(row);
 }
 
 function isStale(container, row, signal, requestToken) {
@@ -166,15 +192,14 @@ function sendLifecycleRequest(action, repeatRuleId, csrfToken, signal) {
     return cancelRepeatRule(repeatRuleId, csrfToken, signal);
 }
 
+/** Dispatches Edit locally and applies successful lifecycle requests only to the originating live row. */
 function handleAction(container, actionButton, signal) {
     const action = actionButton.dataset.repeatAction;
     if (action === 'edit') {
         const row = actionButton.closest('.recurringRule');
         if (!row || actionButton.disabled) return;
-        let payload = {};
-        try { payload = JSON.parse(row.dataset.repeatRule || '{}'); } catch { payload = {}; }
         document.dispatchEvent(new CustomEvent('recurring-rule:edit', {
-            detail: { trigger: actionButton, payload }
+            detail: { trigger: actionButton, payload: readRulePayload(row) }
         }));
         return;
     }
@@ -202,12 +227,11 @@ function handleAction(container, actionButton, signal) {
                 return;
             }
             const status = response.status || (action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'cancelled');
-            renderRuleState(row, status);
+            applyRuleState(row, { status });
             setPageMessage(
                 container,
                 translate(`recurring.message.${status}`, {}, `Recurring task ${status}.`)
             );
-            pendingRows.delete(row);
         })
         .catch((error) => {
             if (isStale(container, row, signal, requestToken)) {
@@ -243,10 +267,7 @@ async function refreshEditedRow(container, row, repeatRuleId, signal) {
         if (!nextRow || Number(JSON.parse(nextRow.dataset.repeatRule || '{}').id) !== repeatRuleId) {
             throw new Error('The refreshed recurring row is missing.');
         }
-        const focusStayedOnRow = row.contains(document.activeElement) || document.activeElement === document.body;
-        row.replaceWith(nextRow);
-        pendingRows.delete(row);
-        if (restoreFocus && focusStayedOnRow) nextRow.querySelector('[data-repeat-action="edit"]')?.focus();
+        applyRuleState(row, { status: nextRow.dataset.repeatStatus, replacement: nextRow, restoreFocus });
         setPageMessage(container, translate('recurring.message.updated', {}, 'Recurring task updated.'));
     } catch {
         if (isStale(container, row, signal, requestToken)) return;
