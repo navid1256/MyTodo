@@ -4,6 +4,7 @@ import { translate } from '../utils/i18n.js';
 
 const initializedTaskForms = new WeakSet();
 
+/** Connects task editing controls and binds asynchronous rule saves to their original form and view. */
 export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     // متغیرهای Task Modal
     const taskModal = document.getElementById('taskModal');
@@ -20,6 +21,7 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
     const taskEditScopeChoice = document.getElementById('taskEditScopeChoice');
     const taskEditRuleId = document.getElementById('taskEditRuleId');
     let lastTaskModalTrigger = null;
+    let formRevision = 0;
 
     if (!newTaskForm || initializedTaskForms.has(newTaskForm)) {
         return;
@@ -51,8 +53,14 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         });
     }
 
+    /** Clears form data and invalidates responses belonging to an earlier edit session. */
     function resetTaskModalState() {
+        formRevision++;
         newTaskForm?.reset();
+        if (saveTaskButton) {
+            saveTaskButton.disabled = false;
+            saveTaskButton.textContent = translate('common.save');
+        }
         if (taskFormMode) taskFormMode.value = 'create';
         if (taskEditId) taskEditId.value = '';
         if (taskEditRuleId) taskEditRuleId.value = '';
@@ -72,8 +80,10 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         repeatPicker?.setEnabled?.(!isSingle);
     }
 
+    /** Opens one task's current edit payload and invalidates any previous rule save. */
     function openEditModal(trigger, payload) {
-        if (!payload || !taskModalText) return;
+        if (!payload || !taskModalText || newTaskForm.isConnected === false) return;
+        formRevision++;
         lastTaskModalTrigger = trigger || document.activeElement;
         if (taskFormMode) taskFormMode.value = 'edit';
         if (taskEditId) taskEditId.value = String(payload.task_id || '');
@@ -90,8 +100,10 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
         window.requestAnimationFrame(() => taskModalText.focus());
     }
 
+    /** Opens a rule's current payload as a new form session. */
     function openRuleEditModal(trigger, payload) {
-        if (!payload || !taskModalText) return;
+        if (!payload || !taskModalText || newTaskForm.isConnected === false) return;
+        formRevision++;
         lastTaskModalTrigger = trigger || document.activeElement;
         if (taskFormMode) taskFormMode.value = 'rule';
         if (taskEditRuleId) taskEditRuleId.value = String(payload.id || '');
@@ -221,19 +233,26 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
             saveTaskButton.textContent = translate('common.saving');
             setTaskModalMessage('');
 
+            const submittedRevision = formRevision;
+            const submittedRuleId = formData.get('repeat_rule_id');
+            const sourceContainer = isRuleEdit ? document.querySelector('.recurringTasksContent') : null;
+
             const request = isRuleEdit
                 ? updateRecurringRule(formData)
                 : isEdit ? updateRecurringTask(formData) : createTask(formData);
             request.then(function (response) {
+                    if (isRuleEdit && (newTaskForm.isConnected === false
+                        || sourceContainer !== document.querySelector('.recurringTasksContent'))) return;
                     if (!isEdit) {
                         window.location.reload();
                         return;
                     }
                     if (isRuleEdit) {
+                        // A completed save refreshes its row, but must not close a newer edit session.
+                        if (formRevision === submittedRevision) closeTaskModal();
                         document.dispatchEvent(new CustomEvent('recurring-rule:updated', {
-                            detail: { previousRuleId: taskEditRuleId?.value, response }
+                            detail: { previousRuleId: submittedRuleId, response, container: sourceContainer }
                         }));
-                        closeTaskModal();
                         return;
                     }
                     const task = response.task || response;
@@ -248,6 +267,8 @@ export function initTaskModal(dateTimePicker, reminderPicker, repeatPicker) {
                     closeTaskModal();
                 })
                 .catch(function (error) {
+                    if (isRuleEdit && (formRevision !== submittedRevision || newTaskForm.isConnected === false
+                        || sourceContainer !== document.querySelector('.recurringTasksContent'))) return;
                     setTaskModalMessage(error.message || translate('task.save_failed', {}, 'The task could not be saved.'));
                     saveTaskButton.disabled = false;
                     saveTaskButton.textContent = translate('common.save');

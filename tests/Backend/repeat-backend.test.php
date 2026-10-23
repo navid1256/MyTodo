@@ -137,8 +137,8 @@ $countPlan = $planner->plan(
 
 assertSameValue(2, count($countPlan['occurrences']), 'Repeat Counts must create the requested number of repeats after the original task.');
 assertSameValue(2, $countPlan['generated_repeats'], 'Generated repeat count must exclude the original task.');
-assertSameValue('completed', $countPlan['status'], 'A count-limited rule must complete after all repeats are planned.');
-assertSameValue(null, $countPlan['next_occurrence'], 'A completed rule must not retain another occurrence.');
+assertSameValue('active', $countPlan['status'], 'Finishing count-limited generation must not close the series lifecycle.');
+assertSameValue(null, $countPlan['next_occurrence'], 'Exhausted generation must clear its cursor.');
 
 $resumeStart = new DateTimeImmutable('2026-09-16 12:00:00', $timezone);
 $resumeCandidate = $calculator->nextOccurrence($weeklyRule, $start, $resumeStart);
@@ -158,7 +158,7 @@ $exhaustedPlan = $planner->plan(
 );
 
 assertSameValue([], $exhaustedPlan['occurrences'], 'An exhausted count rule must not create another task.');
-assertSameValue('completed', $exhaustedPlan['status'], 'An exhausted count rule must be terminal.');
+assertSameValue('active', $exhaustedPlan['status'], 'An exhausted count rule must remain manageable without producing tasks.');
 
 $rollingPlan = $planner->plan(
     $weeklyRule,
@@ -203,7 +203,8 @@ assertValidationFails(
 );
 
 // Exercise real service/repository SQL against a fresh in-memory database.
-// SQLite cannot verify MySQL row locks; the opt-in integration test covers that dialect.
+// SQLite cannot verify MySQL row locks or MySQL UPDATE aliases used by attachToRule.
+// Full single/future/rule edit flows belong in repeat-lifecycle.integration.php.
 final class LifecycleTestPdo extends PDO
 {
     public function __construct()
@@ -333,13 +334,14 @@ $lifecycleTests = [
         [$pdo, $service, $rules] = lifecycleFixture('active', 'count', 3);
         $service->pauseRule(1, 10, $lifecycleNow);
         $pdo->exec("UPDATE tasks SET due_at = '2026-09-21 06:00:00' WHERE id = 5");
-        assertSameValue(['status' => 'completed', 'generated_count' => 1, 'next_occurrence_at' => null], $service->resumeRule(1, 10, $lifecycleNow), 'Retained occurrences must count once without spending the remaining count again.');
+        assertSameValue(['status' => 'active', 'generated_count' => 1, 'next_occurrence_at' => null], $service->resumeRule(1, 10, $lifecycleNow), 'Resume must keep the lifecycle active while counting retained occurrences once.');
         assertSameValue('2026-09-28 06:00:00', $pdo->query('SELECT due_at FROM tasks WHERE repeat_rule_id = 1 AND repeat_occurrence_number = 9')->fetchColumn(), 'Resume must skip an already materialized first candidate.');
         assertSameValue(3, (int) $rules->findByIdForUserForUpdate(1, 10)->generated_repeats, 'Count-limited generation must save actual materialized repeats.');
         foreach ([['count', 2, null], ['date', null, '2026-09-20']] as [$endType, $count, $endDate]) {
             [, $service] = lifecycleFixture('active', $endType, $count, $endDate);
             $service->pauseRule(1, 10, $lifecycleNow);
-            assertSameValue(['status' => 'completed', 'generated_count' => 0, 'next_occurrence_at' => null], $service->resumeRule(1, 10, $lifecycleNow), 'Exhausted end rules must complete without generating tasks.');
+            assertSameValue(['status' => 'active', 'generated_count' => 0, 'next_occurrence_at' => null], $service->resumeRule(1, 10, $lifecycleNow), 'Resume must enable exhausted rules without generating extra tasks.');
+            assertSameValue(['status' => 'active', 'generated_count' => 0, 'next_occurrence_at' => null], $service->resumeRule(1, 10, $lifecycleNow), 'Repeated Resume must not restart exhausted generation.');
         }
     },
     'cancel is idempotent and completed and cancelled rules remain terminal' => static function () use ($lifecycleNow): void {
@@ -407,7 +409,8 @@ $lifecycleTests = [
         assertSameValue(3, $service->generateInitialWindow(1, new DateTimeImmutable('2026-10-16 00:00:00', new DateTimeZone('UTC'))), 'Generation must use surviving repeat count, not stale generated_repeats or the unique cursor.');
         assertSameValue(true, $pdo->inTransaction(), 'Initial generation must leave the TaskService transaction open.');
         assertSameValue(11, (int) $pdo->query('SELECT MAX(repeat_occurrence_number) FROM tasks WHERE repeat_rule_id = 1')->fetchColumn(), 'Generation cursor must advance from the surviving maximum.');
-        assertSameValue('completed', $rules->findByIdForUserForUpdate(1, 10)->status, 'Retained dates must not consume the remaining count twice.');
+        assertSameValue('active', $rules->findByIdForUserForUpdate(1, 10)->status, 'Exhausted generation must preserve management after accounting for retained dates.');
+        assertSameValue(null, $rules->findByIdForUserForUpdate(1, 10)->next_occurrence_at, 'Exhausted generation must not retain a Cron cursor.');
         $pdo->rollBack();
     },
 ];

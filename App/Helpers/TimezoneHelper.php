@@ -15,6 +15,18 @@ final class TimezoneHelper
         return new DateTimeZone('UTC');
     }
 
+    /** Formats a stored UTC instant as a Gregorian local form value, even when the visible calendar is Jalali. */
+    public static function formatUtcDateTimeForInput(?string $value, DateTimeZone $timezone): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        return (new DateTimeImmutable($value, self::getApplicationTimezone()))
+            ->setTimezone($timezone)
+            ->format('Y-m-d\TH:i');
+    }
+
     public static function getClientTimezone(?string $timezoneName = null): DateTimeZone
     {
         $candidate = $timezoneName;

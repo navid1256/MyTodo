@@ -42,6 +42,13 @@ class FakeElement {
   appendChild(child) { child.parentElement = this; this.children.push(child); return child; }
   removeChild(child) { this.children = this.children.filter(item => item !== child); child.parentElement = null; }
   remove() { this.parentElement?.removeChild(this); }
+  // Replaces one row without changing its surrounding list or delegated listeners.
+  replaceWith(next) {
+    const parent = this.parentElement;
+    parent.children[parent.children.indexOf(this)] = next;
+    next.parentElement = parent;
+    this.parentElement = null;
+  }
   contains(element) { return this === element || this.children.some(child => child.contains(element)); }
   addEventListener(type, listener, options) {
     this.listeners.push({ type, listener, signal: options?.signal });
@@ -77,7 +84,16 @@ class FakeElement {
 
 class FakeDocument extends FakeElement {
   constructor() { super('document'); this.meta = new FakeElement('meta', { name: 'csrf-token', content: 'csrf' }); }
-  createElement(tagName) { return new FakeElement(tagName); }
+  // Supplies a prepared server fragment; HTML parsing itself is verified in the browser.
+  createElement(tagName) {
+    if (tagName === 'template') return { content: this.fragment, innerHTML: '' };
+    return new FakeElement(tagName);
+  }
+  // Delivers the same document-level events used by the modal and recurring list.
+  dispatchEvent(event) {
+    this.listeners.filter(item => item.type === event.type).forEach(item => item.listener(event));
+    return true;
+  }
   getElementById(id) { return this.querySelector(`#${id}`); }
   querySelector(selector) {
     if (selector === 'meta[name="csrf-token"]') return this.meta;
@@ -89,6 +105,7 @@ function setupPage(status = 'active') {
   const document = new FakeDocument();
   const container = document.appendChild(new FakeElement('div', { class: 'recurringTasksContent' }));
   const row = container.appendChild(new FakeElement('article', { class: 'recurringRule', 'data-repeat-rule-id': '7', 'data-repeat-status': status }));
+  row.dataset.repeatRule = JSON.stringify({ id: 7, title: 'Morning task', status, reminders: [{ value: 15, unit: 'minute' }] });
   const main = row.appendChild(new FakeElement('div', { class: 'recurringRuleMain' }));
   main.appendChild(new FakeElement('h2', { textContent: 'Morning task' }));
   row.appendChild(new FakeElement('span', { class: 'recurringStatus', textContent: status }));
@@ -103,6 +120,7 @@ function setupPage(status = 'active') {
 globalThis.document = setupPage().document;
 globalThis.window = { confirm: () => true };
 const recurringModule = await import('../../public/assets/js/modules/recurring-tasks.js');
+const { applyTranslations } = await import('../../public/assets/js/utils/i18n.js');
 delete globalThis.document;
 
 async function withPage(status, callback) {
@@ -151,16 +169,73 @@ test('resume renders active Pause state and cancel leaves terminal history row w
 test('API failure restores controls and announces the translated error', async () => {
   await withPage('active', async ({ container, row }) => {
     globalThis.fetch = async () => { throw new Error('Server said no'); };
+    const edit = row.querySelector('[data-repeat-action="edit"]');
+    edit.disabled = true;
+    edit.setAttribute('aria-disabled', 'true');
     const controller = new AbortController();
     recurringModule.initRecurringTasks(controller.signal);
     const pause = row.querySelector('[data-repeat-action="pause"]');
     container.click(pause);
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(pause.disabled, false);
+    assert.equal(edit.disabled, true);
+    assert.equal(edit.getAttribute('aria-disabled'), 'true');
+    assert.equal(JSON.parse(row.dataset.repeatRule).status, 'active');
     assert.equal(container.querySelector('#recurringTasksStatus').textContent, 'Server said no');
     controller.abort();
   });
 });
+
+// Exercise the shared renderer with both supported languages without adding a browser-test dependency.
+for (const [language, labels] of Object.entries({
+  english: { edit: 'Edit', pause: 'Pause', resume: 'Resume', cancel: 'Cancel', active: 'Active', paused: 'Paused', cancelled: 'Cancelled' },
+  persian: { edit: 'ویرایش', pause: 'توقف', resume: 'ادامه', cancel: 'لغو', active: 'فعال', paused: 'متوقف‌شده', cancelled: 'لغوشده' }
+})) {
+  test(`${language}: lifecycle results keep visible state and the next Edit payload consistent`, async () => {
+    await withPage('active', async ({ document, container, row }) => {
+      const translations = Object.fromEntries(Object.entries(labels).map(([key, value]) => [
+        `recurring.${['active', 'paused', 'cancelled'].includes(key) ? 'status' : 'action'}.${key}`, value
+      ]));
+      applyTranslations(translations, document);
+      const controller = new AbortController();
+      recurringModule.initRecurringTasks(controller.signal);
+      // Reinitializing the same live view must not send a second request for a click.
+      recurringModule.initRecurringTasks(controller.signal);
+      let requestCount = 0;
+      globalThis.fetch = async url => {
+        requestCount++;
+        const status = url.endsWith('pause') ? 'paused' : url.endsWith('resume') ? 'active' : 'cancelled';
+        return { ok: true, text: async () => JSON.stringify({ success: true, status }) };
+      };
+      try {
+        for (const [action, status] of [['pause', 'paused'], ['resume', 'active'], ['cancel', 'cancelled']]) {
+          container.click(row.querySelector(`[data-repeat-action="${action}"]`));
+          await new Promise(resolve => setImmediate(resolve));
+          assert.equal(row.dataset.repeatStatus, status);
+          assert.equal(row.querySelector('.recurringStatus').textContent, labels[status]);
+          const payload = JSON.parse(row.dataset.repeatRule);
+          assert.equal(payload.status, status);
+          assert.equal(payload.title, 'Morning task');
+          assert.deepEqual(payload.reminders, [{ value: 15, unit: 'minute' }]);
+          assert.equal(row.getAttribute('aria-busy'), null);
+          if (status !== 'cancelled') {
+            let opened;
+            document.addEventListener('recurring-rule:edit', event => { opened = event.detail.payload; }, { signal: controller.signal });
+            const edit = row.querySelector('[data-repeat-action="edit"]');
+            assert.equal(edit.textContent, labels.edit);
+            container.click(edit);
+            assert.equal(opened.status, status);
+          }
+        }
+        assert.equal(requestCount, 3);
+        assert.equal(row.querySelector('[data-repeat-action]'), null);
+      } finally {
+        controller.abort();
+        applyTranslations(Object.fromEntries(Object.keys(translations).map(key => [key, key.split('.').at(-1).replace(/^./, char => char.toUpperCase())])), document);
+      }
+    });
+  });
+}
 
 test('an already-aborted signal does not register duplicate delegated handlers', async () => {
   await withPage('active', async ({ container, row }) => {
@@ -170,5 +245,141 @@ test('an already-aborted signal does not register duplicate delegated handlers',
     recurringModule.initRecurringTasks(controller.signal);
     assert.equal(container.listeners.length, 0);
     assert.equal(row.querySelector('[data-repeat-action="pause"]').disabled, false);
+  });
+});
+
+for (const status of ['active', 'paused']) {
+  test(`${status}: two edits replace the entire row and reopen the latest rule payload`, async () => {
+    await withPage(status, async ({ document, container, row }) => {
+      const controller = new AbortController();
+      recurringModule.initRecurringTasks(controller.signal);
+      let previousId = 7;
+      for (const revision of [1, 2]) {
+        const id = status === 'active' ? 7 + revision : 7;
+        const payload = { id, title: `Saved ${revision}`, status, start_at: `2099-01-0${revision}T09:30`,
+          frequency: 'weekly', week_days: [revision], ends: { type: 'count', count: revision + 3 },
+          reminders: [{ value: revision * 15, unit: 'minute' }] };
+        const fresh = setupPage(status);
+        fresh.row.dataset.repeatRuleId = String(id);
+        fresh.row.dataset.repeatRule = JSON.stringify(payload);
+        fresh.row.querySelectorAll('[data-repeat-action]').forEach(button => { button.dataset.repeatRuleId = String(id); });
+        document.fragment = fresh.container;
+        globalThis.fetch = async (url, options) => {
+          assert.equal(url, '/recurring-tasks?partial=1&filter=all');
+          assert.equal(options.signal, controller.signal);
+          return { ok: true, json: async () => ({ activeView: 'recurring-tasks', html: '<section>fresh row</section>' }) };
+        };
+        document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+          container, previousRuleId: String(previousId), response: { success: true, scope: 'rule', repeat_rule_id: id }
+        } });
+        await new Promise(resolve => setImmediate(resolve));
+        const updated = container.querySelector('.recurringRule');
+        assert.equal(updated, fresh.row);
+        assert.equal(row.parentElement, null);
+        let opened;
+        document.addEventListener('recurring-rule:edit', event => { opened = event.detail.payload; }, { signal: controller.signal });
+        container.click(updated.querySelector('[data-repeat-action="edit"]'));
+        assert.deepEqual(opened, payload);
+        assert.ok(updated.querySelectorAll('[data-repeat-action]').every(button => button.dataset.repeatRuleId === String(id)));
+        row = updated;
+        previousId = id;
+      }
+      controller.abort();
+    });
+  });
+}
+
+test('a failed edit event leaves the valid row unchanged and does not refresh it', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    globalThis.fetch = () => { throw new Error('Unexpected refresh'); };
+    document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+      container, previousRuleId: '7', response: { success: false, repeat_rule_id: 8 }
+    } });
+    assert.equal(row.dataset.repeatRuleId, '7');
+    assert.equal(row.querySelector('[data-repeat-action="edit"]').disabled, false);
+    controller.abort();
+  });
+});
+
+test('navigation abort discards a late refresh response', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    let resolveRequest;
+    globalThis.fetch = () => new Promise(resolve => { resolveRequest = resolve; });
+    document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+      container, previousRuleId: '7', response: { success: true, repeat_rule_id: 8 }
+    } });
+    controller.abort();
+    resolveRequest({ ok: true, json: async () => ({ activeView: 'recurring-tasks', html: '<section>late</section>' }) });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(container.querySelector('.recurringRule'), row);
+    assert.equal(row.dataset.repeatRuleId, '7');
+  });
+});
+
+// Late lifecycle results must not mutate a view that was aborted or removed by navigation.
+for (const change of ['abort', 'remove']) {
+  test(`${change}: a late lifecycle response leaves the obsolete row unchanged`, async () => {
+    await withPage('active', async ({ container, row }) => {
+      const controller = new AbortController();
+      recurringModule.initRecurringTasks(controller.signal);
+      let resolveRequest;
+      globalThis.fetch = () => new Promise(resolve => { resolveRequest = resolve; });
+      container.click(row.querySelector('[data-repeat-action="pause"]'));
+      if (change === 'abort') controller.abort(); else row.remove();
+      resolveRequest({ ok: true, text: async () => JSON.stringify({ success: true, status: 'paused' }) });
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(row.dataset.repeatStatus, 'active');
+      assert.equal(JSON.parse(row.dataset.repeatRule).status, 'active');
+      controller.abort();
+    });
+  });
+}
+
+test('a newer edit refresh wins when responses arrive out of order', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    const requests = [];
+    globalThis.fetch = () => new Promise(resolve => { requests.push(resolve); });
+    for (const id of [8, 9]) {
+      document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+        container, previousRuleId: '7', response: { success: true, repeat_rule_id: id }
+      } });
+    }
+    const fresh = setupPage('paused');
+    fresh.row.dataset.repeatRuleId = '9';
+    fresh.row.dataset.repeatRule = JSON.stringify({ id: 9, title: 'Latest saved title', status: 'paused' });
+    document.fragment = fresh.container;
+    const response = { ok: true, json: async () => ({ activeView: 'recurring-tasks', html: '<section>latest</section>' }) };
+    requests[1](response);
+    await new Promise(resolve => setImmediate(resolve));
+    requests[0](response);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(container.querySelector('.recurringRule'), fresh.row);
+    assert.equal(JSON.parse(fresh.row.dataset.repeatRule).title, 'Latest saved title');
+    assert.equal(fresh.row.getAttribute('aria-busy'), null);
+    assert.equal(fresh.row.querySelector('[data-repeat-action="resume"]').dataset.repeatRuleId, '9');
+    assert.equal(row.parentElement, null);
+    controller.abort();
+  });
+});
+
+test('a refresh failure keeps old data but disables stale actions after a successful save', async () => {
+  await withPage('active', async ({ document, container, row }) => {
+    const controller = new AbortController();
+    recurringModule.initRecurringTasks(controller.signal);
+    globalThis.fetch = async () => ({ ok: false });
+    document.dispatchEvent({ type: 'recurring-rule:updated', detail: {
+      container, previousRuleId: '7', response: { success: true, repeat_rule_id: 8 }
+    } });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(row.dataset.repeatRuleId, '7');
+    assert.ok(row.querySelectorAll('[data-repeat-action]').every(button => button.disabled));
+    assert.match(container.querySelector('#recurringTasksStatus').textContent, /saved.*reload/i);
+    controller.abort();
   });
 });

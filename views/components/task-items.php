@@ -57,6 +57,7 @@ if (!function_exists('formatTaskTimeInfo')) {
 }
 
 if (!function_exists('renderSingleTaskItem')) {
+    /** Renders a task row and converts its UTC edit payload to the same timezone used by its displayed date. */
     function renderSingleTaskItem(
         object $task,
         string $viewName,
@@ -99,6 +100,9 @@ if (!function_exists('renderSingleTaskItem')) {
             && !$isDone && !empty($task->repeat_rule_id)
             ? $task->edit_payload
             : null;
+        if ($editPayload !== null) {
+            $editPayload['due_at'] = TimezoneHelper::formatUtcDateTimeForInput($editPayload['due_at'] ?? null, $timezone);
+        }
         $editLabel = htmlspecialchars(
             $translator->translate('task.edit', ['title' => $title]),
             ENT_QUOTES,

@@ -14,30 +14,36 @@ use App\Services\RepeatRuleUpdateData;
 use App\Services\RepeatScheduleCalculator;
 use App\Services\RepeatService;
 
-// Never load application bootstrap or .env: an explicitly configured test database is mandatory.
-$dsn = getenv('MYTODO_TEST_DSN');
-$username = getenv('MYTODO_TEST_DB_USER');
-$password = getenv('MYTODO_TEST_DB_PASSWORD');
-if ($dsn === false || $dsn === '' || $username === false || $username === '' || $password === false) {
-    echo "SKIP repeat-lifecycle integration: set MYTODO_TEST_DSN, MYTODO_TEST_DB_USER, and MYTODO_TEST_DB_PASSWORD for an existing migrated MySQL database ending in _test (an empty password is allowed). No database connection was opened.\n";
-    exit(0);
-}
-
-if (!str_starts_with($dsn, 'mysql:')) {
-    fwrite(STDERR, "REFUSED repeat-lifecycle integration: use an explicit mysql: DSN with one database name ending in _test.\n");
-    exit(1);
-}
-
-$databaseNames = [];
-foreach (explode(';', substr($dsn, 6)) as $part) {
-    [$key, $value] = array_pad(explode('=', $part, 2), 2, '');
-    if (strtolower(trim($key)) === 'dbname') {
-        $databaseNames[] = trim($value);
+// The default entrypoint still requires a dedicated _test database.
+// The separate isolated runner may supply only a fully prepared, table-restricted connection.
+$isolated = isset($isolatedRepeatConnection)
+    && $isolatedRepeatConnection instanceof IsolatedRepeatTestConnection
+    && $isolatedRepeatConnection->isReady();
+if (!$isolated) {
+    $dsn = getenv('MYTODO_TEST_DSN');
+    $username = getenv('MYTODO_TEST_DB_USER');
+    $password = getenv('MYTODO_TEST_DB_PASSWORD');
+    if ($dsn === false || $dsn === '' || $username === false || $username === '' || $password === false) {
+        echo "SKIP repeat-lifecycle integration: set MYTODO_TEST_DSN, MYTODO_TEST_DB_USER, and MYTODO_TEST_DB_PASSWORD for an existing migrated MySQL database ending in _test (an empty password is allowed). No database connection was opened.\n";
+        exit(0);
     }
-}
-if (count($databaseNames) !== 1 || preg_match('/\A[A-Za-z0-9_]+_test\z/', $databaseNames[0]) !== 1) {
-    fwrite(STDERR, "REFUSED repeat-lifecycle integration: the DSN must name exactly one database ending in _test. No database connection was opened.\n");
-    exit(1);
+
+    if (!str_starts_with($dsn, 'mysql:')) {
+        fwrite(STDERR, "REFUSED repeat-lifecycle integration: use an explicit mysql: DSN with one database name ending in _test.\n");
+        exit(1);
+    }
+
+    $databaseNames = [];
+    foreach (explode(';', substr($dsn, 6)) as $part) {
+        [$key, $value] = array_pad(explode('=', $part, 2), 2, '');
+        if (strtolower(trim($key)) === 'dbname') {
+            $databaseNames[] = trim($value);
+        }
+    }
+    if (count($databaseNames) !== 1 || preg_match('/\A[A-Za-z0-9_]+_test\z/', $databaseNames[0]) !== 1) {
+        fwrite(STDERR, "REFUSED repeat-lifecycle integration: the DSN must name exactly one database ending in _test. No database connection was opened.\n");
+        exit(1);
+    }
 }
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
@@ -62,11 +68,11 @@ function assertLifecycleException(string $exceptionClass, callable $operation): 
     throw new RuntimeException('Expected ' . $exceptionClass);
 }
 
-$pdo = new PDO($dsn, $username, $password, [
+$pdo = $isolated ? $isolatedRepeatConnection : new PDO($dsn, $username, $password, [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_EMULATE_PREPARES => false,
 ]);
-assertLifecycleValue($databaseNames[0], $pdo->query('SELECT DATABASE()')->fetchColumn(), 'Connected database must match the validated test DSN.');
+assertLifecycleValue($isolated ? 'mytodo' : $databaseNames[0], $pdo->query('SELECT DATABASE()')->fetchColumn(), 'Connected database must match the authorized target.');
 $tableEngines = $pdo->query(
     "SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
      AND TABLE_NAME IN ('users', 'tasks', 'task_repeat_rules', 'task_repeat_reminder_templates', 'task_reminders')"
@@ -157,31 +163,42 @@ try {
     }
     assertLifecycleValue(true, $pdo->inTransaction(), 'Lifecycle calls must not commit the outer fixture transaction.');
 
+    // Edit validation uses the real clock; keep these fixtures inside the next generation window.
+    $editNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Tehran'));
+    $editDueAt = $editNow->modify('+14 days')->setTime(11, 0);
+    $originalEditAt = $editDueAt->modify('-2 hours');
+    $siblingEditAt = $originalEditAt->modify('+7 days');
+    $utc = new DateTimeZone('UTC');
+    $databaseOriginalEditAt = $originalEditAt->setTimezone($utc)->format('Y-m-d H:i:s');
+    $databaseSiblingEditAt = $siblingEditAt->setTimezone($utc)->format('Y-m-d H:i:s');
+    $databaseEditDueAt = $editDueAt->setTimezone($utc)->format('Y-m-d H:i:s');
+    $editWeekDays = [(int) $editDueAt->format('w')];
     $editRuleData = $ruleData;
     $editRuleData['user_id'] = $userA;
     $editRuleData['title'] = 'Edit fixture';
-    $editRuleData['start_at'] = '2026-09-30 09:00:00';
-    $editRuleData['next_occurrence_at'] = '2026-09-30 09:00:00';
+    $editRuleData['start_at'] = $databaseOriginalEditAt;
+    $editRuleData['next_occurrence_at'] = $databaseOriginalEditAt;
+    $editRuleData['week_days'] = $editWeekDays;
     $editRule = $ruleRepository->create($editRuleData);
-    $selectedEditTask = $taskRepository->create($userA, 'Before edit', '2026-09-30 09:00:00', true, $editRule, 1);
-    $siblingEditTask = $taskRepository->create($userA, 'Sibling task', '2026-10-07 09:00:00', true, $editRule, 2);
-    $reminderRepository->create($selectedEditTask, 30, 'minute', '2026-09-30 08:30:00');
-    $reminderRepository->create($siblingEditTask, 30, 'minute', '2026-10-07 08:30:00');
-    $foreignEditTask = $taskRepository->create($userB, 'Foreign edit', '2026-09-30 09:00:00', true, $ruleB, 10);
+    $selectedEditTask = $taskRepository->create($userA, 'Before edit', $databaseOriginalEditAt, true, $editRule, 1);
+    $siblingEditTask = $taskRepository->create($userA, 'Sibling task', $databaseSiblingEditAt, true, $editRule, 2);
+    $reminderRepository->create($selectedEditTask, 30, 'minute', $originalEditAt->modify('-30 minutes')->setTimezone($utc)->format('Y-m-d H:i:s'));
+    $reminderRepository->create($siblingEditTask, 30, 'minute', $siblingEditAt->modify('-30 minutes')->setTimezone($utc)->format('Y-m-d H:i:s'));
+    $foreignEditTask = $taskRepository->create($userB, 'Foreign edit', $databaseOriginalEditAt, true, $ruleB, 10);
     $originalRule = $ruleRepository->findByIdForUserForUpdate($editRule, $userA);
 
     $singleEdit = $service->updateSingleOccurrence(
         $selectedEditTask,
         $userA,
         'After edit',
-        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        $editDueAt,
         true,
         [['value' => 15, 'unit' => 'minute']]
     );
     assertLifecycleValue('single', $singleEdit['scope'], 'Single edit must identify its scope.');
     $editedTask = $taskRepository->findById($selectedEditTask, $userA);
     assertLifecycleValue('After edit', $editedTask->title, 'Single edit must update only the selected title.');
-    assertLifecycleValue('2026-09-30 07:30:00', $editedTask->due_at, 'Single edit must canonicalize due_at to UTC.');
+    assertLifecycleValue($databaseEditDueAt, $editedTask->due_at, 'Single edit must canonicalize due_at to UTC.');
     assertLifecycleValue($editRule, (int) $editedTask->repeat_rule_id, 'Single edit must preserve the repeat rule.');
     assertLifecycleValue(1, (int) $editedTask->repeat_occurrence_number, 'Single edit must preserve the occurrence number.');
     assertLifecycleValue(1, count($reminderRepository->getByTaskId($selectedEditTask)), 'Single edit must replace reminders.');
@@ -192,11 +209,11 @@ try {
         $selectedEditTask,
         $userA,
         'Split edit',
-        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        $editDueAt,
         true,
         [['value' => 30, 'unit' => 'minute']],
         [
-            'frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly'],
+            'frequency' => 'weekly', 'week_days' => $editWeekDays, 'ends' => ['type' => 'endlessly'],
         ],
     );
     assertLifecycleValue('future', $futureEdit['scope'], 'Future edit must identify its scope.');
@@ -206,31 +223,190 @@ try {
     $splitRule = $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA);
     assertLifecycleValue('active', $splitRule->status, 'The new split rule must be active.');
     assertLifecycleValue(true, (int) $futureEdit['generated_count'] > 0, 'The split rule must generate its initial 30-day window.');
-    $service->pauseRule((int) $futureEdit['repeat_rule_id'], $userA, $now);
+    $service->pauseRule((int) $futureEdit['repeat_rule_id'], $userA, $editNow);
     $pausedEdit = $service->updateRule(new RepeatRuleUpdateData([
         'repeat_rule_id' => (int) $futureEdit['repeat_rule_id'],
         'user_id' => $userA,
         'title' => 'Paused split edit',
-        'due_at' => new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        'due_at' => $editDueAt,
         'has_time' => true,
-        'repeat_config' => ['frequency' => 'weekly', 'week_days' => [3], 'ends' => ['type' => 'endlessly']],
+        'repeat_config' => ['frequency' => 'weekly', 'week_days' => $editWeekDays, 'ends' => ['type' => 'endlessly']],
         'reminders' => [['value' => 15, 'unit' => 'minute']],
-        'now' => $now,
+        'now' => $editNow,
     ]));
     assertLifecycleValue('paused', $pausedEdit['status'], 'Paused rule edits must stay paused.');
+    assertLifecycleValue('rule', $pausedEdit['scope'], 'Paused rule edits must identify the rule scope.');
     assertLifecycleValue(null, $ruleRepository->findByIdForUserForUpdate((int) $futureEdit['repeat_rule_id'], $userA)->next_occurrence_at, 'Paused edits must clear the cursor until Resume.');
     assertLifecycleException(RepeatRuleNotFoundException::class, fn() => $service->updateSingleOccurrence(
         $foreignEditTask,
         $userA,
         'Should fail',
-        new DateTimeImmutable('2026-09-30 11:00:00', new DateTimeZone('Asia/Tehran')),
+        $editDueAt,
         true,
         []
     ));
+
+    // Splits follow occurrence order, not the selected task's original or replacement date.
+    foreach (['forward' => [14, 22], 'backward' => [14, -7], 'previously moved' => [24, 22]] as $scenario => [$selectedDay, $replacementDay]) {
+        $replacementDate = $editNow->modify($replacementDay . ' days')->setTime(11, 0);
+        $splitData = $editRuleData;
+        $splitData['start_at'] = $editNow->modify('+1 day')->setTimezone($utc)->format('Y-m-d H:i:s');
+        $splitData['next_occurrence_at'] = $splitData['start_at'];
+        $sourceRuleId = $ruleRepository->create($splitData);
+        $splitTasks = [];
+        foreach ([0 => 25, 1 => $selectedDay, 2 => -2, 3 => 21, 4 => 28, 5 => 29] as $number => $days) {
+            $taskDate = $editNow->modify($days . ' days')->setTimezone($utc)->format('Y-m-d H:i:s');
+            $splitTasks[$number] = $taskRepository->create($userA, 'Split boundary fixture', $taskDate, true, $sourceRuleId, $number);
+            $reminderRepository->create($splitTasks[$number], 0, 'minute', $taskDate);
+        }
+        $taskRepository->updateStatus($splitTasks[4], $userA, true, $editNow->setTimezone($utc)->format('Y-m-d H:i:s'));
+        assertLifecycleException(RepeatRuleNotFoundException::class, fn() => $service->updateThisAndFuture(
+            $splitTasks[1], $userB, 'Unauthorized split', $replacementDate, true, [],
+            ['frequency' => 'daily', 'ends' => ['type' => 'endlessly']]
+        ));
+        assertLifecycleValue('active', $ruleRepository->findByIdForUserForUpdate($sourceRuleId, $userA)->status, $scenario . ': rejected ownership must leave the rule active.');
+
+        $split = $service->updateThisAndFuture(
+            $splitTasks[1], $userA, 'Split boundary edit', $replacementDate, true, [],
+            ['frequency' => 'daily', 'ends' => ['type' => 'endlessly']]
+        );
+        assertLifecycleValue([$splitTasks[3], $splitTasks[5]], $split['deleted_task_ids'], $scenario . ': delete only later incomplete future occurrences.');
+        foreach ([3, 5] as $number) {
+            assertLifecycleValue(null, $taskRepository->findById($splitTasks[$number], $userA), $scenario . ': replaced siblings must not remain on the old rule.');
+            assertLifecycleValue([], $reminderRepository->getByTaskId($splitTasks[$number]), $scenario . ': deleted sibling reminders must cascade.');
+        }
+        foreach ([0, 2, 4] as $number) {
+            assertLifecycleValue($sourceRuleId, (int) $taskRepository->findById($splitTasks[$number], $userA)->repeat_rule_id, $scenario . ': earlier occurrences, history and completed tasks must keep their rule.');
+            assertLifecycleValue(1, count($reminderRepository->getByTaskId($splitTasks[$number])), $scenario . ': preserved reminders must survive.');
+        }
+        $selectedTask = $taskRepository->findById($splitTasks[1], $userA);
+        assertLifecycleValue((int) $split['repeat_rule_id'], (int) $selectedTask->repeat_rule_id, $scenario . ': selected task must move to the new rule.');
+        assertLifecycleValue(0, (int) $selectedTask->repeat_occurrence_number, $scenario . ': selected task must become occurrence zero.');
+        assertLifecycleValue($replacementDate->setTimezone($utc)->format('Y-m-d H:i:s'), $selectedTask->due_at, $scenario . ': selected task must retain the requested replacement date.');
+        assertLifecycleValue('Foreign edit', $taskRepository->findById($foreignEditTask, $userB)->title, $scenario . ': another user\'s task must remain unchanged.');
+    }
+
+    // Repository cutoff is inclusive at the exact operation second, not the preceding second.
+    $cutoffDate = $editNow->setTimezone($utc);
+    $cutoffAt = $cutoffDate->format('Y-m-d H:i:s');
+    $boundaryRuleId = $ruleRepository->create($editRuleData);
+    $selectedBoundaryTask = $taskRepository->create($userA, 'Selected boundary', $databaseEditDueAt, true, $boundaryRuleId, 0);
+    $beforeCutoffTask = $taskRepository->create($userA, 'Past boundary', $cutoffDate->modify('-1 second')->format('Y-m-d H:i:s'), true, $boundaryRuleId, 1);
+    $atCutoffTask = $taskRepository->create($userA, 'Exact boundary', $cutoffAt, true, $boundaryRuleId, 2);
+    $reminderRepository->create($beforeCutoffTask, 0, 'minute', $cutoffAt);
+    $reminderRepository->create($atCutoffTask, 0, 'minute', $cutoffAt);
+    assertLifecycleValue([$atCutoffTask], $taskRepository->deleteIncompleteFromOccurrence($boundaryRuleId, $userA, $cutoffAt, 1, $selectedBoundaryTask), 'The exact operation cutoff must be included while the preceding second is preserved.');
+    assertLifecycleValue(1, count($reminderRepository->getByTaskId($beforeCutoffTask)), 'The past boundary reminder must survive.');
+    assertLifecycleValue([], $reminderRepository->getByTaskId($atCutoffTask), 'The exact boundary reminder must cascade.');
+    // Exercise the real task-row payload and title-only edit round trip in both UI languages.
+    require_once dirname(__DIR__, 2) . '/views/components/task-items.php';
+    foreach (['UTC', 'Asia/Tehran', 'America/Los_Angeles'] as $timezoneName) {
+        $displayTimezone = new DateTimeZone($timezoneName);
+        foreach ([true, false] as $hasTime) {
+            $localDate = $editNow->setTimezone($displayTimezone)->modify('+14 days')->setTime($hasTime ? 23 : 0, $hasTime ? 45 : 0);
+            $storedDate = $localDate->setTimezone($utc)->format('Y-m-d H:i:s');
+            $timezoneRuleData = $editRuleData;
+            $timezoneRuleData['start_at'] = $storedDate;
+            $timezoneRuleData['next_occurrence_at'] = $storedDate;
+            $timezoneRuleData['timezone'] = 'America/New_York';
+            $timezoneRuleData['has_time'] = $hasTime;
+            $timezoneRuleId = $ruleRepository->create($timezoneRuleData);
+            $timezoneTaskId = $taskRepository->create($userA, 'Timezone fixture', $storedDate, $hasTime, $timezoneRuleId, 0);
+            foreach (['english', 'persian'] as $language) {
+                $task = $taskRepository->findById($timezoneTaskId, $userA);
+                $task->edit_payload = $service->getTaskEditPayload($timezoneTaskId, $userA);
+                $translator = new App\Localization\Translator($language, dirname(__DIR__, 2) . '/resources/lang');
+                ob_start();
+                renderSingleTaskItem($task, 'manage-tasks', true, true, $displayTimezone, $translator);
+                $taskHtml = ob_get_clean();
+                preg_match('/data-task-edit-payload>(.*?)<\/script>/s', $taskHtml, $payloadMatch);
+                $input = json_decode($payloadMatch[1], true, 512, JSON_THROW_ON_ERROR);
+                assertLifecycleValue($localDate->format('Y-m-d\TH:i'), $input['due_at'], $timezoneName . ': the form must receive the local day and time in ' . $language . '.');
+                $parsedDate = App\Helpers\TimezoneHelper::parseCanonicalDateTime($input['due_at'], $displayTimezone);
+                $service->updateSingleOccurrence($timezoneTaskId, $userA, 'Title only', $parsedDate, $hasTime, []);
+                assertLifecycleValue($storedDate, $taskRepository->findById($timezoneTaskId, $userA)->due_at, 'A title-only edit must not change UTC storage, including tasks without time.');
+            }
+
+            // A user timezone change must not silently redefine the schedule's timezone or anchor.
+            $ruleRepository->updateStatus($timezoneRuleId, $userA, 'paused', null);
+            $service->updateRule(new RepeatRuleUpdateData([
+                'repeat_rule_id' => $timezoneRuleId, 'user_id' => $userA, 'title' => 'Rule title only',
+                'due_at' => $localDate, 'has_time' => $hasTime,
+                'repeat_config' => ['frequency' => 'weekly', 'week_days' => [1], 'ends' => ['type' => 'endlessly']],
+                'reminders' => [],
+            ]));
+            $savedRule = $ruleRepository->findByIdForUserForUpdate($timezoneRuleId, $userA);
+            assertLifecycleValue($storedDate, $savedRule->start_at, 'A rule title edit must preserve the UTC anchor.');
+            assertLifecycleValue('America/New_York', $savedRule->timezone, 'A rule title edit must preserve the schedule timezone.');
+            $ruleRepository->updateStatus($timezoneRuleId, $userA, 'active', $storedDate);
+            $activeEdit = $service->updateRule(new RepeatRuleUpdateData([
+                'repeat_rule_id' => $timezoneRuleId, 'user_id' => $userA, 'title' => 'Active rule title only',
+                'due_at' => $localDate, 'has_time' => $hasTime,
+                'repeat_config' => ['frequency' => 'weekly', 'week_days' => [1], 'ends' => ['type' => 'endlessly']],
+                'reminders' => [],
+            ]));
+            assertLifecycleValue('rule', $activeEdit['scope'], 'Active rule edits must identify the rule scope rather than the delegated future scope.');
+            assertLifecycleValue($timezoneRuleId, $activeEdit['old_repeat_rule_id'], 'Overriding scope must retain the original split rule ID.');
+            assertLifecycleValue($timezoneTaskId, $activeEdit['task']['id'], 'Overriding scope must retain the edited task payload.');
+            $savedRule = $ruleRepository->findByIdForUserForUpdate((int) $activeEdit['repeat_rule_id'], $userA);
+            assertLifecycleValue($storedDate, $savedRule->start_at, 'An active split must preserve the submitted UTC anchor.');
+            assertLifecycleValue('America/New_York', $savedRule->timezone, 'An active split must also preserve the original schedule timezone.');
+        }
+    }
+    // Exhausting Count or End Date generation must not close controls for already materialized future tasks.
+    $boundedStart = $editNow->modify('+1 day')->setTime(9, 0);
+    $boundedHorizon = $editNow->modify('+30 days');
+    foreach (['count', 'date'] as $endType) {
+        $ends = $endType === 'count'
+            ? ['type' => 'count', 'count' => 2]
+            : ['type' => 'date', 'date' => $boundedStart->modify('+2 days')->format('Y-m-d')];
+        $boundedConfig = ['frequency' => 'daily', 'ends' => $ends];
+        foreach (['pause', 'cancel', 'edit'] as $operation) {
+            $boundedRuleId = $service->createRule($userA, 'Bounded fixture', $boundedStart, true,
+                $service->prepareRule($boundedConfig, $boundedStart), [['offset_value' => 30, 'offset_unit' => 'minute']]);
+            $boundedTaskId = $taskRepository->create($userA, 'Bounded fixture', $boundedStart->setTimezone($utc)->format('Y-m-d H:i:s'), true, $boundedRuleId, 0);
+            assertLifecycleValue(2, $service->generateInitialWindow($boundedRuleId, $boundedHorizon), 'A bounded rule must materialize exactly two repeats.');
+            $boundedRule = $ruleRepository->findByIdForUserForUpdate($boundedRuleId, $userA);
+            assertLifecycleValue('active', $boundedRule->status, $endType . ': generation exhaustion must not end management.');
+            assertLifecycleValue(null, $boundedRule->next_occurrence_at, 'An exhausted rule must have no generation cursor.');
+            assertLifecycleValue(false, in_array($boundedRuleId, $ruleRepository->findDueRuleIds($boundedHorizon->setTimezone($utc)->format('Y-m-d H:i:s'), 500), true), 'Cron must not select an exhausted active rule.');
+            assertLifecycleValue(0, $service->generateInitialWindow($boundedRuleId, $boundedHorizon), 'Repeated generation must not add occurrences after exhaustion.');
+            assertLifecycleValue(2, $taskRepository->countRepeatsForRule($boundedRuleId, $userA), 'Repeated generation must preserve the configured repeat count.');
+            assertLifecycleValue(true, $service->getTaskEditPayload($boundedTaskId, $userA) !== null, 'The existing task edit button must remain available.');
+
+            if ($operation === 'edit') {
+                $service->updateSingleOccurrence($boundedTaskId, $userA, 'Bounded single edit', $boundedStart, true, []);
+                assertLifecycleValue('Bounded single edit', $taskRepository->findById($boundedTaskId, $userA)->title, 'Single occurrence editing must remain available.');
+                $boundedEdit = $service->updateRule(new RepeatRuleUpdateData([
+                    'repeat_rule_id' => $boundedRuleId, 'user_id' => $userA, 'title' => 'Bounded series edit',
+                    'due_at' => $boundedStart, 'has_time' => true, 'repeat_config' => $boundedConfig,
+                    'reminders' => [['value' => 30, 'unit' => 'minute']],
+                ]));
+                $newBoundedRuleId = (int) $boundedEdit['repeat_rule_id'];
+                assertLifecycleValue('active', $ruleRepository->findByIdForUserForUpdate($newBoundedRuleId, $userA)->status, 'Editing a bounded series must keep its replacement manageable.');
+                assertLifecycleValue(null, $ruleRepository->findByIdForUserForUpdate($newBoundedRuleId, $userA)->next_occurrence_at, 'The replacement must still respect its generation limit.');
+                assertLifecycleValue(2, $taskRepository->countRepeatsForRule($newBoundedRuleId, $userA), 'A split must not exceed the new repeat limit.');
+                assertLifecycleValue('completed', $ruleRepository->findByIdForUserForUpdate($boundedRuleId, $userA)->status, 'The old split rule must remain terminal.');
+                assertLifecycleException(RepeatRuleStateException::class, fn() => $service->resumeRule($boundedRuleId, $userA, $editNow));
+            } else {
+                $method = $operation === 'pause' ? 'pauseRule' : 'cancelRule';
+                $changed = $service->$method($boundedRuleId, $userA, $editNow);
+                assertLifecycleValue($operation === 'pause' ? 'paused' : 'cancelled', $changed['status'], 'An exhausted series must still accept lifecycle actions.');
+                assertLifecycleValue(3, count($changed['deleted_task_ids']), 'Lifecycle actions must remove only this series\' future tasks.');
+                foreach ($changed['deleted_task_ids'] as $deletedId) {
+                    assertLifecycleValue([], $reminderRepository->getByTaskId($deletedId), 'Deleted bounded tasks must leave no reminders.');
+                }
+                if ($operation === 'cancel') {
+                    assertLifecycleException(RepeatRuleStateException::class, fn() => $service->resumeRule($boundedRuleId, $userA, $editNow));
+                }
+            }
+        }
+    }
+    assertLifecycleValue(true, $pdo->inTransaction(), 'Edit calls must preserve the outer fixture transaction.');
 } finally {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
 }
 
-echo "PASS repeat-lifecycle integration: ownership, pause/resume/cancel, reminders, cursor/count, terminal states, and outer transaction verified; fixtures rolled back.\n";
+echo "PASS repeat-lifecycle integration: ownership, pause/resume/cancel, single/future/paused edits, reminders, cursor/count, terminal states, and outer transaction verified; fixtures rolled back.\n";
