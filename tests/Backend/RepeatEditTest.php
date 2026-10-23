@@ -259,7 +259,7 @@ final class RepeatEditTest extends TestCase
             $this->edit($scope);
             self::fail('The injected persistence failure must escape the service.');
         } catch (RuntimeException $exception) {
-            self::assertSame('Simulated edit persistence failure.', $exception->getMessage());
+            self::assertSame(RepeatEditFailureStatement::FAILURE_MESSAGE, $exception->getMessage());
         } finally {
             self::$pdo->setAttribute(PDO::ATTR_STATEMENT_CLASS, $defaultStatement);
         }
@@ -268,6 +268,78 @@ final class RepeatEditTest extends TestCase
             self::$pdo->rollBack();
         }
         self::assertSame($before, $this->snapshotFixture());
+    }
+
+    /** Covers both ownership modes of the independent generation transaction wrapper. */
+    public static function generationOwnershipCases(): iterable
+    {
+        yield 'service transaction' => [false];
+        yield 'caller transaction' => [true];
+    }
+
+    /** Verifies that successful generation commits only its own transaction and remains rollbackable by a caller. */
+    #[DataProvider('generationOwnershipCases')]
+    public function testIndependentGenerationPreservesTransactionOwnership(bool $outer): void
+    {
+        $before = $this->preparePendingGeneration();
+        if ($outer) {
+            self::$pdo->beginTransaction();
+        }
+
+        self::assertSame(2, $this->service->generateUntil($this->dueAt->modify('+30 days')));
+        self::assertSame($outer, self::$pdo->inTransaction());
+        $after = $this->snapshotFixture();
+        self::assertCount(3, $after['tasks']);
+        self::assertCount(3, $after['task_reminders']);
+        self::assertSame(2, (int) $after['task_repeat_rules'][0]['generated_repeats']);
+        self::assertNull($after['task_repeat_rules'][0]['next_occurrence_at']);
+
+        if ($outer) {
+            self::$pdo->rollBack();
+            self::assertSame($before, $this->snapshotFixture());
+        } else {
+            self::$pdo->beginTransaction();
+            self::assertSame($after, $this->snapshotFixture());
+        }
+    }
+
+    /** Fails after a generated task insert and checks service rollback versus the caller's retained partial writes. */
+    #[DataProvider('generationOwnershipCases')]
+    public function testIndependentGenerationFailureRollsBackOnlyItsOwnTransaction(bool $outer): void
+    {
+        $before = $this->preparePendingGeneration();
+        if ($outer) {
+            self::$pdo->beginTransaction();
+        }
+        $defaultStatement = self::$pdo->getAttribute(PDO::ATTR_STATEMENT_CLASS);
+        self::$pdo->setAttribute(PDO::ATTR_STATEMENT_CLASS, [RepeatEditFailureStatement::class, [self::$pdo->prefix . 'task_reminders']]);
+        try {
+            $this->service->generateUntil($this->dueAt->modify('+30 days'));
+            self::fail('The generation persistence failure must escape the service.');
+        } catch (RuntimeException $exception) {
+            self::assertSame(RepeatEditFailureStatement::FAILURE_MESSAGE, $exception->getMessage());
+        } finally {
+            self::$pdo->setAttribute(PDO::ATTR_STATEMENT_CLASS, $defaultStatement);
+        }
+        self::assertSame($outer, self::$pdo->inTransaction());
+        if ($outer) {
+            self::assertNotSame($before, $this->snapshotFixture());
+            self::$pdo->rollBack();
+        }
+        self::assertSame($before, $this->snapshotFixture());
+    }
+
+    /** Restores the two-day fixture's first repeat and commits its baseline only in private fixture tables. */
+    private function preparePendingGeneration(): array
+    {
+        $original = $this->tasks->findById($this->taskId, $this->userId);
+        self::assertNotNull($original);
+        $nextOccurrence = (new DateTimeImmutable((string) $original->due_at, new DateTimeZone('UTC')))->modify('+2 days');
+        $this->tasks->deleteFutureIncompleteForRule($this->ruleId, $this->userId, $this->utc($nextOccurrence));
+        $this->rules->updateGenerationState($this->ruleId, $this->userId, 0, $this->utc($nextOccurrence), 'active');
+        self::$pdo->commit();
+
+        return $this->snapshotFixture();
     }
 
     /** Establishes the paused branch using the same lifecycle operation as the application. */
@@ -312,6 +384,8 @@ final class RepeatEditTest extends TestCase
 
 final class RepeatEditFailureStatement extends PDOStatement
 {
+    public const FAILURE_MESSAGE = 'Simulated edit persistence failure.';
+
     /** Targets one private fixture table without replacing production repositories or transaction code. */
     protected function __construct(private readonly string $target) {}
 
@@ -319,7 +393,7 @@ final class RepeatEditFailureStatement extends PDOStatement
     public function execute(?array $params = null): bool
     {
         if (str_starts_with(ltrim($this->queryString), 'INSERT INTO') && str_contains($this->queryString, '`' . $this->target . '`')) {
-            throw new RuntimeException('Simulated edit persistence failure.');
+            throw new RuntimeException(self::FAILURE_MESSAGE);
         }
         return parent::execute($params);
     }

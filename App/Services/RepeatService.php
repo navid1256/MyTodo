@@ -108,13 +108,18 @@ final class RepeatService
         return $this->generationService->generateInitialWindow($repeatRuleId, $horizon, $occurrenceLimit);
     }
 
-    /** @return array<int, object> */
+    /**
+     * Loads the owned rule list and its reminder templates without a separate template query for each rule.
+     * @return array<int, object>
+     */
     public function getRulesForUser(int $userId, string $status, DateTimeImmutable $now): array
     {
         $rules = $this->repeatRuleRepository->getForUser($userId, $status, $this->ruleMapper->toDatabaseDateTime($now));
+        $ruleIds = array_map(static fn(object $rule): int => (int) $rule->id, $rules);
+        $templatesByRule = $this->repeatRuleRepository->getReminderTemplatesForRules($userId, $ruleIds);
         foreach ($rules as $rule) {
             $rule->reminders = $this->ruleMapper->normalizeReminderTemplates(
-                $this->repeatRuleRepository->getReminderTemplates((int) $rule->id)
+                $templatesByRule[(int) $rule->id] ?? []
             );
         }
 

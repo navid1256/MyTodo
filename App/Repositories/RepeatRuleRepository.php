@@ -340,6 +340,42 @@ final class RepeatRuleRepository
         return $statement->fetchAll(PDO::FETCH_OBJ);
     }
 
+    /**
+     * Fetches templates for the selected owned rules in one query, preserving each rule's insertion order.
+     * @param array<int, int> $repeatRuleIds
+     * @return array<int, array<int, object>> Templates grouped by rule ID; missing groups have no templates.
+     */
+    public function getReminderTemplatesForRules(int $userId, array $repeatRuleIds): array
+    {
+        if ($repeatRuleIds === []) {
+            return [];
+        }
+
+        $parameters = [':user_id' => $userId];
+        $placeholders = [];
+        foreach (array_values($repeatRuleIds) as $index => $ruleId) {
+            $placeholder = ':rule_id_' . $index;
+            $placeholders[] = $placeholder;
+            $parameters[$placeholder] = $ruleId;
+        }
+        $statement = $this->pdo->prepare(
+            'SELECT templates.repeat_rule_id, templates.offset_value, templates.offset_unit
+             FROM task_repeat_reminder_templates AS templates
+             INNER JOIN task_repeat_rules AS r ON r.id = templates.repeat_rule_id
+             WHERE r.user_id = :user_id
+               AND templates.repeat_rule_id IN (' . implode(', ', $placeholders) . ')
+             ORDER BY templates.repeat_rule_id ASC, templates.id ASC'
+        );
+        $statement->execute($parameters);
+
+        $templatesByRule = [];
+        foreach ($statement->fetchAll(PDO::FETCH_OBJ) as $template) {
+            $templatesByRule[(int) $template->repeat_rule_id][] = $template;
+        }
+
+        return $templatesByRule;
+    }
+
     public function updateGenerationState(
         int $repeatRuleId,
         int $userId,
