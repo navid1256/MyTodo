@@ -631,6 +631,37 @@ html.dark-mode .dashboardBackButton:focus-visible {
     opacity: 0.55;
 }
 
+.main .view .content .list ul li .deleteTaskButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 50px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.main .view .content .list ul li .deleteTaskButton i {
+    float: none;
+    width: auto;
+    height: auto;
+    margin: 0;
+    line-height: 1;
+}
+
+.main .view .content .list ul li .deleteTaskButton:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -4px;
+}
+
+.main .view .content .list ul li .deleteTaskButton:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
 .main .view .content .list ul li span {
     float: left;
     font-weight: 600;

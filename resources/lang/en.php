@@ -297,6 +297,7 @@ return [
     'task.mark_incomplete' => 'Mark task as incomplete',
     'task.delete' => 'Delete task {title}',
     'task.delete_confirmation' => "Are you sure you want to delete this task?\n{title}",
+    'task.delete_failed' => 'The task could not be deleted. Please try again.',
     'task.due_date_time' => 'Due {date} at {time}',
     'task.due_date_no_time' => 'Due {date} · No time',
     'task.no_due_date' => 'No due date',

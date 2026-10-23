@@ -140,6 +140,7 @@ final class TaskController
         return $response;
     }
 
+    /** Deletes an owned task and returns the remaining completed count in the user's timezone. */
     public function delete(Request $request): Response
     {
         $guardResponse = $this->guardJsonRequest($request);
@@ -152,9 +153,15 @@ final class TaskController
             $response = Response::json(['success' => false, 'message' => 'Invalid task ID.'], 422);
         } else {
             try {
-                $this->taskService->deleteTask($taskId, $this->authService->getCurrentUserId());
+                $userId = $this->authService->getCurrentUserId();
+                $clientToday = new DateTimeImmutable('today', $this->resolveUserTimezone($request));
+                $this->taskService->deleteTask($taskId, $userId);
 
-                $response = Response::json(['success' => true]);
+                $response = Response::json([
+                    'success' => true,
+                    'deleted_task_id' => $taskId,
+                    'completed_today_count' => $this->taskService->countCompletedTasksForDate($userId, $clientToday),
+                ]);
             } catch (TaskNotFoundException $exception) {
                 $response = Response::json(['success' => false, 'message' => $exception->getMessage()], 404);
             }

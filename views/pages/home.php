@@ -16,7 +16,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
 
 <div class="list">
     <div class="title" data-i18n="home.no_date"><?= htmlspecialchars($translator->translate('home.no_date'), ENT_QUOTES, 'UTF-8') ?></div>
-    <ul>
+    <ul data-empty-message="home.empty_no_date">
         <?php renderTaskItems(
             $noDateTasks,
             'home',
@@ -31,7 +31,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
 
 <div class="list scheduledTaskList">
     <div class="title" data-i18n="home.today"><?= htmlspecialchars($translator->translate('home.today'), ENT_QUOTES, 'UTF-8') ?></div>
-    <ul>
+    <ul data-empty-message="home.empty_today">
         <?php renderTaskItems(
             $todayTasks,
             'home',
@@ -46,7 +46,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
 
 <div class="list scheduledTaskList">
     <div class="title" data-i18n="home.tomorrow"><?= htmlspecialchars($translator->translate('home.tomorrow'), ENT_QUOTES, 'UTF-8') ?></div>
-    <ul>
+    <ul data-empty-message="home.empty_tomorrow">
         <?php renderTaskItems(
             $tomorrowTasks,
             'home',

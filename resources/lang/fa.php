@@ -297,6 +297,7 @@ return [
     'task.mark_incomplete' => 'علامت‌گذاری کار به‌عنوان انجام‌نشده',
     'task.delete' => 'حذف کار {title}',
     'task.delete_confirmation' => "آیا از حذف این کار مطمئن هستید؟\n{title}",
+    'task.delete_failed' => 'حذف کار انجام نشد. لطفاً دوباره تلاش کنید.',
     'task.due_date_time' => 'موعد {date} ساعت {time}',
     'task.due_date_no_time' => 'موعد {date} · بدون زمان',
     'task.no_due_date' => 'بدون تاریخ سررسید',

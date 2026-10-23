@@ -84,15 +84,8 @@ if (!function_exists('renderSingleTaskItem')) {
         $ariaLabel = htmlspecialchars($translator->translate($toggleTranslationKey), ENT_QUOTES, 'UTF-8');
         $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
         $timeInfo = formatTaskTimeInfo($task, $showDueDate, $showDueTime, $timezone, $translator);
-        $deleteUrl = '?view=' . urlencode($viewName) . '&amp;delete_task=' . $taskId;
         $deleteLabel = htmlspecialchars(
             $translator->translate('task.delete', ['title' => $title]),
-            ENT_QUOTES,
-            'UTF-8'
-        );
-        $confirmation = $translator->translate('task.delete_confirmation', ['title' => $title]);
-        $confirmationScript = htmlspecialchars(
-            'return confirm(' . json_encode($confirmation, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) . ')',
             ENT_QUOTES,
             'UTF-8'
         );
@@ -122,9 +115,9 @@ if (!function_exists('renderSingleTaskItem')) {
                     . json_encode($editPayload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
                     . "</script>\n"
                 : '')
-            . "        <a class=\"deleteTaskLink\" href=\"{$deleteUrl}\" data-i18n-aria-label=\"task.delete\" data-title=\"{$escapedTitle}\" aria-label=\"{$deleteLabel}\" onclick=\"{$confirmationScript}\">\n"
+            . "        <button class=\"deleteTaskButton\" type=\"button\" data-task-delete data-task-id=\"{$taskId}\" data-i18n-aria-label=\"task.delete\" data-title=\"{$escapedTitle}\" aria-label=\"{$deleteLabel}\">\n"
             . "            <i class=\"fa-light fa-trash-can\" aria-hidden=\"true\"></i>\n"
-            . "        </a>\n"
+            . "        </button>\n"
             . "    </div>\n"
             . "</li>\n";
     }
