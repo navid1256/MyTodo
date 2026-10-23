@@ -13,6 +13,7 @@ final class RepeatRuleRepository
     public function __construct(private readonly PDO $pdo) {}
 
     /**
+     * Inserts a prepared rule, binding its owner separately from the shared schedule parameters.
      * @param array{
      *     user_id: int,
      *     title: string,
@@ -45,25 +46,9 @@ final class RepeatRuleRepository
                 :month_day_mode, :end_type, :end_date, :repeat_count, :next_occurrence_at
             )'
         );
-        $statement->execute([
-            ':user_id' => $rule['user_id'],
-            ':title' => $rule['title'],
-            ':start_at' => $rule['start_at'],
-            ':has_time' => $rule['has_time'] ? 1 : 0,
-            ':timezone' => $rule['timezone'],
-            ':frequency' => $rule['frequency'],
-            ':interval_value' => $rule['interval'],
-            ':interval_unit' => $rule['unit'],
-            ':week_days' => $rule['week_days'] === []
-                ? null
-                : json_encode($rule['week_days'], JSON_THROW_ON_ERROR),
-            ':month_day' => $rule['month_day'],
-            ':month_day_mode' => $rule['month_day_mode'],
-            ':end_type' => $rule['end_type'],
-            ':end_date' => $rule['end_date'],
-            ':repeat_count' => $rule['repeat_count'],
-            ':next_occurrence_at' => $rule['next_occurrence_at'],
-        ]);
+        $parameters = $this->toRuleParameters($rule);
+        $parameters[':user_id'] = $rule['user_id'];
+        $statement->execute($parameters);
 
         return (int) $this->pdo->lastInsertId();
     }
@@ -240,6 +225,7 @@ final class RepeatRuleRepository
     }
 
     /**
+     * Updates only the requested owner's rule, reusing schedule bindings without changing its identity.
      * @param array<string, mixed> $rule
      * @throws JsonException
      */
@@ -263,7 +249,23 @@ final class RepeatRuleRepository
                  next_occurrence_at = :next_occurrence_at
              WHERE id = :repeat_rule_id AND user_id = :user_id'
         );
-        $statement->execute([
+        $parameters = $this->toRuleParameters($rule);
+        $parameters[':repeat_rule_id'] = $repeatRuleId;
+        $parameters[':user_id'] = $userId;
+        $statement->execute($parameters);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Encodes shared SQL values without selecting an owner, identity or lifecycle state.
+     * @param array<string, mixed> $rule
+     * @return array<string, int|string|null>
+     * @throws JsonException
+     */
+    private function toRuleParameters(array $rule): array
+    {
+        return [
             ':title' => $rule['title'],
             ':start_at' => $rule['start_at'],
             ':has_time' => $rule['has_time'] ? 1 : 0,
@@ -280,11 +282,7 @@ final class RepeatRuleRepository
             ':end_date' => $rule['end_date'],
             ':repeat_count' => $rule['repeat_count'],
             ':next_occurrence_at' => $rule['next_occurrence_at'],
-            ':repeat_rule_id' => $repeatRuleId,
-            ':user_id' => $userId,
-        ]);
-
-        return $statement->rowCount() > 0;
+        ];
     }
 
     /**

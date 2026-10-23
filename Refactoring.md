@@ -6,7 +6,7 @@
 
 این سند برنامه کارهای آینده و محل ثبت پیشرفت آن‌هاست؛ ساخت آن به معنی اجرای مراحل، رفع باگ‌ها یا پاس‌شدن دوباره تست‌ها نیست. در مرحله تدوین فقط همین فایل ایجاد شد؛ تغییرات و نتایج اجرای بعدی زیر شناسه همان کار ثبت می‌شوند. کامیت را کاربر انجام می‌دهد.
 
-وضعیت فعلی: T01، T02، تمام موارد B01 تا B08 و R01 تکمیل شده‌اند؛ R02 تا R05 همچنان باز هستند. B08 به‌عنوان پیش‌نیاز B03 زودتر انجام شده است. مرحله بعد R02، کاهش نگاشت تکراری اطلاعات Rule در Mapper موجود است.
+وضعیت فعلی: T01، T02، تمام موارد B01 تا B08، R01 و R02 تکمیل شده‌اند؛ R03 تا R05 همچنان باز هستند. B08 به‌عنوان پیش‌نیاز B03 زودتر انجام شده است. مرحله بعد R03، یک مسیر برای اعمال وضعیت Rule در UI است.
 
 ## ۱. هدف و قواعد اجرا
 
@@ -246,12 +246,23 @@
 
 ### R02 — کاهش نگاشت تکراری اطلاعات Rule
 
-- [ ] **اولویت P2 — پیش‌نیاز: B02، B04 و R01.**
+- [x] **اولویت P2 — پیش‌نیاز: B02، B04 و R01.**
 - **محل:** `App/Services/RepeatService.php`، ساخت داده در `createRule()`، خط ۸۴ و `updateRule()`، خط ۴۰۷؛ `App/Services/RepeatRuleMapper.php`؛ نگاشت پارامترهای `create()` و `updateRule()` در `App/Repositories/RepeatRuleRepository.php`.
 - **مشکل و دلیل:** تبدیل فیلدهای Rule در چند مسیر تکرار می‌شود و اضافه‌شدن فیلد می‌تواند رفتار Create و Update را ناهمسان کند.
 - **تغییر پیشنهادی و نتیجه:** نگاشت مشترک هم‌معنا در Mapper موجود متمرکز شود؛ اعتبارسنجی در Validator و SQL در Repository باقی بمانند. تفاوت داده جدید و Update، مانند شناسه مالک و Cursor، پنهان نشود.
 - **معیار پذیرش و تست:** Create و Update برای Daily/Weekly/Monthly/Custom، پایان‌ها و Reminderها خروجی هم‌معنا داشته باشند؛ UTC، `NULL` و فیلدهای اختیاری صحیح حفظ شوند و تست قرارداد Repository پاس بماند.
 - **محدودیت:** Payload رابط کاربری، Rule دامنه و پارامتر SQL لزوماً یک شکل ندارند؛ برای حذف ظاهری تکرار به یک آرایه مبهم تبدیل نشوند.
+
+#### نتیجه اجرای R02 — ۲۰۲۶-۱۰-۲۳
+
+- **Mapper:** تابع `RepeatRuleMapper::toPersistenceData()`، عنوان، شروع UTC، Timezone اصلی و فیلدهای قانون معتبر را به شکل مشترک قابل ذخیره تبدیل می‌کند. اعتبارسنجی، انتخاب مالک، محاسبه Cursor و تصمیم Lifecycle داخل Mapper نرفته‌اند؛ کلاس یا Interface جدیدی ساخته نشده است.
+- **Service:** `createRule()` و شاخه Paused در `updateRule()` از همان نگاشت استفاده می‌کنند. Create صریحاً `user_id` و Cursor محاسبه‌شده را اضافه می‌کند؛ Edit برای Rule متوقف‌شده Cursor را `NULL` نگه می‌دارد و مالکیت را با آرگومان Repository اعمال می‌کند. Rule فعال از مسیر مشترک R01 و در نهایت همان Create استفاده می‌کند. ساخت آرایه بلااستفاده در شاخه Active نیز حذف شد؛ ترتیب قفل و مالکیت تراکنش تغییر نکرده‌اند.
+- **Repository:** تابع خصوصی `toRuleParameters()` تبدیل مشترک Bool به عدد، روزهای هفته به JSON یا `NULL` و نام پارامترهای SQL را انجام می‌دهد. `create()` و `updateRule()` شناسه مالک/Rule را جدا و صریح Bind می‌کنند؛ متن SQL و شرط مالکیت تغییر نکرده است. Mapper به Repository وابسته نیست و Repository نیز Mapper جدیدی دریافت نمی‌کند.
+- **پوشش PHPUnit:** هفت حالت به `RepeatEditTest.php` موجود اضافه شد؛ هیچ Harness یا فایل تست تازه‌ای ساخته نشد. این حالت‌ها قبل و بعد از ریفکتور موفق بودند: Daily، Weekly، Monthly با Clamp و Last Day، Custom در واحد روز/هفته/ماه، پایان‌های Endlessly/Count/Date، تسک بدون ساعت، Reminder خالی/دارای مقدار، حفظ روز واقعی در تبدیل ساعت محلی `۰۰:۱۵` به UTC روز قبل، و برابری فیلدهای مشترک Create و Paused Edit. Cursor و وضعیت متفاوت این دو عملیات نیز جدا بررسی می‌شوند. این مرحله ریفکتور بدون تغییر رفتار است، نه رفع باگ تازه.
+- **حساسیت و نتیجه نهایی:** تغییر آزمایشی شرط روزهای هفته خالی از `=== []` به `!== []`، تست Daily را با تفاوت `'[]'` و `NULL` شکست داد؛ شرط صحیح بلافاصله برگردانده شد. سپس کل PHPUnit با مجوز `MYTODO_REPEAT_TEST_DATABASE=mytodo` روی **MariaDB 10.4.32** و PHP **8.2.12**، **۱۰۲ تست و ۱۴۳۸ Assertion موفق، بدون Skip** داشت؛ از جمله حالت‌های Rollback، هم‌زمانی و DST مراحل قبلی. اجرای بدون مجوز MySQL، ۳۹ حالت Edit/Locking را عمداً Skip می‌کند و فقط ۶۳ تست با ۹۸۵ Assertion را اجرا می‌کند.
+- **رگرسیون و ایمنی:** اسکریپت‌های قبلی Backend، Controller، Repository و CLI بدون ویرایش موفق بودند. Lifecycle ایزوله با `php tests/Backend/repeat-lifecycle-isolated.integration.php --database=mytodo` نیز پاس شد؛ پیشوند آن اجرا `mytodo_repeat_8546aa5dab8fdb2b_` بود. Fixtureهای PHPUnit و Lifecycle پاک شدند و شمار رکوردها، Checksum داده و Hash ساختار جدول‌های اصلی پیش و پس از اجرا برابر ماند. Syntax چهار فایل PHP تغییرکرده و `git diff --check` موفق بودند.
+- **مرز بررسی:** `todo.md`، Schema و داده اصلی، مسیرهای API و فایل‌های Frontend تغییر نکردند؛ مرورگر، Push، Cron و Benchmark اجرا نشدند. این شواهد مربوط به MariaDB محلی است، نه اجرای مستقل MySQL 8. مهاجرت تست‌های قدیمی به PHPUnit نیز جزو این کار نبود.
+- **پیام کامیت پیشنهادی:** `refactor(repeat): centralize rule persistence mapping and SQL bindings` — Stage و Commit انجام نشده‌اند.
 
 ### R03 — یک مسیر برای اعمال وضعیت Rule در UI
 
@@ -320,7 +331,7 @@ Authentication، CSRF، شرط مالکیت داخل Queryها و عدم نما�
 php vendor/phpunit/phpunit/phpunit
 ```
 
-این فرمان در حال حاضر `RepeatResumeTest.php` و `RepeatScheduleCalculatorTest.php` را اجرا می‌کند؛ ۳۲ حالت `RepeatEditTest.php` و `RepeatLockingTest.php` بدون مجوز صریح محیط MySQL به‌صورت Skipped گزارش می‌شوند. موفقیت این فرمان به معنی مهاجرت یا اجرای تمام اسکریپت‌های PHP قدیمی نیست. اجرای کل مجموعه PHPUnit، شامل تست‌های ویرایش و چنداتصالی، روی MySQL ایزوله فقط با مجوز تست روی mytodo:
+این فرمان در حال حاضر `RepeatResumeTest.php` و `RepeatScheduleCalculatorTest.php` را اجرا می‌کند؛ ۳۹ حالت `RepeatEditTest.php` و `RepeatLockingTest.php` بدون مجوز صریح محیط MySQL به‌صورت Skipped گزارش می‌شوند. موفقیت این فرمان به معنی مهاجرت یا اجرای تمام اسکریپت‌های PHP قدیمی نیست. اجرای کل مجموعه PHPUnit، شامل تست‌های ویرایش و چنداتصالی، روی MySQL ایزوله فقط با مجوز تست روی mytodo:
 
 ```powershell
 $previousRepeatTestDatabase = $env:MYTODO_REPEAT_TEST_DATABASE

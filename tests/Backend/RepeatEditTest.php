@@ -8,6 +8,7 @@ use App\Repositories\RepeatRuleRepository;
 use App\Repositories\TaskRepository;
 use App\Services\ReminderService;
 use App\Services\RepeatOccurrencePlanner;
+use App\Services\RepeatRuleMapper;
 use App\Services\RepeatRuleUpdateData;
 use App\Services\RepeatRuleValidator;
 use App\Services\RepeatScheduleCalculator;
@@ -155,6 +156,63 @@ final class RepeatEditTest extends TestCase
         self::assertSame($this->utc($this->dueAt), $result['task']['due_at']);
         self::assertSame(2, $result['generated_count']);
         self::assertSame('completed', $this->rules->findByIdForUserForUpdate($this->ruleId, $this->userId)->status);
+    }
+
+    /** Covers schedule shapes, nullable endings and timed/untimed persistence without new fixture infrastructure. */
+    public static function persistenceCases(): iterable
+    {
+        yield 'daily endlessly without a time' => [['frequency' => 'daily', 'ends' => ['type' => 'endlessly']], false];
+        yield 'weekly count' => [['frequency' => 'weekly', 'week_days' => [5, 1], 'ends' => ['type' => 'count', 'count' => 3]], true];
+        yield 'monthly clamp with an end date' => [['frequency' => 'monthly', 'month_day' => 31, 'month_day_mode' => 'clamp', 'ends' => ['type' => 'date']], true];
+        yield 'monthly last day' => [['frequency' => 'monthly', 'month_day_mode' => 'last_day', 'ends' => ['type' => 'endlessly']], false];
+        yield 'custom days' => [['frequency' => 'custom', 'unit' => 'day', 'interval' => 2, 'ends' => ['type' => 'count', 'count' => 2]], true];
+        yield 'custom weeks with an end date' => [['frequency' => 'custom', 'unit' => 'week', 'interval' => 3, 'week_days' => [6, 0], 'ends' => ['type' => 'date']], true];
+        yield 'custom months on the last day' => [['frequency' => 'custom', 'unit' => 'month', 'interval' => 2, 'month_day_mode' => 'last_day', 'ends' => ['type' => 'count', 'count' => 4]], true];
+    }
+
+    /** Checks real Create and paused Edit persistence against the same normalized schedule contract. */
+    #[DataProvider('persistenceCases')]
+    public function testCreateAndPausedEditPersistEquivalentScheduleFields(array $payload, bool $hasTime): void
+    {
+        $start = $this->dueAt->setTimezone(new DateTimeZone('Asia/Tehran'))->setTime(0, 15);
+        if ($payload['ends']['type'] === 'date') {
+            $payload['ends']['date'] = $start->modify('+3 months')->format('Y-m-d');
+        }
+        $prepared = $this->service->prepareRule($payload, $start);
+        $templates = $hasTime ? [['offset_value' => 30, 'offset_unit' => 'minute']] : [];
+        $createdId = $this->service->createRule($this->userId, '  Mapped title  ', $start, $hasTime, $prepared, $templates);
+        $created = $this->rules->findByIdForUserForUpdate($createdId, $this->userId);
+        $expectedCursor = (new RepeatScheduleCalculator())->nextOccurrence($prepared, $start, $start);
+        self::assertSame($this->utc($expectedCursor), $created->next_occurrence_at);
+        self::assertSame('active', $created->status);
+
+        $this->service->pauseRule($this->ruleId, $this->userId, $this->now);
+        $result = $this->service->updateRule(new RepeatRuleUpdateData([
+            'repeat_rule_id' => $this->ruleId, 'user_id' => $this->userId, 'title' => '  Mapped title  ',
+            'due_at' => $start->setTimezone(new DateTimeZone('UTC')), 'has_time' => $hasTime,
+            'repeat_config' => $payload, 'reminders' => $hasTime ? [['value' => 30, 'unit' => 'minute']] : [],
+            'now' => $this->now,
+        ]));
+        $edited = $this->rules->findByIdForUserForUpdate($this->ruleId, $this->userId);
+        self::assertSame($this->ruleId, $result['repeat_rule_id']);
+        self::assertSame('paused', $edited->status);
+        self::assertNull($edited->next_occurrence_at);
+        $commonFields = array_fill_keys(['title', 'start_at', 'has_time', 'timezone', 'frequency', 'interval_value',
+            'interval_unit', 'week_days', 'month_day', 'month_day_mode', 'end_type', 'end_date', 'repeat_count'], true);
+        self::assertSame(array_intersect_key((array) $created, $commonFields), array_intersect_key((array) $edited, $commonFields));
+        $mapper = new RepeatRuleMapper();
+        foreach ([$created, $edited] as $stored) {
+            self::assertSame('Mapped title', $stored->title);
+            self::assertSame($this->utc($start), $stored->start_at);
+            self::assertSame('Asia/Tehran', $stored->timezone);
+            self::assertSame($hasTime ? 1 : 0, (int) $stored->has_time);
+            self::assertSame($this->userId, (int) $stored->user_id);
+            self::assertSame($prepared, $mapper->toRuleArray($stored));
+            self::assertSame($prepared['week_days'] === [] ? null : json_encode($prepared['week_days']), $stored->week_days);
+            self::assertSame($hasTime ? [['value' => 30, 'unit' => 'minute']] : [],
+                $mapper->normalizeReminderTemplates($this->rules->getReminderTemplates((int) $stored->id)));
+        }
+        self::assertTrue(self::$pdo->inTransaction());
     }
 
     /** Keeps invalid-title error precedence and guarantees validation does not write partial edits. */

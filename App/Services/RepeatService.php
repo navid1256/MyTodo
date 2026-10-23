@@ -59,6 +59,7 @@ final class RepeatService
     }
 
     /**
+     * Persists a prepared schedule and its templates, with an explicit owner and calculated generation cursor.
      * @param array{
      *     frequency: string,
      *     interval: int,
@@ -81,23 +82,10 @@ final class RepeatService
         $seriesStart = DateTimeImmutable::createFromInterface($startAt);
         $nextOccurrence = $this->scheduleCalculator->nextOccurrence($rule, $seriesStart, $seriesStart);
 
-        $repeatRuleId = $this->repeatRuleRepository->create([
-            'user_id' => $userId,
-            'title' => trim($title),
-            'start_at' => $this->ruleMapper->toDatabaseDateTime($seriesStart),
-            'has_time' => $hasTime,
-            'timezone' => $seriesStart->getTimezone()->getName(),
-            'frequency' => $rule['frequency'],
-            'interval' => $rule['interval'],
-            'unit' => $rule['unit'],
-            'week_days' => $rule['week_days'],
-            'month_day' => $rule['month_day'],
-            'month_day_mode' => $rule['month_day_mode'],
-            'end_type' => $rule['ends']['type'],
-            'end_date' => $rule['ends']['date'],
-            'repeat_count' => $rule['ends']['count'],
-            'next_occurrence_at' => $this->ruleMapper->toDatabaseDateTime($nextOccurrence),
-        ]);
+        $ruleData = $this->ruleMapper->toPersistenceData($title, $seriesStart, $hasTime, $rule);
+        $ruleData['user_id'] = $userId;
+        $ruleData['next_occurrence_at'] = $this->ruleMapper->toDatabaseDateTime($nextOccurrence);
+        $repeatRuleId = $this->repeatRuleRepository->create($ruleData);
 
         $this->repeatRuleRepository->saveReminderTemplates($repeatRuleId, $reminders);
 
@@ -333,24 +321,9 @@ final class RepeatService
             $trimmedTitle = $this->normalizeTaskTitle($update->title);
             $preparedRule = $this->validator->validate($update->repeatConfig, $ruleDueAt);
             $preparedReminders = $this->reminderService->prepareTaskReminders($update->reminders, $ruleDueAt, $update->hasTime);
-            $ruleData = [
-                'title' => $trimmedTitle,
-                'start_at' => $this->ruleMapper->toDatabaseDateTime($ruleDueAt),
-                'has_time' => $update->hasTime,
-                'timezone' => $ruleDueAt->getTimezone()->getName(),
-                'frequency' => $preparedRule['frequency'],
-                'interval' => $preparedRule['interval'],
-                'unit' => $preparedRule['unit'],
-                'week_days' => $preparedRule['week_days'],
-                'month_day' => $preparedRule['month_day'],
-                'month_day_mode' => $preparedRule['month_day_mode'],
-                'end_type' => $preparedRule['ends']['type'],
-                'end_date' => $preparedRule['ends']['date'],
-                'repeat_count' => $preparedRule['ends']['count'],
-                'next_occurrence_at' => null,
-            ];
-
             if ($status === 'paused') {
+                $ruleData = $this->ruleMapper->toPersistenceData($trimmedTitle, $ruleDueAt, $update->hasTime, $preparedRule);
+                $ruleData['next_occurrence_at'] = null;
                 $this->repeatRuleRepository->updatePausedRule($update->repeatRuleId, $update->userId, $ruleData);
                 $this->repeatRuleRepository->replaceReminderTemplates($update->repeatRuleId, $update->userId, $preparedReminders);
 
