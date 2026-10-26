@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Controllers\AuthController;
+use App\Controllers\CalendarController;
 use App\Controllers\NotificationController;
 use App\Controllers\PushSubscriptionController;
 use App\Controllers\ReminderController;
@@ -13,6 +14,7 @@ use App\Http\Router;
 use App\Middleware\AuthMiddleware;
 
 return static function (Router $router): void {
+    $router->get('/api/calendar/holidays', [CalendarController::class, 'holidays'], [AuthMiddleware::class]);
     $router->post('/api/push/status', [PushSubscriptionController::class, 'status'], [AuthMiddleware::class]);
     $router->post('/api/push/subscribe', [PushSubscriptionController::class, 'subscribe'], [AuthMiddleware::class]);
     $router->post('/api/push/unsubscribe', [PushSubscriptionController::class, 'unsubscribe'], [AuthMiddleware::class]);

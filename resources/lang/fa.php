@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'calendar.public_holiday' => 'تعطیل رسمی',
     'navigation.recurring_tasks' => 'کارهای تکرارشونده',
     'recurring.title' => 'کارهای تکرارشونده',
     'recurring.filter.label' => 'فیلتر کارهای تکرارشونده بر اساس وضعیت',
@@ -351,6 +352,7 @@ return [
     'notifications.cancel_confirm' => 'این اعلان لغو شود؟',
     'notifications.cancel_failed' => 'اعلان لغو نشد.',
     'notifications.update_failed' => 'اعلان به‌روزرسانی نشد.',
+    'notifications.updated' => 'اعلان به‌روزرسانی شد.',
     'notifications.request_failed' => 'درخواست اعلان انجام نشد.',
     'notifications.sent_at' => 'ارسال‌شده در',
     'notifications.notification_time' => 'زمان اعلان',

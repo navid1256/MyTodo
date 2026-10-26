@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Helpers\CalendarDateFormatter;
 use App\Helpers\TimezoneHelper;
 
 /** @var array<int, object> $sentNotifications */
@@ -15,14 +16,14 @@ $notificationList = isset($sentNotifications) && is_array($sentNotifications)
 
 $storageTimezone = TimezoneHelper::getApplicationTimezone();
 $userTimezone = $notificationTimezone ?? TimezoneHelper::getClientTimezone();
-$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($storageTimezone, $userTimezone, $translator): string {
+$calendarDateFormatter = new CalendarDateFormatter($calendarSystem ?? 'gregorian', $userTimezone);
+/** Formats sent, scheduled, and due timestamps consistently with the notification management page. */
+$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($storageTimezone, $calendarDateFormatter, $translator): string {
     if ($dateTime === null || trim($dateTime) === '') {
         return $translator->translate('common.not_available');
     }
 
-    return (new DateTimeImmutable($dateTime, $storageTimezone))
-        ->setTimezone($userTimezone)
-        ->format('M j, Y \a\t h:i A');
+    return $calendarDateFormatter->dateTime(new DateTimeImmutable($dateTime, $storageTimezone));
 };
 ?>
 <section class="sentNotificationsPage" aria-labelledby="sentNotificationsPageTitle">

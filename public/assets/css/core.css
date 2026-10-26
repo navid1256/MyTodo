@@ -829,6 +829,27 @@ html[lang="fa"] body {
     font-family: "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* Jalali date text stays Persian even when the surrounding interface is English. */
+body[data-calendar-system="jalali"] :is(
+    .created-at,
+    .activityDateGroup > h2,
+    .activityTaskItem time,
+    .notificationDetails strong,
+    #notificationEditDue
+) {
+    font-family: "Vazirmatn", sans-serif;
+}
+
+/* Isolate date-only values so English labels cannot reorder Persian date and time fragments. */
+body[data-calendar-system="jalali"] :is(
+    .activityDateGroup > h2,
+    .notificationDetails strong:not([data-notification-offset]),
+    #notificationEditDue
+) {
+    direction: rtl;
+    unicode-bidi: isolate;
+}
+
 /* ==========================================================================
    Responsive layout (additive only — no existing rule above is modified)
    Tablet: <= 1050px | Mobile: <= 620px | Small mobile: <= 400px

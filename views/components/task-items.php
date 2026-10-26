@@ -2,18 +2,22 @@
 
 declare(strict_types=1);
 
+use App\Helpers\CalendarDateFormatter;
 use App\Helpers\TimezoneHelper;
 use App\Localization\Translator;
 
 if (!function_exists('formatTaskTimeInfo')) {
+    /** Formats task metadata for the selected calendar without changing its canonical edit values. */
     function formatTaskTimeInfo(
         object $task,
         bool $showDueDate,
         bool $showDueTime,
         DateTimeZone $timezone,
-        Translator $translator
+        Translator $translator,
+        ?CalendarDateFormatter $dateFormatter = null
     ): string
     {
+        $dateFormatter ??= new CalendarDateFormatter('gregorian', $timezone);
         $dueAt = (string) ($task->due_at ?? '');
         $hasTime = !empty($task->has_time);
         $createdAt = (string) ($task->created_at ?? '');
@@ -27,21 +31,23 @@ if (!function_exists('formatTaskTimeInfo')) {
         [$translationKey, $replacements] = match (true) {
             $showDueDate && $localizedDueAt !== null && $hasTime => [
                 'task.due_date_time',
-                ['date' => $localizedDueAt->format('M j, Y'), 'time' => $localizedDueAt->format('h:i A')],
+                ['date' => $dateFormatter->date($localizedDueAt), 'time' => $dateFormatter->time($localizedDueAt)],
             ],
             $showDueDate && $localizedDueAt !== null => [
                 'task.due_date_no_time',
-                ['date' => $localizedDueAt->format('M j, Y')],
+                ['date' => $dateFormatter->date($localizedDueAt)],
             ],
             $showDueDate => ['task.no_due_date', []],
             $showDueTime && $localizedDueAt !== null && $hasTime => [
                 'task.due_at',
-                ['time' => $localizedDueAt->format('h:i A')],
+                ['time' => $dateFormatter->time($localizedDueAt)],
             ],
             $showDueTime && $localizedDueAt !== null => ['task.no_time_set', []],
             default => [
                 'task.created_at',
-                ['date' => $localizedCreatedAt?->format('M j, Y \a\t h:i A') ?? $translator->translate('common.not_available')],
+                ['date' => $localizedCreatedAt !== null
+                    ? $dateFormatter->dateTime($localizedCreatedAt)
+                    : $translator->translate('common.not_available')],
             ],
         };
 
@@ -64,7 +70,8 @@ if (!function_exists('renderSingleTaskItem')) {
         bool $showDueDate,
         bool $showDueTime,
         DateTimeZone $timezone,
-        Translator $translator
+        Translator $translator,
+        ?CalendarDateFormatter $dateFormatter = null
     ): void
     {
         $taskId = (int) ($task->id ?? 0);
@@ -83,7 +90,7 @@ if (!function_exists('renderSingleTaskItem')) {
         $toggleTranslationKey = $isDone ? 'task.mark_incomplete' : 'task.mark_completed';
         $ariaLabel = htmlspecialchars($translator->translate($toggleTranslationKey), ENT_QUOTES, 'UTF-8');
         $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
-        $timeInfo = formatTaskTimeInfo($task, $showDueDate, $showDueTime, $timezone, $translator);
+        $timeInfo = formatTaskTimeInfo($task, $showDueDate, $showDueTime, $timezone, $translator, $dateFormatter);
         $deleteLabel = htmlspecialchars(
             $translator->translate('task.delete', ['title' => $title]),
             ENT_QUOTES,
@@ -124,6 +131,7 @@ if (!function_exists('renderSingleTaskItem')) {
 }
 
 if (!function_exists('renderTaskItems')) {
+    /** Renders task rows using calendar preferences, retaining support for existing timezone-only callers. */
     function renderTaskItems(
         ?array $taskItems,
         string $viewName,
@@ -131,9 +139,12 @@ if (!function_exists('renderTaskItems')) {
         Translator $translator,
         bool $showDueTime = false,
         bool $showDueDate = false,
-        ?DateTimeZone $timezone = null
+        DateTimeZone|CalendarDateFormatter|null $timezone = null
     ): void {
-        $displayTimezone = $timezone ?? TimezoneHelper::getClientTimezone();
+        $dateFormatter = $timezone instanceof CalendarDateFormatter
+            ? $timezone
+            : new CalendarDateFormatter('gregorian', $timezone ?? TimezoneHelper::getClientTimezone());
+        $displayTimezone = $dateFormatter->timezone;
         $items = $taskItems ?? [];
         if (empty($items)) {
             $emptyClass = $showDueDate ? 'emptyTask allTasksEmpty' : 'emptyTask';
@@ -144,11 +155,12 @@ if (!function_exists('renderTaskItems')) {
         }
 
         foreach ($items as $task) {
-            renderSingleTaskItem($task, $viewName, $showDueDate, $showDueTime, $displayTimezone, $translator);
+            renderSingleTaskItem($task, $viewName, $showDueDate, $showDueTime, $displayTimezone, $translator, $dateFormatter);
         }
     }
 }
 
+/** Forwards the task list and its display preferences to the shared row renderer. */
 $renderTaskItems = static function (
     ?array $taskItems,
     string $viewName,
@@ -156,7 +168,7 @@ $renderTaskItems = static function (
     Translator $translator,
     bool $showDueTime = false,
     bool $showDueDate = false,
-    ?DateTimeZone $timezone = null
+    DateTimeZone|CalendarDateFormatter|null $timezone = null
 ): void {
     renderTaskItems($taskItems, $viewName, $emptyMessageKey, $translator, $showDueTime, $showDueDate, $timezone);
 };

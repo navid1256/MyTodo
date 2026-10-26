@@ -95,6 +95,7 @@ if ($isPartial) {
         <link id="activePageStylesheet" rel="stylesheet" href="<?= htmlspecialchars($activePageStylesheet, ENT_QUOTES, 'UTF-8') ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="/assets/css/theme.css">
+    <link rel="stylesheet" href="/assets/css/calendar-holidays.css">
 </head>
 
 <body

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Helpers\CalendarDateFormatter;
 use App\Helpers\TimezoneHelper;
 
 /** @var array<int, object> $completedTasks */
@@ -10,6 +11,7 @@ use App\Helpers\TimezoneHelper;
 $completedTasks = isset($completedTasks) && is_array($completedTasks) ? $completedTasks : [];
 $appTimezone = TimezoneHelper::getApplicationTimezone();
 $tz = $activityTimezone ?? TimezoneHelper::getClientTimezone();
+$calendarDateFormatter = new CalendarDateFormatter($calendarSystem ?? 'gregorian', $tz);
 $todayKey = (new DateTimeImmutable('today', $tz))->format('Y-m-d');
 $yesterdayKey = (new DateTimeImmutable('yesterday', $tz))->format('Y-m-d');
 $completedTaskGroups = [];
@@ -27,7 +29,7 @@ foreach ($completedTasks as $task) {
         } elseif ($dateKey === $yesterdayKey) {
             $dateLabel = $translator->translate('activity.filter.yesterday');
         } else {
-            $dateLabel = $completedAt->format('F j, Y');
+            $dateLabel = $calendarDateFormatter->date($completedAt, true);
         }
 
         $completedTaskGroups[$dateKey] = [
@@ -79,7 +81,7 @@ if (!in_array($selectedFilter, ['today', 'yesterday', 'week', 'month', 'all'], t
                             <?php
                             $task = $item['task'];
                             $title = (string) ($task->title ?? '');
-                            $completedAtText = $item['completed_at']->format('h:i A');
+                            $completedAtText = $calendarDateFormatter->time($item['completed_at']);
                             $isoCompletedAt = $item['completed_at']->format('c');
                             ?>
                             <li class="activityTaskItem">

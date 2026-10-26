@@ -18,6 +18,7 @@ import {
     getCalendarYearMonth
 } from '../../utils/calendar-core.js';
 import { translate } from '../../utils/i18n.js';
+import { markCalendarHolidays } from '../../utils/calendar-holidays.js';
 
 const MINIMUM_JALALI_YEAR = 1300;
 
@@ -163,7 +164,8 @@ export function initProfileBirthDate(signal) {
         days.textContent = '';
         days.dir = calendarSystem === CALENDAR_SYSTEM.JALALI ? 'rtl' : 'ltr';
 
-        getCalendarGrid(viewDate, calendarSystem).forEach((calendarDay) => {
+        const calendarGrid = getCalendarGrid(viewDate, calendarSystem);
+        calendarGrid.forEach((calendarDay) => {
             const button = document.createElement('button');
             const isSelected = datesAreEqual(calendarDay.date, selectedDate);
 
@@ -191,6 +193,7 @@ export function initProfileBirthDate(signal) {
             button.addEventListener('click', () => selectDate(calendarDay.date), { signal });
             days.appendChild(button);
         });
+        markCalendarHolidays(days, weekdays, calendarGrid);
     }
 
     function changeViewMonth() {

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'calendar.public_holiday' => 'Public holiday',
     'navigation.recurring_tasks' => 'Recurring Tasks',
     'recurring.title' => 'Recurring Tasks',
     'recurring.filter.label' => 'Filter recurring tasks by status',
@@ -365,6 +366,7 @@ return [
     'notifications.cancel_confirm' => 'Cancel this notification?',
     'notifications.cancel_failed' => 'The notification could not be cancelled.',
     'notifications.update_failed' => 'The notification could not be updated.',
+    'notifications.updated' => 'Notification updated.',
     'notifications.request_failed' => 'The notification request failed.',
     'push.title' => 'Browser Notifications',
     'push.hint' => 'Enable reminders on this browser. Other devices are managed separately. Your browser permission is requested only when you click Enable.',

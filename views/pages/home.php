@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Helpers\CalendarDateFormatter;
+
 /** @var array<int, object> $todayTasks */
 /** @var array<int, object> $tomorrowTasks */
 /** @var array<int, object> $noDateTasks */
@@ -10,6 +12,7 @@ declare(strict_types=1);
 $todayTasks = isset($todayTasks) && is_array($todayTasks) ? $todayTasks : [];
 $tomorrowTasks = isset($tomorrowTasks) && is_array($tomorrowTasks) ? $tomorrowTasks : [];
 $noDateTasks = isset($noDateTasks) && is_array($noDateTasks) ? $noDateTasks : [];
+$taskDateFormatter = new CalendarDateFormatter($calendarSystem ?? 'gregorian', $taskTimezone);
 
 require_once dirname(__DIR__) . '/components/task-items.php';
 ?>
@@ -24,7 +27,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $translator,
             false,
             false,
-            $taskTimezone
+            $taskDateFormatter
         ); ?>
     </ul>
 </div>
@@ -39,7 +42,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $translator,
             true,
             false,
-            $taskTimezone
+            $taskDateFormatter
         ); ?>
     </ul>
 </div>
@@ -54,7 +57,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $translator,
             true,
             false,
-            $taskTimezone
+            $taskDateFormatter
         ); ?>
     </ul>
 </div>
