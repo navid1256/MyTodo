@@ -6,13 +6,17 @@ namespace App\Controllers;
 
 use App\Exceptions\NotificationNotFoundException;
 use App\Exceptions\NotificationValidationException;
+use App\Helpers\CalendarDateFormatter;
+use App\Helpers\TimezoneHelper;
 use App\Http\Request;
 use App\Http\Response;
 use App\Middleware\CsrfMiddleware;
+use App\Localization\Translator;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\NotificationService;
 use App\Services\UserSettingsService;
+use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 
@@ -92,6 +96,7 @@ final class NotificationController
         ]);
     }
 
+    /** Updates the reminder and returns display text using the same saved preferences as the Messages page. */
     public function update(Request $request): Response
     {
         $guardResponse = $this->guardRequest($request);
@@ -107,6 +112,9 @@ final class NotificationController
             $response = Response::json(['success' => false, 'message' => 'Please provide valid reminder details.'], 422);
         } else {
             try {
+                $settings = $this->resolveUserSettings($request);
+                $dateFormatter = new CalendarDateFormatter($settings['calendar_system'], new DateTimeZone($settings['timezone']));
+                $translator = new Translator($settings['effective_language'], dirname(__DIR__, 2) . '/resources/lang');
                 $updatedReminder = $this->notificationService->updateNotification(
                     $notificationId,
                     $this->authService->getCurrentUserId(),
@@ -116,9 +124,14 @@ final class NotificationController
 
                 $response = Response::json([
                     'success' => true,
+                    'message' => $translator->translate('notifications.updated'),
                     'notification' => [
                         'id' => (int) $updatedReminder->id,
                         'remind_at' => (string) $updatedReminder->remind_at,
+                        'formatted_remind_at' => $dateFormatter->dateTime(new DateTimeImmutable(
+                            (string) $updatedReminder->remind_at, TimezoneHelper::getApplicationTimezone()
+                        )),
+                        'status' => (string) $updatedReminder->status,
                         'offset_value' => (int) $updatedReminder->offset_value,
                         'offset_unit' => (string) $updatedReminder->offset_unit,
                     ],

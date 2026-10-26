@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Helpers\CalendarDateFormatter;
 use App\Helpers\TimezoneHelper;
 
 /** @var array<int, object> $notifications */
@@ -22,14 +23,14 @@ $csrfToken = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
 
 $storageTimezone = TimezoneHelper::getApplicationTimezone();
 $userTimezone = $notificationTimezone ?? TimezoneHelper::getClientTimezone();
-$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($storageTimezone, $userTimezone, $translator): string {
+$calendarDateFormatter = new CalendarDateFormatter($calendarSystem ?? 'gregorian', $userTimezone);
+/** Formats stored notification instants using the user's calendar and timezone, including editor text. */
+$dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) use ($storageTimezone, $calendarDateFormatter, $translator): string {
     if ($dateTime === null || trim($dateTime) === '') {
         return $translator->translate('common.not_available');
     }
 
-    return (new DateTimeImmutable($dateTime, $storageTimezone))
-        ->setTimezone($userTimezone)
-        ->format('M j, Y \a\t h:i A');
+    return $calendarDateFormatter->dateTime(new DateTimeImmutable($dateTime, $storageTimezone));
 };
 
 $offsetFormatter = $formatNotificationOffset ?? static function (int $value, string $unit) use ($translator): string {

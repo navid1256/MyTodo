@@ -226,6 +226,21 @@ final class TaskRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /** Checks the original occurrence by identity, even if its due date was individually edited. */
+    public function hasInitialOccurrenceForRule(int $repeatRuleId, int $userId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM tasks AS t
+             WHERE t.repeat_rule_id = :repeat_rule_id
+               AND t.user_id = :user_id
+               AND t.repeat_occurrence_number = 0
+             LIMIT 1'
+        );
+        $stmt->execute([':repeat_rule_id' => $repeatRuleId, ':user_id' => $userId]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
     public function getMaxOccurrenceNumber(int $repeatRuleId, int $userId): int
     {
         $stmt = $this->pdo->prepare(

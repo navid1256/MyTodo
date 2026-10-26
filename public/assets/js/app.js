@@ -13,6 +13,7 @@ import { initTaskCalendar } from './modules/task-calendar.js';
 import { initPasswordChange } from './modules/password-change.js';
 import { initNotificationCenter } from './modules/notification-center.js';
 import { initTaskCompletion } from './modules/task-completion.js';
+import { initTaskDeletion } from './modules/task-deletion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
 import { initAccountSettings } from './modules/account-settings.js';
@@ -33,6 +34,7 @@ function initDashboardView() {
     initTaskCalendar(signal);
     initNotificationCenter(signal);
     initTaskCompletion(signal);
+    initTaskDeletion(signal);
     initHomeDayRefresh(signal);
     initActivityFilter(signal);
     initAccountSettings(signal);

@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Helpers\CalendarDateFormatter;
+
 /** @var array<int, object> $tasks */
 /** @var DateTimeZone $taskTimezone */
 
 $tasks = isset($tasks) && is_array($tasks) ? $tasks : [];
+$taskDateFormatter = new CalendarDateFormatter($calendarSystem ?? 'gregorian', $taskTimezone);
 
 require_once dirname(__DIR__) . '/components/task-items.php';
 ?>
@@ -19,7 +22,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             <span class="selectedTaskDateLabel" id="selectedTaskDateLabel" hidden></span>
         </div>
         <ul id="manageTaskItems">
-            <?php renderTaskItems($tasks, 'manage-tasks', 'manage.empty_all', $translator, false, true, $taskTimezone); ?>
+            <?php renderTaskItems($tasks, 'manage-tasks', 'manage.empty_all', $translator, false, true, $taskDateFormatter); ?>
             <?php if (!empty($tasks)): ?>
                 <li class="emptyTask allTasksEmpty" id="allTasksEmpty" data-i18n="manage.empty_all" hidden><?= htmlspecialchars($translator->translate('manage.empty_all'), ENT_QUOTES, 'UTF-8') ?></li>
             <?php endif; ?>

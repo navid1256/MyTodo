@@ -25,6 +25,17 @@ export async function toggleTaskCompletion(taskId, csrfToken) {
     });
 }
 
+/** Deletes one owned task through the existing authenticated, CSRF-protected endpoint. */
+export async function deleteTask(taskId, csrfToken) {
+    const formData = new FormData();
+    formData.set('csrf_token', csrfToken);
+    formData.set('task_id', String(taskId));
+
+    return sendJsonFormRequest('/api/tasks/delete', formData, {
+        errorMessage: translate('task.delete_failed', {}, 'The task could not be deleted. Please try again.')
+    });
+}
+
 export async function previewTaskReminders(data, signal) {
     const formData = new FormData();
     formData.set('action', 'previewReminders');

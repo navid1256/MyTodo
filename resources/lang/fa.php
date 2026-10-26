@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'calendar.public_holiday' => 'تعطیل رسمی',
     'navigation.recurring_tasks' => 'کارهای تکرارشونده',
     'recurring.title' => 'کارهای تکرارشونده',
     'recurring.filter.label' => 'فیلتر کارهای تکرارشونده بر اساس وضعیت',
@@ -42,6 +43,7 @@ return [
     'recurring.message.failed' => 'به‌روزرسانی کار تکرارشونده انجام نشد. دوباره تلاش کنید.',
     'recurring.message.processing' => 'در حال به‌روزرسانی کار تکرارشونده…',
     'recurring.message.updated' => 'کار تکرارشونده به‌روزرسانی شد.',
+    'recurring.message.saved_refresh_failed' => 'ذخیره انجام شد، اما ردیف تازه‌سازی نشد. برای ادامه صفحه را تازه‌سازی کنید.',
     'recurring.empty' => 'هیچ کار تکرارشونده‌ای با این فیلتر پیدا نشد. برای ساختن آن، «کار جدید» را انتخاب کنید و زمان‌بندی تکرار را تنظیم کنید.',
     'app.name' => 'مای‌تودو',
     'header.title' => 'مدیریت کارها',
@@ -296,6 +298,7 @@ return [
     'task.mark_incomplete' => 'علامت‌گذاری کار به‌عنوان انجام‌نشده',
     'task.delete' => 'حذف کار {title}',
     'task.delete_confirmation' => "آیا از حذف این کار مطمئن هستید؟\n{title}",
+    'task.delete_failed' => 'حذف کار انجام نشد. لطفاً دوباره تلاش کنید.',
     'task.due_date_time' => 'موعد {date} ساعت {time}',
     'task.due_date_no_time' => 'موعد {date} · بدون زمان',
     'task.no_due_date' => 'بدون تاریخ سررسید',
@@ -349,6 +352,7 @@ return [
     'notifications.cancel_confirm' => 'این اعلان لغو شود؟',
     'notifications.cancel_failed' => 'اعلان لغو نشد.',
     'notifications.update_failed' => 'اعلان به‌روزرسانی نشد.',
+    'notifications.updated' => 'اعلان به‌روزرسانی شد.',
     'notifications.request_failed' => 'درخواست اعلان انجام نشد.',
     'notifications.sent_at' => 'ارسال‌شده در',
     'notifications.notification_time' => 'زمان اعلان',

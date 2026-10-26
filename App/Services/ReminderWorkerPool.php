@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Notifications\ReminderDeliverySummary;
 use InvalidArgumentException;
 
 final class ReminderWorkerPool
@@ -14,64 +15,90 @@ final class ReminderWorkerPool
         if ($workers < 1 || $workers > 16 || $command === []) {
             throw new InvalidArgumentException('Invalid reminder worker pool.');
         }
-        $summary = [
-            'claimed' => 0, 'accepted' => 0, 'retryable' => 0, 'expired' => 0,
-            'failed' => 0, 'unknown' => 0, 'skipped' => 0,
-            'busy_workers' => 0, 'failed_workers' => 0,
-        ];
+
+        $children = $this->startWorkers($command, $workers);
+
+        return $this->collectReports($children);
+    }
+
+    /** Starts every child before waiting for reports; null marks a failed process launch. */
+    private function startWorkers(array $command, int $workers): array
+    {
         $children = [];
         for ($slot = 1; $slot <= $workers; $slot++) {
+            $childCommand = $command;
+            $childCommand[] = '--worker=' . $slot;
+            $outputChannels = [
+                1 => ['pipe', 'w'], // The child writes its JSON report to stdout.
+                2 => ['pipe', 'w'], // The child writes private errors to stderr.
+            ];
             // Array commands bypass the shell, preserving paths with spaces on Windows.
-            $process = @proc_open([...$command, '--worker=' . $slot], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+            $process = @proc_open($childCommand, $outputChannels, $pipes);
             if (!is_resource($process)) {
-                $summary['failed_workers']++;
+                $children[] = null;
                 continue;
             }
-            $children[] = [$process, $pipes];
+            $children[] = [
+                'process' => $process,
+                'stdout' => $pipes[1],
+                'stderr' => $pipes[2],
+            ];
         }
-        foreach ($children as [$process, $pipes]) {
-            $stdout = stream_get_contents($pipes[1]);
-            // Raw child errors can contain credentials and must never be forwarded.
-            stream_get_contents($pipes[2]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            $status = proc_close($process);
-            $report = json_decode((string) $stdout, true);
-            if ($status !== 0 || !is_array($report)) {
+
+        return $children;
+    }
+
+    /** Combines validated child reports and counts failed launches or occupied worker slots. */
+    private function collectReports(array $children): array
+    {
+        $summary = ReminderDeliverySummary::create();
+        $summary['busy_workers'] = 0;
+        $summary['failed_workers'] = 0;
+
+        foreach ($children as $child) {
+            if ($child === null) {
                 $summary['failed_workers']++;
                 continue;
             }
-            if (($report['status'] ?? null) === 'busy') {
+
+            $report = $this->readWorkerReport($child);
+            if ($report === null) {
+                $summary['failed_workers']++;
+                continue;
+            }
+            if ($report['status'] === 'busy') {
                 $summary['busy_workers']++;
                 continue;
             }
-            if (!$this->isValidReport($report)) {
-                $summary['failed_workers']++;
-                continue;
-            }
-            foreach ($report['summary'] as $outcome => $count) {
-                $summary[$outcome] += $count;
-            }
+
+            $summary = ReminderDeliverySummary::merge($summary, $report['summary']);
         }
 
         return $summary;
     }
 
-    /** Accepts only known integer counters from a child, excluding arbitrary output. */
-    private function isValidReport(array $report): bool
+    /** Closes a child's resources and returns its valid report, never its private error output. */
+    private function readWorkerReport(array $child): ?array
     {
-        $outcomes = ['claimed', 'accepted', 'retryable', 'expired', 'failed', 'unknown', 'skipped'];
-        if (($report['status'] ?? null) !== 'completed' || !is_array($report['summary'] ?? null)
-            || count($report['summary']) !== count($outcomes)) {
-            return false;
+        $stdout = stream_get_contents($child['stdout']);
+        // Raw child errors can contain credentials and must never be forwarded.
+        stream_get_contents($child['stderr']);
+        fclose($child['stdout']);
+        fclose($child['stderr']);
+        $exitCode = proc_close($child['process']);
+
+        $report = json_decode((string) $stdout, true);
+        if ($exitCode !== 0 || !is_array($report)) {
+            return null;
         }
-        foreach ($outcomes as $outcome) {
-            $count = $report['summary'][$outcome] ?? null;
-            if (!is_int($count) || $count < 0) {
-                return false;
-            }
+        if (($report['status'] ?? null) === 'busy') {
+            return $report;
+        }
+        if (($report['status'] ?? null) !== 'completed'
+            || !ReminderDeliverySummary::isValid($report['summary'] ?? null)) {
+            return null;
         }
 
-        return true;
+        return $report;
     }
 }

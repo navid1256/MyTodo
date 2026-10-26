@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'calendar.public_holiday' => 'Public holiday',
     'navigation.recurring_tasks' => 'Recurring Tasks',
     'recurring.title' => 'Recurring Tasks',
     'recurring.filter.label' => 'Filter recurring tasks by status',
@@ -42,6 +43,7 @@ return [
     'recurring.message.failed' => 'The recurring task could not be updated. Please try again.',
     'recurring.message.processing' => 'Updating recurring task…',
     'recurring.message.updated' => 'Recurring task updated.',
+    'recurring.message.saved_refresh_failed' => 'Saved, but the row could not be refreshed. Please reload before continuing.',
     'recurring.empty' => 'No recurring tasks match this filter. Use Add New Task and choose a repeat schedule to create one.',
     'app.name' => 'MyTodo',
     'header.title' => 'Task Manager',
@@ -296,6 +298,7 @@ return [
     'task.mark_incomplete' => 'Mark task as incomplete',
     'task.delete' => 'Delete task {title}',
     'task.delete_confirmation' => "Are you sure you want to delete this task?\n{title}",
+    'task.delete_failed' => 'The task could not be deleted. Please try again.',
     'task.due_date_time' => 'Due {date} at {time}',
     'task.due_date_no_time' => 'Due {date} · No time',
     'task.no_due_date' => 'No due date',
@@ -363,6 +366,7 @@ return [
     'notifications.cancel_confirm' => 'Cancel this notification?',
     'notifications.cancel_failed' => 'The notification could not be cancelled.',
     'notifications.update_failed' => 'The notification could not be updated.',
+    'notifications.updated' => 'Notification updated.',
     'notifications.request_failed' => 'The notification request failed.',
     'push.title' => 'Browser Notifications',
     'push.hint' => 'Enable reminders on this browser. Other devices are managed separately. Your browser permission is requested only when you click Enable.',

@@ -10,6 +10,7 @@ import {
     getCalendarMonthLabel,
     getCalendarWeekdayNames
 } from '../../utils/calendar-core.js';
+import { markCalendarHolidays } from '../../utils/calendar-holidays.js';
 
 export function renderDateTimeCalendar(options) {
     const calendarDays = options.calendarDays;
@@ -85,6 +86,7 @@ export function renderDateTimeCalendar(options) {
 
         calendarDays.appendChild(dayButton);
     });
+    markCalendarHolidays(calendarDays, calendarWeekdays, calendarGrid);
 }
 
 export function changeCalendarMonth(viewDate, offset) {

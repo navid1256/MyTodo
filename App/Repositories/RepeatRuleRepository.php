@@ -13,6 +13,7 @@ final class RepeatRuleRepository
     public function __construct(private readonly PDO $pdo) {}
 
     /**
+     * Inserts a prepared rule, binding its owner separately from the shared schedule parameters.
      * @param array{
      *     user_id: int,
      *     title: string,
@@ -45,25 +46,9 @@ final class RepeatRuleRepository
                 :month_day_mode, :end_type, :end_date, :repeat_count, :next_occurrence_at
             )'
         );
-        $statement->execute([
-            ':user_id' => $rule['user_id'],
-            ':title' => $rule['title'],
-            ':start_at' => $rule['start_at'],
-            ':has_time' => $rule['has_time'] ? 1 : 0,
-            ':timezone' => $rule['timezone'],
-            ':frequency' => $rule['frequency'],
-            ':interval_value' => $rule['interval'],
-            ':interval_unit' => $rule['unit'],
-            ':week_days' => $rule['week_days'] === []
-                ? null
-                : json_encode($rule['week_days'], JSON_THROW_ON_ERROR),
-            ':month_day' => $rule['month_day'],
-            ':month_day_mode' => $rule['month_day_mode'],
-            ':end_type' => $rule['end_type'],
-            ':end_date' => $rule['end_date'],
-            ':repeat_count' => $rule['repeat_count'],
-            ':next_occurrence_at' => $rule['next_occurrence_at'],
-        ]);
+        $parameters = $this->toRuleParameters($rule);
+        $parameters[':user_id'] = $rule['user_id'];
+        $statement->execute($parameters);
 
         return (int) $this->pdo->lastInsertId();
     }
@@ -240,6 +225,7 @@ final class RepeatRuleRepository
     }
 
     /**
+     * Updates only the requested owner's rule, reusing schedule bindings without changing its identity.
      * @param array<string, mixed> $rule
      * @throws JsonException
      */
@@ -263,7 +249,23 @@ final class RepeatRuleRepository
                  next_occurrence_at = :next_occurrence_at
              WHERE id = :repeat_rule_id AND user_id = :user_id'
         );
-        $statement->execute([
+        $parameters = $this->toRuleParameters($rule);
+        $parameters[':repeat_rule_id'] = $repeatRuleId;
+        $parameters[':user_id'] = $userId;
+        $statement->execute($parameters);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Encodes shared SQL values without selecting an owner, identity or lifecycle state.
+     * @param array<string, mixed> $rule
+     * @return array<string, int|string|null>
+     * @throws JsonException
+     */
+    private function toRuleParameters(array $rule): array
+    {
+        return [
             ':title' => $rule['title'],
             ':start_at' => $rule['start_at'],
             ':has_time' => $rule['has_time'] ? 1 : 0,
@@ -280,11 +282,7 @@ final class RepeatRuleRepository
             ':end_date' => $rule['end_date'],
             ':repeat_count' => $rule['repeat_count'],
             ':next_occurrence_at' => $rule['next_occurrence_at'],
-            ':repeat_rule_id' => $repeatRuleId,
-            ':user_id' => $userId,
-        ]);
-
-        return $statement->rowCount() > 0;
+        ];
     }
 
     /**
@@ -340,6 +338,42 @@ final class RepeatRuleRepository
         $statement->execute([':repeat_rule_id' => $repeatRuleId]);
 
         return $statement->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /**
+     * Fetches templates for the selected owned rules in one query, preserving each rule's insertion order.
+     * @param array<int, int> $repeatRuleIds
+     * @return array<int, array<int, object>> Templates grouped by rule ID; missing groups have no templates.
+     */
+    public function getReminderTemplatesForRules(int $userId, array $repeatRuleIds): array
+    {
+        if ($repeatRuleIds === []) {
+            return [];
+        }
+
+        $parameters = [':user_id' => $userId];
+        $placeholders = [];
+        foreach (array_values($repeatRuleIds) as $index => $ruleId) {
+            $placeholder = ':rule_id_' . $index;
+            $placeholders[] = $placeholder;
+            $parameters[$placeholder] = $ruleId;
+        }
+        $statement = $this->pdo->prepare(
+            'SELECT templates.repeat_rule_id, templates.offset_value, templates.offset_unit
+             FROM task_repeat_reminder_templates AS templates
+             INNER JOIN task_repeat_rules AS r ON r.id = templates.repeat_rule_id
+             WHERE r.user_id = :user_id
+               AND templates.repeat_rule_id IN (' . implode(', ', $placeholders) . ')
+             ORDER BY templates.repeat_rule_id ASC, templates.id ASC'
+        );
+        $statement->execute($parameters);
+
+        $templatesByRule = [];
+        foreach ($statement->fetchAll(PDO::FETCH_OBJ) as $template) {
+            $templatesByRule[(int) $template->repeat_rule_id][] = $template;
+        }
+
+        return $templatesByRule;
     }
 
     public function updateGenerationState(

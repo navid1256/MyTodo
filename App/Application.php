@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use App\Controllers\AuthController;
+use App\Controllers\CalendarController;
 use App\Controllers\HomeController;
 use App\Controllers\NotificationController;
 use App\Controllers\ProfileController;
@@ -25,6 +26,7 @@ use App\Repositories\TaskRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\UserSettingsRepository;
 use App\Services\AuthService;
+use App\Services\CalendarHolidayService;
 use App\Services\NotificationService;
 use App\Services\ProfileService;
 use App\Services\PushSubscriptionService;
@@ -37,6 +39,8 @@ use App\Services\RepeatService;
 use App\Services\TaskService;
 use App\Services\UserSettingsService;
 use PDO;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\NoPrivateNetworkHttpClient;
 
 final class Application
 {
@@ -80,6 +84,11 @@ final class Application
         $notificationService = new NotificationService($notificationRepository, $reminderService);
         $profileService = new ProfileService($userRepository);
         $userSettingsService = new UserSettingsService($userSettingsRepository);
+
+        $this->router->bind(CalendarController::class, new CalendarController(new CalendarHolidayService(
+            new NoPrivateNetworkHttpClient(HttpClient::create()),
+            $this->rootPath . '/storage/cache/calendar-holidays'
+        )));
 
         $pushConfig = require $this->rootPath . '/config/web-push.php';
         $this->router->bind(PushSubscriptionController::class, new PushSubscriptionController(

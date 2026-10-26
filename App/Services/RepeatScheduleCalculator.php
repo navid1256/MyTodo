@@ -11,6 +11,7 @@ final class RepeatScheduleCalculator
 {
     private const MAX_SEARCH_DAYS = 370000;
     private const MAX_SEARCH_MONTHS = 120000;
+    private const TRANSITION_WINDOW_SECONDS = 86400;
 
     /**
      * @param array{
@@ -35,6 +36,7 @@ final class RepeatScheduleCalculator
         };
     }
 
+    /** Advances calendar days while restoring the original wall-clock time after every step. */
     private function nextDailyOccurrence(
         int $interval,
         DateTimeImmutable $seriesStart,
@@ -43,13 +45,14 @@ final class RepeatScheduleCalculator
         $candidate = $seriesStart;
 
         do {
-            $candidate = $candidate->modify("+{$interval} days");
+            $candidate = $this->applySeriesTime($candidate->modify("+{$interval} days"), $seriesStart);
         } while ($candidate <= $after);
 
         return $candidate;
     }
 
     /**
+     * Searches eligible weekdays without carrying a normalized gap hour into subsequent dates.
      * @param array{interval: int, week_days: array<int, int>} $rule
      */
     private function nextWeeklyOccurrence(
@@ -60,15 +63,10 @@ final class RepeatScheduleCalculator
         $anchorWeek = $seriesStart
             ->modify('-' . $seriesStart->format('w') . ' days')
             ->setTime(0, 0);
-        $candidate = $after
-            ->setTime(
-                (int) $seriesStart->format('H'),
-                (int) $seriesStart->format('i'),
-                (int) $seriesStart->format('s')
-            );
+        $candidate = $this->applySeriesTime($after, $seriesStart);
 
         if ($candidate <= $after) {
-            $candidate = $candidate->modify('+1 day');
+            $candidate = $this->applySeriesTime($candidate->modify('+1 day'), $seriesStart);
         }
 
         for ($searchedDays = 0; $searchedDays < self::MAX_SEARCH_DAYS; $searchedDays++) {
@@ -86,7 +84,7 @@ final class RepeatScheduleCalculator
                 return $candidate;
             }
 
-            $candidate = $candidate->modify('+1 day');
+            $candidate = $this->applySeriesTime($candidate->modify('+1 day'), $seriesStart);
         }
 
         throw new RepeatScheduleCalculationException(
@@ -95,6 +93,7 @@ final class RepeatScheduleCalculator
     }
 
     /**
+     * Applies the configured month day and the same local-time policy as daily and weekly schedules.
      * @param array{interval: int, month_day: int|null, month_day_mode: string} $rule
      */
     private function nextMonthlyOccurrence(
@@ -110,15 +109,12 @@ final class RepeatScheduleCalculator
             $day = $rule['month_day_mode'] === 'last_day'
                 ? $lastDay
                 : min((int) $rule['month_day'], $lastDay);
-            $candidate = $month->setDate(
+            $candidateDate = $month->setDate(
                 (int) $month->format('Y'),
                 (int) $month->format('m'),
                 $day
-            )->setTime(
-                (int) $seriesStart->format('H'),
-                (int) $seriesStart->format('i'),
-                (int) $seriesStart->format('s')
             );
+            $candidate = $this->applySeriesTime($candidateDate, $seriesStart);
 
             if ($candidate > $after) {
                 return $candidate;
@@ -128,5 +124,33 @@ final class RepeatScheduleCalculator
         throw new RepeatScheduleCalculationException(
             'The next monthly repeat occurrence could not be calculated.'
         );
+    }
+
+    /** Restores the anchor time, lets PHP normalize gaps, and selects the earlier instant for a repeated local time. */
+    private function applySeriesTime(DateTimeImmutable $date, DateTimeImmutable $seriesStart): DateTimeImmutable
+    {
+        $occurrence = $date->setTime(
+            (int) $seriesStart->format('H'),
+            (int) $seriesStart->format('i'),
+            (int) $seriesStart->format('s')
+        );
+        $timestamp = $occurrence->getTimestamp();
+        $localTime = $occurrence->format('Y-m-d H:i:s');
+        $transitions = $occurrence->getTimezone()->getTransitions(
+            $timestamp - self::TRANSITION_WINDOW_SECONDS,
+            $timestamp + self::TRANSITION_WINDOW_SECONDS
+        );
+
+        // PHP can retain the input offset inside a repeated hour. Compare nearby offsets
+        // from its timezone database instead of assuming a one-hour transition.
+        foreach ($transitions ?: [] as $transition) {
+            $offsetDifference = $occurrence->getOffset() - $transition['offset'];
+            $alternative = $occurrence->setTimestamp($occurrence->getTimestamp() + $offsetDifference);
+            if ($alternative < $occurrence && $alternative->format('Y-m-d H:i:s') === $localTime) {
+                $occurrence = $alternative;
+            }
+        }
+
+        return $occurrence;
     }
 }

@@ -15,6 +15,7 @@ import {
     getCalendarWeekdayNames
 } from '../../utils/calendar-core.js';
 import { translate } from '../../utils/i18n.js';
+import { markCalendarHolidays } from '../../utils/calendar-holidays.js';
 
 export function createRepeatCalendar(options) {
     const repeatCalendarMonth = document.getElementById('repeatCalendarMonth');
@@ -106,6 +107,7 @@ export function createRepeatCalendar(options) {
 
             repeatCalendarDays.appendChild(button);
         });
+        markCalendarHolidays(repeatCalendarDays, repeatCalendarWeekdays, calendarGrid);
 
         if (repeatEndDateSummary) {
             repeatEndDateSummary.textContent = selectedEndDate

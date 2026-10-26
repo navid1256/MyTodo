@@ -19,6 +19,7 @@ session_set_save_handler(
 );
 session_start();
 
+/** Rejects rendered output that violates the recurring page contract. */
 function checkRecurringPage(bool $condition, string $message): void
 {
     if (!$condition) {
@@ -42,6 +43,9 @@ $pdo->exec('CREATE TABLE task_repeat_rules (
     week_days TEXT, month_day INTEGER, month_day_mode TEXT, end_type TEXT, end_date TEXT,
     repeat_count INTEGER, next_occurrence_at TEXT, created_at TEXT
 )');
+$pdo->exec('CREATE TABLE task_repeat_reminder_templates (
+    id INTEGER PRIMARY KEY, repeat_rule_id INTEGER, offset_value INTEGER, offset_unit TEXT
+)');
 $pdo->exec("INSERT INTO users VALUES (10, 'Owner', 'owner@example.test')");
 $statement = $pdo->prepare('INSERT INTO user_settings VALUES (10, ?, ?, ?)');
 $statement->execute([$language, $language === 'persian' ? 'jalali' : 'gregorian', 'Asia/Tehran']);
@@ -58,6 +62,11 @@ foreach (['active', 'paused', 'completed', 'cancelled'] as $index => $status) {
     ]);
 }
 $pdo->exec("INSERT INTO task_repeat_rules (id, user_id, title, status, created_at) VALUES (99, 20, 'FOREIGN PRIVATE RULE', 'active', '2099-01-01')");
+// Insert out of ID order so the rendered payload also verifies template ordering.
+$pdo->exec("INSERT INTO task_repeat_reminder_templates VALUES
+    (2, 1, 1, 'hour'),
+    (1, 1, 30, 'minute'),
+    (3, 99, 999, 'day')");
 $pdo->exec("INSERT INTO tasks VALUES (1, 10, 1, 0, '2099-01-02 06:00:00', NULL)");
 $pdo->exec("INSERT INTO tasks VALUES (2, 20, 99, 0, '2099-01-01 06:00:00', NULL)");
 $pdo->exec("INSERT INTO task_reminders VALUES (1, 'sent')");
@@ -111,6 +120,14 @@ checkRecurringPage($xpath->query('//*[@id="recurringTasksStatus" and @role="stat
 checkRecurringPage($xpath->query('//a[@data-repeat-filter="' . $expectedFilter . '" and @aria-current="page"]')->length === 1, 'Current filter must normalize and be accessible.');
 foreach ($rows as $row) {
     $payload = json_decode($row->getAttribute('data-repeat-rule'), true, 512, JSON_THROW_ON_ERROR);
+    checkRecurringPage(($payload['start_at'] ?? '') === '2099-01-01T09:30', 'The rule edit input must use the saved user timezone, not an offset-less UTC value.');
+    $expectedReminders = $row->getAttribute('data-repeat-rule-id') === '1'
+        ? [['value' => 30, 'unit' => 'minute'], ['value' => 1, 'unit' => 'hour']]
+        : [];
+    checkRecurringPage(
+        ($payload['reminders'] ?? null) === $expectedReminders,
+        'Each row must expose only its own ordered reminder templates; missing templates must remain empty.'
+    );
     $status = $row->getAttribute('data-repeat-status');
     $buttons = $xpath->query('.//button[@data-repeat-action]', $row);
     checkRecurringPage($buttons->length === (in_array($status, ['active', 'paused'], true) ? 3 : 0), 'Action availability must match lifecycle state.');

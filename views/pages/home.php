@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Helpers\CalendarDateFormatter;
+
 /** @var array<int, object> $todayTasks */
 /** @var array<int, object> $tomorrowTasks */
 /** @var array<int, object> $noDateTasks */
@@ -10,13 +12,14 @@ declare(strict_types=1);
 $todayTasks = isset($todayTasks) && is_array($todayTasks) ? $todayTasks : [];
 $tomorrowTasks = isset($tomorrowTasks) && is_array($tomorrowTasks) ? $tomorrowTasks : [];
 $noDateTasks = isset($noDateTasks) && is_array($noDateTasks) ? $noDateTasks : [];
+$taskDateFormatter = new CalendarDateFormatter($calendarSystem ?? 'gregorian', $taskTimezone);
 
 require_once dirname(__DIR__) . '/components/task-items.php';
 ?>
 
 <div class="list">
     <div class="title" data-i18n="home.no_date"><?= htmlspecialchars($translator->translate('home.no_date'), ENT_QUOTES, 'UTF-8') ?></div>
-    <ul>
+    <ul data-empty-message="home.empty_no_date">
         <?php renderTaskItems(
             $noDateTasks,
             'home',
@@ -24,14 +27,14 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $translator,
             false,
             false,
-            $taskTimezone
+            $taskDateFormatter
         ); ?>
     </ul>
 </div>
 
 <div class="list scheduledTaskList">
     <div class="title" data-i18n="home.today"><?= htmlspecialchars($translator->translate('home.today'), ENT_QUOTES, 'UTF-8') ?></div>
-    <ul>
+    <ul data-empty-message="home.empty_today">
         <?php renderTaskItems(
             $todayTasks,
             'home',
@@ -39,14 +42,14 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $translator,
             true,
             false,
-            $taskTimezone
+            $taskDateFormatter
         ); ?>
     </ul>
 </div>
 
 <div class="list scheduledTaskList">
     <div class="title" data-i18n="home.tomorrow"><?= htmlspecialchars($translator->translate('home.tomorrow'), ENT_QUOTES, 'UTF-8') ?></div>
-    <ul>
+    <ul data-empty-message="home.empty_tomorrow">
         <?php renderTaskItems(
             $tomorrowTasks,
             'home',
@@ -54,7 +57,7 @@ require_once dirname(__DIR__) . '/components/task-items.php';
             $translator,
             true,
             false,
-            $taskTimezone
+            $taskDateFormatter
         ); ?>
     </ul>
 </div>

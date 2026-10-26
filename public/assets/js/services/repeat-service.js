@@ -9,6 +9,22 @@ const lifecycleEndpoints = Object.freeze({
     updateRule: '/api/repeat-rules/update'
 });
 
+/** Loads the authoritative server-rendered rows, including their current edit payloads. */
+export async function fetchRecurringRows(signal) {
+    const response = await fetch('/recurring-tasks?partial=1&filter=all', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        signal
+    });
+    if (!response.ok) throw new Error('Recurring rows could not be refreshed.');
+    const payload = await response.json();
+    if (payload?.activeView !== 'recurring-tasks' || typeof payload.html !== 'string') {
+        throw new Error('Invalid recurring rows response.');
+    }
+    return payload.html;
+}
+
 async function updateRepeatRule(action, repeatRuleId, csrfToken, signal) {
     const formData = new FormData();
     formData.set('repeat_rule_id', String(repeatRuleId));

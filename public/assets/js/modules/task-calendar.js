@@ -17,6 +17,7 @@ import {
     getCalendarWeekdayNames
 } from '../utils/calendar-core.js';
 import { translate } from '../utils/i18n.js';
+import { markCalendarHolidays } from '../utils/calendar-holidays.js';
 
 export function initTaskCalendar(signal) {
     const taskCalendar = document.getElementById('taskCalendar');
@@ -211,6 +212,7 @@ export function initTaskCalendar(signal) {
             });
             calendarDays.appendChild(dayButton);
         });
+        markCalendarHolidays(calendarDays, calendarWeekdays, calendarGrid, 1);
     }
 
     if (previousMonthButton) {
