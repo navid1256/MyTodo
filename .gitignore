@@ -1,20 +1,53 @@
+# Dependencies (keep Composer and npm lockfiles tracked)
 /vendor/
 /node_modules/
+
+# Generated frontend assets
 /public/build/
-/.vscode/
-/docs/
-/storage/
-/.vscode/
-/.superpowers
-todo.md
-RoadToMVC.md
-progress.md
+
+# Environment files and private keys
 .env
 .env.*
 !.env.example
 *.pem
 *.key
-MyTodo.zip
-.superpowers
-docs
-.kilo
+*.p12
+*.pfx
+
+# Runtime data, logs, and uploaded avatars
+/storage/
+/public/storage/avatars/*
+!/public/storage/avatars/.gitkeep
+!/public/storage/avatars/.htaccess
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# PHPUnit cache and generated test reports
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+/coverage.xml
+/junit.xml
+
+# Local editor settings and operating-system files
+/.vscode/
+/.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Local planning documents and agent workspaces (existing exclusions)
+/docs/
+/todo.md
+/RoadToMVC.md
+/progress.md
+/.superpowers/
+/.kilo/
+
+# Local project archive
+/MyTodo.zip
