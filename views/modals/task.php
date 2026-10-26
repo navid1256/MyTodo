@@ -1,15 +1,13 @@
 <?php
 
 /** @var string $csrfToken */
+/** @var \App\Localization\Translator $translator */
 ?>
-<div class="taskModalBackdrop" id="taskModal" hidden>
+<dialog class="taskModalBackdrop" id="taskModal" aria-labelledby="taskModalTitle">
     <section
-        class="taskModal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="taskModalTitle">
-        <h2 class="srOnly" id="taskModalTitle">Add New Task</h2>
-        <button class="taskModalClose" id="closeTaskModal" type="button" aria-label="Close task modal">
+        class="taskModal">
+        <h2 class="srOnly" id="taskModalTitle" data-i18n="task.add_new"><?= htmlspecialchars($translator->translate('task.add_new'), ENT_QUOTES, 'UTF-8') ?></h2>
+        <button class="taskModalClose" id="closeTaskModal" type="button" data-i18n-aria-label="task.modal.close" aria-label="<?= htmlspecialchars($translator->translate('task.modal.close'), ENT_QUOTES, 'UTF-8') ?>">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
 
@@ -18,13 +16,18 @@
                 type="hidden"
                 name="csrf_token"
                 value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+            <input id="taskFormMode" name="mode" type="hidden" value="create">
+            <input id="taskEditId" name="task_id" type="hidden" value="">
+            <input id="taskEditRuleId" name="repeat_rule_id" type="hidden" value="">
+            <input id="taskEditScope" name="scope" type="hidden" value="">
 
-            <label class="srOnly" for="taskModalText">Task text</label>
+            <label class="srOnly" for="taskModalText" data-i18n="task.modal.text_label"><?= htmlspecialchars($translator->translate('task.modal.text_label'), ENT_QUOTES, 'UTF-8') ?></label>
             <textarea
                 id="taskModalText"
                 name="task_title"
                 maxlength="512"
-                placeholder="Input Text"
+                data-i18n-placeholder="task.modal.text_placeholder"
+                placeholder="<?= htmlspecialchars($translator->translate('task.modal.text_placeholder'), ENT_QUOTES, 'UTF-8') ?>"
                 required></textarea>
 
             <div class="taskModalOptions">
@@ -34,7 +37,7 @@
                     type="button"
                     aria-expanded="false"
                     aria-controls="dateTimeModal">
-                    Set Date &amp; Time
+                    <span data-i18n="task.modal.set_date_time"><?= htmlspecialchars($translator->translate('task.modal.set_date_time'), ENT_QUOTES, 'UTF-8') ?></span>
                 </button>
                 <button
                     class="taskOptionButton"
@@ -42,7 +45,7 @@
                     type="button"
                     aria-expanded="false"
                     aria-controls="reminderModal">
-                    Set Reminder
+                    <span data-i18n="task.modal.set_reminder"><?= htmlspecialchars($translator->translate('task.modal.set_reminder'), ENT_QUOTES, 'UTF-8') ?></span>
                 </button>
                 <button
                     class="taskOptionButton"
@@ -50,23 +53,31 @@
                     type="button"
                     aria-expanded="false"
                     aria-controls="repeatModal">
-                    Repeat
+                    <span data-i18n="task.modal.repeat"><?= htmlspecialchars($translator->translate('task.modal.repeat'), ENT_QUOTES, 'UTF-8') ?></span>
                 </button>
+            </div>
+
+            <div class="taskEditScope" id="taskEditScopeControl" hidden>
+                <label for="taskEditScopeChoice"><?= htmlspecialchars($translator->translate('task.edit_scope.label'), ENT_QUOTES, 'UTF-8') ?></label>
+                <select id="taskEditScopeChoice">
+                    <option value="single"><?= htmlspecialchars($translator->translate('task.edit_scope.single'), ENT_QUOTES, 'UTF-8') ?></option>
+                    <option value="future"><?= htmlspecialchars($translator->translate('task.edit_scope.future'), ENT_QUOTES, 'UTF-8') ?></option>
+                </select>
             </div>
 
             <input id="taskDueAt" name="due_at" type="hidden" value="">
             <input id="taskHasTime" name="has_time" type="hidden" value="0">
             <input id="taskReminders" name="reminders" type="hidden" value="[]">
             <input id="taskRepeat" name="repeat_config" type="hidden" value="">
-            <p class="taskDateSummary" id="taskDateSummary">No date selected</p>
-            <p class="taskReminderSummary" id="taskReminderSummary">No reminders set</p>
-            <p class="taskRepeatSummary" id="taskRepeatSummary">Does not repeat</p>
+            <p class="taskDateSummary" id="taskDateSummary" data-i18n="task.modal.no_date"><?= htmlspecialchars($translator->translate('task.modal.no_date'), ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="taskReminderSummary" id="taskReminderSummary" data-i18n="task.modal.no_reminders"><?= htmlspecialchars($translator->translate('task.modal.no_reminders'), ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="taskRepeatSummary" id="taskRepeatSummary" data-i18n="task.modal.no_repeat"><?= htmlspecialchars($translator->translate('task.modal.no_repeat'), ENT_QUOTES, 'UTF-8') ?></p>
 
             <p class="taskModalMessage" id="taskModalMessage" role="alert" aria-live="polite"></p>
 
             <div class="taskModalActions">
-                <button class="saveTaskButton" id="saveTaskButton" type="submit">Save</button>
+                <button class="saveTaskButton" id="saveTaskButton" type="submit" data-i18n="common.save"><?= htmlspecialchars($translator->translate('common.save'), ENT_QUOTES, 'UTF-8') ?></button>
             </div>
         </form>
     </section>
-</div>
+</dialog>

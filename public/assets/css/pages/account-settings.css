@@ -1,0 +1,258 @@
+.main .accountSettingsView {
+    height: 100%;
+    overflow: auto;
+}
+
+.accountSettingsPage {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 0px 36px 36px;
+    box-sizing: border-box;
+    color: #1f2933;
+}
+
+.accountSettingsForm {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.accountSettingsHeader {
+    display: flex;
+    min-height: 60px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-bottom: 1px solid #8d9ca4;
+}
+
+.accountSettingsHeader h1 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.accountSettingsIcon {
+    color: #4f5659;
+    font-size: 24px;
+}
+
+.accountSettingsFields {
+    display: grid;
+    width: min(100%, 650px);
+    margin: 100px auto 0;
+    gap: 70px;
+    justify-content: center;
+}
+
+.accountSettingsField {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: center;
+    column-gap: 40px;
+}
+
+.accountSettingsField label {
+    font-size: 24px;
+    text-align: end;
+}
+
+.accountSettingsField select {
+    width: 280px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #93a2aa;
+    border-radius: 9px;
+    background-color: #f8fafb;
+    color: #34434b;
+    font: inherit;
+    font-size: 16px;
+    opacity: 1;
+}
+
+.accountSettingsField select:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.accountSettingsHint,
+.accountSettingsStatus {
+    grid-column: 1 / -1;
+    margin: -20px 0 0;
+    text-align: center;
+    font-size: 14px;
+}
+
+.accountSettingsHint {
+    color: #607d8b;
+}
+
+.accountSettingsStatus {
+    min-height: 20px;
+    color: #16823c;
+}
+
+.accountSettingsStatus.isError {
+    color: #c62828;
+}
+
+.accountSettingsActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding-top: 40px;
+}
+
+.accountSettingsSaveButton {
+    min-width: 100px;
+    min-height: 44px;
+    padding: 10px 24px;
+    border: 0;
+    border-radius: 24px;
+    background-color: #69bd34;
+    box-shadow: 0 8px 18px rgba(105, 189, 52, 0.25);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.accountSettingsSaveButton:hover,
+.accountSettingsSaveButton:focus-visible {
+    background-color: #59a52b;
+    box-shadow: 0 10px 24px rgba(105, 189, 52, 0.32);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.accountSettingsSaveButton:disabled {
+    cursor: wait;
+    opacity: 0.68;
+    transform: none;
+}
+
+html.dark-mode .accountSettingsPage {
+    color: #f7fafc;
+}
+
+html.dark-mode .accountSettingsHeader {
+    border-color: #aebbc2;
+}
+
+html.dark-mode .accountSettingsIcon {
+    color: #f7fafc;
+}
+
+html.dark-mode .accountSettingsField select {
+    border-color: #4b4d4e;
+    background-color: #242321;
+    color: #f7fafc;
+    color-scheme: dark;
+}
+
+html.dark-mode .accountSettingsHint {
+    color: #a8c7d1;
+}
+
+html.dark-mode .accountSettingsStatus {
+    color: #5ee28b;
+}
+
+html.dark-mode .accountSettingsStatus.isError {
+    color: #ff7b83;
+}
+
+.pushSettings {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #8d9ca4;
+}
+
+.pushSettings h2 {
+    margin: 0 0 16px;
+    font-size: 18px;
+}
+
+.pushSettings .accountSettingsHint {
+    margin: 0;
+    text-align: start;
+}
+
+.pushSettingsStatus {
+    margin: 16px 0;
+    font-size: 14px;
+}
+
+.pushSettingsStatus.isError { color: #c62828; }
+html.dark-mode .pushSettingsStatus.isError { color: #ff7b83; }
+
+.pushSettingsActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.pushSettingsButton {
+    min-height: 44px;
+    padding: 10px 24px;
+    border: 1px solid currentColor;
+    border-radius: 9px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.pushSettingsButton:focus-visible { outline: 2px solid #29b6cb; outline-offset: 3px; }
+.pushSettingsButton:disabled { cursor: default; opacity: 0.6; }
+.pushSettingsButton[hidden] { display: none; }
+
+@media (max-width: 620px) {
+    .accountSettingsPage {
+        padding: 24px 16px 40px;
+    }
+
+    .accountSettingsHeader {
+        min-height: 92px;
+        gap: 20px;
+    }
+
+    .accountSettingsHeader h1 {
+        font-size: 28px;
+    }
+
+    .accountSettingsIcon {
+        font-size: 34px;
+    }
+
+    .accountSettingsFields {
+        margin-top: 42px;
+        gap: 26px;
+    }
+
+    .accountSettingsField {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .accountSettingsField label {
+        text-align: start;
+    }
+
+    .accountSettingsField select {
+        width: 100%;
+    }
+
+    .accountSettingsHint,
+    .accountSettingsStatus {
+        margin-top: 0;
+        text-align: start;
+    }
+
+    .accountSettingsActions {
+        padding-top: 32px;
+    }
+}
