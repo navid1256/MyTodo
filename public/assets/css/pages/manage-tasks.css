@@ -1,5 +1,6 @@
 .main .view .manageTasksContent {
-    padding: 0 0 10px 10px;
+    padding-block: 0 10px;
+    padding-inline: 10px 0;
     overflow-y: auto;
 }
 
@@ -67,7 +68,7 @@
 .main .view .content .manageTaskList ul {
     width: auto;
     margin: 0;
-    padding-left: 10px;
+    padding-inline: 10px 0;
 }
 
 .main .view .content .manageTaskList ul li.taskItem {
@@ -88,7 +89,7 @@
 .main .view .content .manageTaskList ul li.taskItem>.taskToggleButton {
     flex: 0 0 30px;
     float: none;
-    margin-left: 10px;
+    margin-inline-start: 10px;
 }
 
 .main .view .content .manageTaskList ul li.taskItem>span {
@@ -105,7 +106,7 @@
     float: none;
     align-items: center;
     gap: 4px;
-    margin-left: auto;
+    margin-inline-start: auto;
 }
 
 .main .view .content .manageTaskList ul li.taskItem .info span,
@@ -130,7 +131,7 @@
     border-radius: 6px;
     background-color: #f7fafb;
     box-shadow: 0 8px 22px rgba(33, 73, 91, 0.12);
-    margin-right: 10px;
+    margin-inline-end: 10px;
 }
 
 .taskCalendarHeader {
@@ -286,7 +287,18 @@
 
     .main .view .content .manageTaskList ul li.taskItem .info {
         width: 100%;
-        padding-left: 48px;
+        box-sizing: border-box;
+        padding-inline: 48px 0;
         justify-content: space-between;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem .info .created-at {
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .main .view .content .manageTaskList ul li.taskItem .info .deleteTaskButton {
+        flex-shrink: 0;
     }
 }

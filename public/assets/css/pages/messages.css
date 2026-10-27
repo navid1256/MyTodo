@@ -352,7 +352,7 @@ html.dark-mode .sentNotificationsPageHeaderIcon {
 .notificationEditClose {
     position: absolute;
     top: 15px;
-    right: 15px;
+    inset-inline-end: 15px;
     display: inline-flex;
     width: 34px;
     height: 34px;
@@ -374,7 +374,7 @@ html.dark-mode .sentNotificationsPageHeaderIcon {
 }
 
 .notificationEditModal header {
-    padding-right: 38px;
+    padding-inline: 0 38px;
 }
 
 .notificationEditModal h2 {
@@ -608,9 +608,9 @@ html.dark-mode .sentNotificationsPageHeaderIcon {
     max-width: none;
     min-height: 50px;
     margin: 0;
-    padding-left: 10px;
+    padding-inline: 10px 0;
     box-sizing: border-box;
-    text-align: left;
+    text-align: start;
 }
 
 @media (max-width: 900px) {
