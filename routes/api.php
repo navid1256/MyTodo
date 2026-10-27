@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Controllers\AuthController;
+use App\Controllers\CalendarController;
+use App\Controllers\NotificationController;
+use App\Controllers\PushSubscriptionController;
+use App\Controllers\ReminderController;
+use App\Controllers\RepeatController;
+use App\Controllers\SettingsController;
+use App\Controllers\TaskController;
+use App\Http\Router;
+use App\Middleware\AuthMiddleware;
+
+return static function (Router $router): void {
+    $router->get('/api/calendar/holidays', [CalendarController::class, 'holidays'], [AuthMiddleware::class]);
+    $router->post('/api/push/status', [PushSubscriptionController::class, 'status'], [AuthMiddleware::class]);
+    $router->post('/api/push/subscribe', [PushSubscriptionController::class, 'subscribe'], [AuthMiddleware::class]);
+    $router->post('/api/push/unsubscribe', [PushSubscriptionController::class, 'unsubscribe'], [AuthMiddleware::class]);
+    $router->post('/api/tasks', [TaskController::class, 'create'], [AuthMiddleware::class]);
+    $router->post('/api/tasks/create', [TaskController::class, 'create'], [AuthMiddleware::class]);
+    $router->post('/api/tasks/toggle', [TaskController::class, 'toggle'], [AuthMiddleware::class]);
+    $router->post('/api/tasks/delete', [TaskController::class, 'delete'], [AuthMiddleware::class]);
+    $router->post('/api/password/change', [AuthController::class, 'changePassword'], [AuthMiddleware::class]);
+    $router->post('/api/notifications/update', [NotificationController::class, 'update'], [AuthMiddleware::class]);
+    $router->post('/api/notifications/cancel', [NotificationController::class, 'cancel'], [AuthMiddleware::class]);
+    $router->post('/api/reminders/preview', [ReminderController::class, 'preview'], [AuthMiddleware::class]);
+    $router->post('/api/repeat-rules/pause', [RepeatController::class, 'pause'], [AuthMiddleware::class]);
+    $router->post('/api/repeat-rules/resume', [RepeatController::class, 'resume'], [AuthMiddleware::class]);
+    $router->post('/api/repeat-rules/cancel', [RepeatController::class, 'cancel'], [AuthMiddleware::class]);
+    $router->post('/api/repeat-tasks/update', [RepeatController::class, 'updateTask'], [AuthMiddleware::class]);
+    $router->post('/api/repeat-rules/update', [RepeatController::class, 'updateRule'], [AuthMiddleware::class]);
+    $router->post('/api/settings', [SettingsController::class, 'update'], [AuthMiddleware::class]);
+};

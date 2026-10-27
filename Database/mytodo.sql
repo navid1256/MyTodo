@@ -17,6 +17,8 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
+ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 --
 -- Database: `mytodo`
 
@@ -28,13 +30,59 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `tasks` (
   `id` int(10) UNSIGNED NOT NULL,
-  `title` varchar(512) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `title` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
+  `repeat_rule_id` int(10) UNSIGNED DEFAULT NULL,
+  `repeat_occurrence_number` smallint(5) UNSIGNED DEFAULT NULL,
   `is_done` tinyint(1) NOT NULL DEFAULT 0,
+  `completed_at` datetime DEFAULT NULL,
   `due_at` datetime DEFAULT NULL,
   `has_time` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `task_repeat_rules`
+--
+
+CREATE TABLE `task_repeat_rules` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `title` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `start_at` datetime NOT NULL,
+  `has_time` tinyint(1) NOT NULL DEFAULT 0,
+  `timezone` varchar(100) NOT NULL,
+  `frequency` enum('daily','weekly','monthly','custom') NOT NULL,
+  `interval_value` smallint(5) UNSIGNED NOT NULL DEFAULT 1,
+  `interval_unit` enum('day','week','month') NOT NULL,
+  `week_days` varchar(32) DEFAULT NULL,
+  `month_day` tinyint(3) UNSIGNED DEFAULT NULL,
+  `month_day_mode` enum('clamp','last_day') NOT NULL DEFAULT 'clamp',
+  `end_type` enum('endlessly','date','count') NOT NULL DEFAULT 'endlessly',
+  `end_date` date DEFAULT NULL,
+  `repeat_count` smallint(5) UNSIGNED DEFAULT NULL,
+  `generated_repeats` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
+  `next_occurrence_at` datetime DEFAULT NULL,
+  `status` enum('active','paused','cancelled','completed') NOT NULL DEFAULT 'active',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `task_repeat_reminder_templates`
+--
+
+CREATE TABLE `task_repeat_reminder_templates` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `repeat_rule_id` int(10) UNSIGNED NOT NULL,
+  `offset_value` int(10) UNSIGNED NOT NULL,
+  `offset_unit` enum('minute','hour','day') NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -75,6 +123,22 @@ CREATE TABLE `users` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `user_settings`
+--
+
+CREATE TABLE `user_settings` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `language` enum('default','english','persian') NOT NULL DEFAULT 'default',
+  `calendar_system` enum('gregorian','jalali') NOT NULL DEFAULT 'gregorian',
+  `timezone` varchar(100) NOT NULL DEFAULT 'UTC',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users_info`
 --
 
@@ -99,7 +163,24 @@ CREATE TABLE `users_info` (
 --
 ALTER TABLE `tasks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_tasks_user_due_at` (`user_id`, `due_at`);
+  ADD UNIQUE KEY `tasks_repeat_occurrence_unique` (`repeat_rule_id`, `repeat_occurrence_number`),
+  ADD KEY `idx_tasks_user_due_at` (`user_id`, `due_at`),
+  ADD KEY `idx_tasks_user_completed_at` (`user_id`, `is_done`, `completed_at`);
+
+--
+-- Indexes for table `task_repeat_rules`
+--
+ALTER TABLE `task_repeat_rules`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_repeat_rules_due` (`status`, `next_occurrence_at`),
+  ADD KEY `idx_repeat_rules_user` (`user_id`, `status`);
+
+--
+-- Indexes for table `task_repeat_reminder_templates`
+--
+ALTER TABLE `task_repeat_reminder_templates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `repeat_reminder_template_unique` (`repeat_rule_id`, `offset_value`, `offset_unit`);
 
 --
 -- Indexes for table `task_reminders`
@@ -116,6 +197,13 @@ ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `users_username_unique` (`username`),
   ADD UNIQUE KEY `users_email_unique` (`email`);
+
+--
+-- Indexes for table `user_settings`
+--
+ALTER TABLE `user_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_settings_user_id_unique` (`user_id`);
 
 --
 -- Indexes for table `users_info`
@@ -135,6 +223,18 @@ ALTER TABLE `tasks`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `task_repeat_rules`
+--
+ALTER TABLE `task_repeat_rules`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `task_repeat_reminder_templates`
+--
+ALTER TABLE `task_repeat_reminder_templates`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `task_reminders`
 --
 ALTER TABLE `task_reminders`
@@ -144,6 +244,12 @@ ALTER TABLE `task_reminders`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_settings`
+--
+ALTER TABLE `user_settings`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -157,16 +263,84 @@ ALTER TABLE `users_info`
 --
 
 --
+-- Constraints for table `tasks`
+--
+ALTER TABLE `tasks`
+  ADD CONSTRAINT `tasks_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `tasks_repeat_rule_id_foreign` FOREIGN KEY (`repeat_rule_id`) REFERENCES `task_repeat_rules` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `task_repeat_rules`
+--
+ALTER TABLE `task_repeat_rules`
+  ADD CONSTRAINT `task_repeat_rules_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `task_repeat_reminder_templates`
+--
+ALTER TABLE `task_repeat_reminder_templates`
+  ADD CONSTRAINT `repeat_reminder_templates_rule_foreign` FOREIGN KEY (`repeat_rule_id`) REFERENCES `task_repeat_rules` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `task_reminders`
 --
 ALTER TABLE `task_reminders`
   ADD CONSTRAINT `task_reminders_task_id_foreign` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `user_settings`
+--
+ALTER TABLE `user_settings`
+  ADD CONSTRAINT `user_settings_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `users_info`
 --
 ALTER TABLE `users_info`
   ADD CONSTRAINT `users_info_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+-- Browser subscriptions (Web Push). Keys are capability data, never log them.
+CREATE TABLE `push_subscriptions` (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `endpoint` varchar(2048) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `endpoint_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `p256dh` varchar(87) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `auth` varchar(22) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `content_encoding` varchar(16) NOT NULL DEFAULT 'aes128gcm',
+  `device_label` varchar(255) NOT NULL DEFAULT '',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `last_used_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `push_subscriptions_endpoint_unique` (`endpoint_hash`),
+  KEY `push_subscriptions_user_index` (`user_id`),
+  CONSTRAINT `push_subscriptions_user_foreign` FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Per-browser reminder delivery state; subscription_id is retained after unsubscribe.
+CREATE TABLE `task_reminder_deliveries` (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `reminder_id` int(10) UNSIGNED NOT NULL,
+  `subscription_id` int(10) UNSIGNED NOT NULL,
+  `status` enum('pending','leased','retryable','sent','failed','expired','unknown','unavailable') NOT NULL DEFAULT 'pending',
+  `attempt_count` smallint UNSIGNED NOT NULL DEFAULT 0,
+  `last_attempt_at` datetime DEFAULT NULL,
+  `next_attempt_at` datetime DEFAULT NULL,
+  `claimed_at` datetime DEFAULT NULL,
+  `claim_token` char(32) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  `sent_at` datetime DEFAULT NULL,
+  `http_status` smallint UNSIGNED DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `task_reminder_deliveries_pair` (`reminder_id`, `subscription_id`),
+  KEY `task_reminder_deliveries_ready` (`status`, `next_attempt_at`, `id`),
+  KEY `task_reminder_deliveries_subscription` (`subscription_id`),
+  CONSTRAINT `task_reminder_deliveries_reminder_foreign` FOREIGN KEY (`reminder_id`)
+    REFERENCES `task_reminders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

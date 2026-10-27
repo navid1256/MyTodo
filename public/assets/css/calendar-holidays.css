@@ -1,0 +1,18 @@
+html {
+    --calendar-holiday-color: #b91c1c;
+}
+
+html.dark-mode {
+    --calendar-holiday-color: #ff8a96;
+}
+
+/* Keep only date text red; existing selection, focus and task markers stay unchanged. */
+html:root :is(.calendarDay, .repeatCalendarDay, .taskCalendarDay, .profileBirthDateDay).is-calendar-holiday,
+html:root :is(.calendarWeekdays, .repeatCalendarWeekdays, .taskCalendarWeekdays, .profileBirthDateWeekdays) .is-calendar-friday {
+    color: var(--calendar-holiday-color);
+}
+
+/* Selected dates need a darker red against the existing blue or turquoise background. */
+html:root :is(.calendarDay, .repeatCalendarDay, .taskCalendarDay, .profileBirthDateDay).is-calendar-holiday.selected {
+    color: #45000d;
+}
