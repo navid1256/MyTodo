@@ -170,6 +170,25 @@ final class TaskController
         return $response;
     }
 
+    /** Permanently clears the authenticated user's completed tasks, independent of the Activity filter. */
+    public function clearCompleted(Request $request): Response
+    {
+        $guardResponse = $this->guardJsonRequest($request);
+        if ($guardResponse !== null) {
+            return $guardResponse;
+        }
+        $userId = $this->authService->getCurrentUserId();
+        $clientToday = new DateTimeImmutable('today', $this->resolveUserTimezone($request));
+        $deletedCount = $this->taskService->clearCompletedTasks($userId);
+
+        return Response::json([
+            'success' => true,
+            'deleted_count' => $deletedCount,
+            'completed_today_count' => $this->taskService->countCompletedTasksForDate($userId, $clientToday),
+            'unread_count' => $this->notificationService->countUnreadNotifications($userId),
+        ]);
+    }
+
     private function processTaskCreation(Request $request): Response
     {
         $taskTitle = $request->postString('task_title');

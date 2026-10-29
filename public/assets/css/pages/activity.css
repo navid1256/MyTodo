@@ -42,6 +42,130 @@
     color: #48575f;
 }
 
+.activityPageActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.activityClearButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 1px solid currentColor;
+    border-radius: 7px;
+    background: transparent;
+    color: #9b2020;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.activityClearButton:hover:not(:disabled) {
+    background: rgba(180, 35, 35, 0.1);
+}
+
+.activityClearButton .fa-trash-can {
+    color: inherit !important;
+    font-weight: 400;
+}
+
+.activityClearButton:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.activityClearButton:focus-visible,
+.activityClearDialog button:focus-visible {
+    outline: 2px solid #2e8294;
+    outline-offset: 3px;
+}
+
+.activityClearMessage {
+    margin: 12px 0;
+    color: #27643b;
+}
+
+.activityClearMessage.is-error {
+    color: #9b2020;
+}
+
+.activityClearMessage[hidden] {
+    display: none;
+}
+
+.activityClearDialog {
+    box-sizing: border-box;
+    width: min(440px, calc(100vw - 32px));
+    padding: 24px;
+    border: 1px solid #74858d;
+    border-radius: 8px;
+    background: #fff;
+    color: #283b46;
+    font: inherit;
+    text-align: start;
+}
+
+.activityClearDialog:modal {
+    overscroll-behavior: contain;
+}
+
+.activityClearDialog::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    overscroll-behavior: contain;
+}
+
+.activityClearDialog h2 {
+    margin: 0 0 12px;
+    font-size: 18px;
+}
+
+.activityClearDialog p {
+    margin: 0 0 24px;
+    line-height: 1.7;
+}
+
+.activityClearDialog form {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.activityClearDialog button {
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid currentColor;
+    border-radius: 7px;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.activityClearDialog button[value="cancel"] {
+    color: inherit;
+}
+
+html.dark-mode .activityClearButton,
+html.dark-mode .activityClearMessage.is-error {
+    color: #ffabab;
+}
+
+html.dark-mode .activityClearMessage {
+    color: #a1dfb0;
+}
+
+html.dark-mode .activityClearDialog {
+    border-color: #6b8998;
+    background: #18242e;
+    color: #f7fafc;
+}
+
 .activityFilter {
     width: 100%;
     max-width: 100%;
@@ -189,6 +313,16 @@ html.dark-mode .activityEmpty {
 }
 
 @media (max-width: 620px) {
+    .activityPageActions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .activityPageActions .activityClearButton,
+    .activityPageActions .activityFilter {
+        min-height: 44px;
+    }
+
     .activityPageHeader {
         align-items: stretch;
         flex-direction: column;

@@ -22,6 +22,7 @@ return static function (Router $router): void {
     $router->post('/api/tasks/create', [TaskController::class, 'create'], [AuthMiddleware::class]);
     $router->post('/api/tasks/toggle', [TaskController::class, 'toggle'], [AuthMiddleware::class]);
     $router->post('/api/tasks/delete', [TaskController::class, 'delete'], [AuthMiddleware::class]);
+    $router->post('/api/tasks/clear-completed', [TaskController::class, 'clearCompleted'], [AuthMiddleware::class]);
     $router->post('/api/password/change', [AuthController::class, 'changePassword'], [AuthMiddleware::class]);
     $router->post('/api/notifications/update', [NotificationController::class, 'update'], [AuthMiddleware::class]);
     $router->post('/api/notifications/cancel', [NotificationController::class, 'cancel'], [AuthMiddleware::class]);

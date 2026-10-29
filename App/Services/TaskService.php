@@ -177,6 +177,12 @@ final class TaskService
         return $this->taskRepository->getCompletedTasksForUser($userId);
     }
 
+    /** Clears completed occurrences across all dates without modifying recurring rules or incomplete tasks. */
+    public function clearCompletedTasks(int $userId): int
+    {
+        return $this->taskRepository->deleteCompletedForUser($userId);
+    }
+
     public function countCompletedTasksForDate(int $userId, DateTimeInterface $date): int
     {
         return $this->taskRepository->countCompletedTasksForDate($userId, $date);

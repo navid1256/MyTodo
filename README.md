@@ -167,6 +167,8 @@ PHP needs write access to `storage/logs/`, `storage/cache/`, private key storage
 4. Use **Messages** to manage reminders and the header bell to open **Sent Notifications**.
 5. Save language, calendar, and timezone preferences in **Account Settings**. Browser notification controls are independent of the settings Save button.
 
+In Activity, **Clear Completed Task** opens a confirmation dialog and permanently deletes all completed tasks belonging to your account, **across all dates**, not just the selected filter. Incomplete tasks and recurring rules remain. Associated reminders and their sent-notification/delivery records are removed by existing foreign-key cascades. This action has no Undo and does not dismiss notifications already shown by the operating system. After success, the list and toolbar/bell counts update without reloading. The authenticated `POST /api/tasks/clear-completed` endpoint requires `csrf_token`; it never accepts a client-supplied owner or deletion date range. No schema migration is required.
+
 ### Sent notification archive
 
 The bell counts **unread sent** notifications, not all reminders. Opening Sent Notifications marks the current user's existing sent archive read through a CSRF-protected POST. Later notifications remain unread until the archive is opened again.

@@ -1,5 +1,6 @@
 import { deleteTask } from '../services/task-service.js';
 import { translate } from '../utils/i18n.js';
+import { updateCompletedCount } from '../utils/task-counters.js';
 
 /** Restores the translated Home empty state after removing the last task from a section. */
 function updateEmptyList(list) {
@@ -13,17 +14,6 @@ function updateEmptyList(list) {
     emptyItem.dataset.i18n = messageKey;
     emptyItem.textContent = translate(messageKey);
     list.appendChild(emptyItem);
-}
-
-/** Updates the shared Completed toolbar using the server's authoritative remaining count. */
-function updateCompletedCount(count) {
-    const safeCount = Math.max(0, Number(count) || 0);
-    const countLabel = document.querySelector('.completedCount');
-    const completedButton = document.querySelector('.completedButton');
-    if (countLabel) {
-        countLabel.textContent = String(safeCount);
-    }
-    completedButton?.setAttribute('aria-label', translate('task.completed_today_label', { count: safeCount }));
 }
 
 /** Connects delegated delete clicks to POST without retrying or removing rows optimistically. */

@@ -18,6 +18,7 @@ import { initTaskCompletion } from './modules/task-completion.js';
 import { initTaskDeletion } from './modules/task-deletion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
+import { initActivityClear } from './modules/activity-clear.js';
 import { initAccountSettings } from './modules/account-settings.js';
 import { initPushNotifications } from './modules/push-notifications.js';
 import { initProfileBirthDate } from './modules/profile/profile-birth-date.js';
@@ -41,6 +42,7 @@ function initDashboardView() {
     initTaskDeletion(signal);
     initHomeDayRefresh(signal);
     initActivityFilter(signal);
+    initActivityClear(signal);
     initAccountSettings(signal);
     initPushNotifications(signal);
     initProfileBirthDate(signal);
