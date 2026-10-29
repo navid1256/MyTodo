@@ -117,12 +117,12 @@ if (!function_exists('renderSingleTaskItem')) {
             . "    <div class=\"info\">\n"
             . "        {$timeInfo}\n"
             . ($editPayload !== null
-                ? "        <button class=\"editTaskButton\" type=\"button\" data-task-edit aria-label=\"{$editLabel}\"><i class=\"fa-light fa-pen\" aria-hidden=\"true\"></i></button>\n"
+                ? "        <button class=\"editTaskButton\" type=\"button\" data-task-edit aria-label=\"{$editLabel}\" title=\"{$editLabel}\"><i class=\"fa-light fa-pen\" aria-hidden=\"true\"></i></button>\n"
                     . "        <script type=\"application/json\" data-task-edit-payload>"
                     . json_encode($editPayload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
                     . "</script>\n"
                 : '')
-            . "        <button class=\"deleteTaskButton\" type=\"button\" data-task-delete data-task-id=\"{$taskId}\" data-i18n-aria-label=\"task.delete\" data-title=\"{$escapedTitle}\" aria-label=\"{$deleteLabel}\">\n"
+            . "        <button class=\"deleteTaskButton\" type=\"button\" data-task-delete data-task-id=\"{$taskId}\" data-i18n-aria-label=\"task.delete\" data-title=\"{$escapedTitle}\" aria-label=\"{$deleteLabel}\" title=\"{$deleteLabel}\">\n"
             . "            <i class=\"fa-light fa-trash-can\" aria-hidden=\"true\"></i>\n"
             . "        </button>\n"
             . "    </div>\n"

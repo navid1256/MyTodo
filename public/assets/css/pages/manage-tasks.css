@@ -105,7 +105,7 @@
     flex: 0 0 auto;
     float: none;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     margin-inline-start: auto;
 }
 
@@ -298,6 +298,7 @@
         overflow-wrap: anywhere;
     }
 
+    .main .view .content .manageTaskList ul li.taskItem .info .editTaskButton,
     .main .view .content .manageTaskList ul li.taskItem .info .deleteTaskButton {
         flex-shrink: 0;
     }

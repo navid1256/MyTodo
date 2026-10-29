@@ -58,11 +58,17 @@
             </div>
 
             <div class="taskEditScope" id="taskEditScopeControl" hidden>
-                <label for="taskEditScopeChoice"><?= htmlspecialchars($translator->translate('task.edit_scope.label'), ENT_QUOTES, 'UTF-8') ?></label>
-                <select id="taskEditScopeChoice">
-                    <option value="single"><?= htmlspecialchars($translator->translate('task.edit_scope.single'), ENT_QUOTES, 'UTF-8') ?></option>
-                    <option value="future"><?= htmlspecialchars($translator->translate('task.edit_scope.future'), ENT_QUOTES, 'UTF-8') ?></option>
-                </select>
+                <label for="taskEditScopeChoice" class="taskEditScopeLabel">
+                    <i class="fa-light fa-arrows-rotate taskEditScopeIcon" aria-hidden="true"></i>
+                    <span data-i18n="task.edit_scope.label"><?= htmlspecialchars($translator->translate('task.edit_scope.label'), ENT_QUOTES, 'UTF-8') ?></span>
+                </label>
+                <div class="taskEditScopeSelectWrapper">
+                    <select id="taskEditScopeChoice">
+                        <option value="single" data-i18n="task.edit_scope.single"><?= htmlspecialchars($translator->translate('task.edit_scope.single'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="future" data-i18n="task.edit_scope.future"><?= htmlspecialchars($translator->translate('task.edit_scope.future'), ENT_QUOTES, 'UTF-8') ?></option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down taskEditScopeArrow" aria-hidden="true"></i>
+                </div>
             </div>
 
             <input id="taskDueAt" name="due_at" type="hidden" value="">
