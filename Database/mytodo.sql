@@ -101,6 +101,8 @@ CREATE TABLE `task_reminders` (
   `attempt_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
   `last_attempt_at` datetime DEFAULT NULL,
   `sent_at` datetime DEFAULT NULL,
+  `read_at` datetime DEFAULT NULL,
+  `cleared_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -188,7 +190,8 @@ ALTER TABLE `task_repeat_reminder_templates`
 ALTER TABLE `task_reminders`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `task_reminders_task_time_unique` (`task_id`, `remind_at`),
-  ADD KEY `idx_task_reminders_delivery` (`status`, `remind_at`);
+  ADD KEY `idx_task_reminders_delivery` (`status`, `remind_at`),
+  ADD KEY `idx_task_reminders_archive` (`status`, `cleared_at`, `sent_at`, `id`);
 
 --
 -- Indexes for table `users`

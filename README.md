@@ -155,6 +155,16 @@ PHP needs write access to `storage/logs/`, `storage/cache/`, private key storage
 4. Use **Messages** to manage reminders and the header bell to open **Sent Notifications**.
 5. Save language, calendar, and timezone preferences in **Account Settings**. Browser notification controls are independent of the settings Save button.
 
+### Sent notification archive
+
+The bell counts **unread sent** notifications, not all reminders. Opening Sent Notifications marks the current user's existing sent archive read through a CSRF-protected POST. Later notifications remain unread until the archive is opened again.
+
+The archive starts with 20 notifications and **Load More** retrieves older pages using a stable send-time/ID cursor. **Clear Notifications** asks for confirmation and clears the user's entire sent archive, including unloaded pages. It sets `task_reminders.cleared_at`; it does not delete tasks, scheduled reminders, browser subscriptions, or delivery deduplication history. Clearing the archive does not dismiss notifications already displayed by the operating system.
+
+Existing installations need [20261029_add_notification_archive_state.sql](Database/migrations/20261029_add_notification_archive_state.sql), applied once after a backup. Fresh schema imports already include these columns. The [rollback](Database/migrations/rollbacks/20261029_add_notification_archive_state.sql) removes the read/clear metadata and makes previously cleared sent reminders visible again; it does not restore a previous read state.
+
+Archive APIs require authentication: `GET /api/notifications/sent?cursor=...` returns `items` and `next_cursor` (null on the last page); `GET /api/notifications/unread` returns `unread_count`. `POST /api/notifications/read` and `POST /api/notifications/clear` require `csrf_token`; Clear also returns `cleared_count`. These actions affect only the session user's sent reminders. Invalid cursors return 422, invalid CSRF returns 403, and unauthenticated AJAX requests return 401.
+
 ## Browser push and background jobs
 
 ### Configure VAPID

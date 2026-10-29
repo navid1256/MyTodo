@@ -46,7 +46,7 @@ final class TaskController
         $clientTimezone = new DateTimeZone($settings['timezone']);
         $clientToday = new DateTimeImmutable('today', $clientTimezone);
         $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
-        $sentCount = $this->notificationService->countSentNotifications($userId);
+        $sentCount = $this->notificationService->countUnreadNotifications($userId);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'manage-tasks',
@@ -75,7 +75,7 @@ final class TaskController
         $clientTimezone = new DateTimeZone($settings['timezone']);
         $clientToday = new DateTimeImmutable('today', $clientTimezone);
         $completedTodayCount = $this->taskService->countCompletedTasksForDate($userId, $clientToday);
-        $sentCount = $this->notificationService->countSentNotifications($userId);
+        $sentCount = $this->notificationService->countUnreadNotifications($userId);
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'activity',

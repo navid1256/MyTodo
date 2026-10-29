@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Helpers\CalendarDateFormatter;
 use App\Helpers\TimezoneHelper;
 
+require_once dirname(__DIR__) . '/components/sent-notification-item.php';
+
 /** @var array<int, object> $sentNotifications */
 /** @var array<int, object> $notifications */
 /** @var \Closure|null $formatNotificationDate */
@@ -26,53 +28,38 @@ $dateFormatter = $formatNotificationDate ?? static function (?string $dateTime) 
     return $calendarDateFormatter->dateTime(new DateTimeImmutable($dateTime, $storageTimezone));
 };
 ?>
-<section class="sentNotificationsPage" aria-labelledby="sentNotificationsPageTitle">
+<section class="sentNotificationsPage" aria-labelledby="sentNotificationsPageTitle" data-notification-archive data-next-cursor="<?= htmlspecialchars($nextNotificationCursor ?? '', ENT_QUOTES, 'UTF-8') ?>">
     <header class="sentNotificationsPageHeader dashboardSectionHeader">
         <a class="dashboardBackButton" href="/" data-dashboard-back data-i18n-aria-label="common.back_to_previous" aria-label="<?= htmlspecialchars($translator->translate('common.back_to_previous'), ENT_QUOTES, 'UTF-8') ?>">
             <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
             <span data-i18n="common.back"><?= htmlspecialchars($translator->translate('common.back'), ENT_QUOTES, 'UTF-8') ?></span>
         </a>
-        <i class="sentNotificationsPageHeaderIcon fa-regular fa-bell" aria-hidden="true"></i>
-        <h1 id="sentNotificationsPageTitle" data-i18n="notifications.sent_title"><?= htmlspecialchars($translator->translate('notifications.sent_title'), ENT_QUOTES, 'UTF-8') ?></h1>
+        <div class="sentNotificationsTitleGroup">
+            <i class="sentNotificationsPageHeaderIcon fa-regular fa-bell" aria-hidden="true"></i>
+            <h1 id="sentNotificationsPageTitle" tabindex="-1" data-i18n="notifications.sent_title"><?= htmlspecialchars($translator->translate('notifications.sent_title'), ENT_QUOTES, 'UTF-8') ?></h1>
+        </div>
+        <button class="notificationsClearButton" type="button" data-clear-notifications <?= empty($notificationList) ? 'disabled' : '' ?>>
+            <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+            <span data-i18n="notifications.clear"><?= htmlspecialchars($translator->translate('notifications.clear'), ENT_QUOTES, 'UTF-8') ?></span>
+        </button>
     </header>
 
     <div class="content notificationsContent">
         <section class="list notificationsPanel">
-            <ul class="notificationsList">
+            <p class="notificationsPageMessage" data-archive-message role="status" aria-live="polite" hidden></p>
+            <ul class="notificationsList" data-sent-notifications>
                 <?php if (empty($notificationList)): ?>
                     <li class="emptyTask notificationsEmpty" data-i18n="notifications.sent_empty"><?= htmlspecialchars($translator->translate('notifications.sent_empty'), ENT_QUOTES, 'UTF-8') ?></li>
                 <?php else: ?>
                     <?php foreach ($notificationList as $notification): ?>
-                        <li class="notificationItem">
-                            <div class="notificationItemIcon" aria-hidden="true">
-                                <i class="fa-regular fa-bell"></i>
-                            </div>
-
-                            <div class="notificationItemContent">
-                                <div class="notificationItemHeading">
-                                    <h2><?= htmlspecialchars((string) ($notification->task_title ?? $translator->translate('notifications.default_sent_task')), ENT_QUOTES, 'UTF-8') ?></h2>
-                                    <span class="notificationStatus notificationStatus--sent" data-i18n="notifications.status.sent"><?= htmlspecialchars($translator->translate('notifications.status.sent'), ENT_QUOTES, 'UTF-8') ?></span>
-                                </div>
-
-                                <div class="notificationDetails">
-                                    <p>
-                                        <span data-i18n="notifications.sent_at"><?= htmlspecialchars($translator->translate('notifications.sent_at'), ENT_QUOTES, 'UTF-8') ?></span>
-                                        <strong><?= htmlspecialchars($dateFormatter((string) ($notification->sent_at ?? '')), ENT_QUOTES, 'UTF-8') ?></strong>
-                                    </p>
-                                    <p>
-                                        <span data-i18n="notifications.notification_time"><?= htmlspecialchars($translator->translate('notifications.notification_time'), ENT_QUOTES, 'UTF-8') ?></span>
-                                        <strong><?= htmlspecialchars($dateFormatter((string) ($notification->remind_at ?? '')), ENT_QUOTES, 'UTF-8') ?></strong>
-                                    </p>
-                                    <p>
-                                        <span data-i18n="notifications.task_due_time"><?= htmlspecialchars($translator->translate('notifications.task_due_time'), ENT_QUOTES, 'UTF-8') ?></span>
-                                        <strong><?= htmlspecialchars($dateFormatter((string) ($notification->task_due_at ?? '')), ENT_QUOTES, 'UTF-8') ?></strong>
-                                    </p>
-                                </div>
-                            </div>
-                        </li>
+                        <?php renderSentNotificationItem($notification, $dateFormatter, $translator); ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </ul>
+            <template data-sent-notification-template><?php renderSentNotificationItem((object) [], $dateFormatter, $translator); ?></template>
+            <div class="notificationsLoadMore">
+                <button type="button" data-load-notifications <?= empty($nextNotificationCursor) ? 'hidden' : '' ?> data-i18n="notifications.load_more"><?= htmlspecialchars($translator->translate('notifications.load_more'), ENT_QUOTES, 'UTF-8') ?></button>
+            </div>
         </section>
     </div>
 </section>

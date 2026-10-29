@@ -25,6 +25,10 @@ return static function (Router $router): void {
     $router->post('/api/password/change', [AuthController::class, 'changePassword'], [AuthMiddleware::class]);
     $router->post('/api/notifications/update', [NotificationController::class, 'update'], [AuthMiddleware::class]);
     $router->post('/api/notifications/cancel', [NotificationController::class, 'cancel'], [AuthMiddleware::class]);
+    $router->get('/api/notifications/sent', [NotificationController::class, 'sent'], [AuthMiddleware::class]);
+    $router->get('/api/notifications/unread', [NotificationController::class, 'unread'], [AuthMiddleware::class]);
+    $router->post('/api/notifications/read', [NotificationController::class, 'read'], [AuthMiddleware::class]);
+    $router->post('/api/notifications/clear', [NotificationController::class, 'clear'], [AuthMiddleware::class]);
     $router->post('/api/reminders/preview', [ReminderController::class, 'preview'], [AuthMiddleware::class]);
     $router->post('/api/repeat-rules/pause', [RepeatController::class, 'pause'], [AuthMiddleware::class]);
     $router->post('/api/repeat-rules/resume', [RepeatController::class, 'resume'], [AuthMiddleware::class]);

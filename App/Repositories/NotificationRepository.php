@@ -72,6 +72,73 @@ final class NotificationRepository
         return (int) $statement->fetchColumn();
     }
 
+    /** Counts only visible, sent reminders that this user has not read. */
+    public function countUnreadNotifications(int $userId): int
+    {
+        $statement = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM task_reminders AS reminder
+             INNER JOIN tasks AS task ON task.id = reminder.task_id
+             WHERE task.user_id = :user_id AND reminder.status = 'sent'
+               AND reminder.cleared_at IS NULL AND reminder.read_at IS NULL"
+        );
+        $statement->execute([':user_id' => $userId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /** Fetches one bounded archive page using immutable send time and ID as the cursor. */
+    public function getSentPage(int $userId, ?string $beforeTime, ?int $beforeId, int $limit): array
+    {
+        $cursorCondition = $beforeTime === null ? '' :
+            ' AND (COALESCE(reminder.sent_at, reminder.remind_at) < :before_time
+                OR (COALESCE(reminder.sent_at, reminder.remind_at) = :same_time AND reminder.id < :before_id))';
+        $statement = $this->pdo->prepare(
+            "SELECT reminder.id, reminder.sent_at, reminder.remind_at, reminder.read_at,
+                    COALESCE(reminder.sent_at, reminder.remind_at) AS archive_time,
+                    task.title AS task_title, task.due_at AS task_due_at
+             FROM task_reminders AS reminder
+             INNER JOIN tasks AS task ON task.id = reminder.task_id
+             WHERE task.user_id = :user_id AND reminder.status = 'sent'
+               AND reminder.cleared_at IS NULL{$cursorCondition}
+             ORDER BY COALESCE(reminder.sent_at, reminder.remind_at) DESC, reminder.id DESC
+             LIMIT :page_limit"
+        );
+        $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':page_limit', $limit, PDO::PARAM_INT);
+        if ($beforeTime !== null) {
+            $statement->bindValue(':before_time', $beforeTime);
+            $statement->bindValue(':same_time', $beforeTime);
+            $statement->bindValue(':before_id', $beforeId, PDO::PARAM_INT);
+        }
+        $statement->execute();
+
+        return $statement->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /** Marks the user's currently visible sent archive read without modifying delivery state. */
+    public function markSentRead(int $userId, string $readAt): void
+    {
+        $statement = $this->pdo->prepare(
+            "UPDATE task_reminders SET read_at = :read_at, updated_at = updated_at
+             WHERE status = 'sent' AND cleared_at IS NULL AND read_at IS NULL
+               AND task_id IN (SELECT task.id FROM tasks AS task WHERE task.user_id = :user_id)"
+        );
+        $statement->execute([':read_at' => $readAt, ':user_id' => $userId]);
+    }
+
+    /** Hides all owned sent notifications while retaining reminders and delivery deduplication records. */
+    public function clearSent(int $userId, string $clearedAt): int
+    {
+        $statement = $this->pdo->prepare(
+            "UPDATE task_reminders SET cleared_at = :cleared_at, updated_at = updated_at
+             WHERE status = 'sent' AND cleared_at IS NULL
+               AND task_id IN (SELECT task.id FROM tasks AS task WHERE task.user_id = :user_id)"
+        );
+        $statement->execute([':cleared_at' => $clearedAt, ':user_id' => $userId]);
+
+        return $statement->rowCount();
+    }
+
     public function findTaskReminderForUser(int $notificationId, int $userId): ?object
     {
         $statement = $this->pdo->prepare(

@@ -44,8 +44,8 @@ final class NotificationController
     public function notifications(Request $request): Response
     {
         $userId = $this->authService->getCurrentUserId();
-        $sentNotifications = $this->notificationService->getNotificationsForUser($userId, 'sent');
-        $sentCount = $this->notificationService->countSentNotifications($userId);
+        $archivePage = $this->notificationService->getSentPage($userId);
+        $sentCount = $this->notificationService->countUnreadNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
         $settings = $this->resolveUserSettings($request);
@@ -53,7 +53,8 @@ final class NotificationController
 
         return Response::view(self::DASHBOARD_LAYOUT, [
             'activeView' => 'notifications',
-            'sentNotifications' => $sentNotifications,
+            'sentNotifications' => $archivePage['items'],
+            'nextNotificationCursor' => $archivePage['next_cursor'],
             'sentNotificationCount' => $sentCount,
             'currentDisplayName' => $this->resolveDisplayName($userProfile, $currentUser),
             'avatarUrl' => $this->resolveAvatarUrl($userProfile),
@@ -74,7 +75,7 @@ final class NotificationController
     {
         $userId = $this->authService->getCurrentUserId();
         $allNotifications = $this->notificationService->getNotificationsForUser($userId);
-        $sentCount = $this->notificationService->countSentNotifications($userId);
+        $sentCount = $this->notificationService->countUnreadNotifications($userId);
         $currentUser = $this->authService->getCurrentUser();
         $userProfile = $this->userRepository->getProfile($userId);
         $settings = $this->resolveUserSettings($request);
@@ -170,6 +171,74 @@ final class NotificationController
         }
 
         return $response;
+    }
+
+    /** Lists an additional archive page without marking notifications read or exposing delivery internals. */
+    public function sent(Request $request): Response
+    {
+        $cursor = $request->query('cursor', '');
+        if (!is_string($cursor)) {
+            return Response::json(['success' => false, 'message' => 'Invalid notification cursor.'], 422);
+        }
+        try {
+            $page = $this->notificationService->getSentPage($this->authService->getCurrentUserId(), $cursor);
+        } catch (NotificationValidationException $exception) {
+            return Response::json(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+        $settings = $this->resolveUserSettings($request);
+        $formatter = new CalendarDateFormatter($settings['calendar_system'], new DateTimeZone($settings['timezone']));
+        $translator = new Translator($settings['effective_language'], dirname(__DIR__, 2) . '/resources/lang');
+        $items = [];
+        foreach ($page['items'] as $notification) {
+            $items[] = [
+                'id' => (int) $notification->id,
+                'title' => (string) $notification->task_title,
+                'sent_at' => $this->formatArchiveDate($notification->sent_at, $formatter, $translator),
+                'remind_at' => $this->formatArchiveDate($notification->remind_at, $formatter, $translator),
+                'due_at' => $this->formatArchiveDate($notification->task_due_at, $formatter, $translator),
+            ];
+        }
+
+        return Response::json(['success' => true, 'items' => $items, 'next_cursor' => $page['next_cursor']], 200, ['Cache-Control' => 'no-store']);
+    }
+
+    /** Returns the current unread badge count on every dashboard page. */
+    public function unread(Request $request): Response
+    {
+        return Response::json(['success' => true, 'unread_count' => $this->notificationService->countUnreadNotifications($this->authService->getCurrentUserId())], 200, ['Cache-Control' => 'no-store']);
+    }
+
+    /** Marks this user's current sent archive read only after a CSRF-protected POST. */
+    public function read(Request $request): Response
+    {
+        $guard = $this->guardRequest($request);
+        if ($guard !== null) {
+            return $guard;
+        }
+        $userId = $this->authService->getCurrentUserId();
+        $this->notificationService->markSentRead($userId);
+
+        return Response::json(['success' => true, 'unread_count' => $this->notificationService->countUnreadNotifications($userId)]);
+    }
+
+    /** Clears only the authenticated user's sent archive, preserving all operational reminder rows. */
+    public function clear(Request $request): Response
+    {
+        $guard = $this->guardRequest($request);
+        if ($guard !== null) {
+            return $guard;
+        }
+        $userId = $this->authService->getCurrentUserId();
+        $clearedCount = $this->notificationService->clearSent($userId);
+
+        return Response::json(['success' => true, 'cleared_count' => $clearedCount, 'unread_count' => $this->notificationService->countUnreadNotifications($userId)]);
+    }
+
+    /** Formats optional archive dates with saved calendar and timezone preferences. */
+    private function formatArchiveDate(?string $date, CalendarDateFormatter $formatter, Translator $translator): string
+    {
+        return $date === null || $date === '' ? $translator->translate('common.not_available')
+            : $formatter->dateTime(new DateTimeImmutable($date, TimezoneHelper::getApplicationTimezone()));
     }
 
     private function guardRequest(Request $request): ?Response
