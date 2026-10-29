@@ -48,7 +48,7 @@ final class HomeController
             'tomorrowTasks' => $this->taskService->getTasksForDate($userId, $tomorrow, $today),
             'noDateTasks' => $this->taskService->getTasksWithoutDueDate($userId, $today),
             'completedTasksToday' => $this->taskService->countCompletedTasksForDate($userId, $today),
-            'sentNotificationCount' => $this->notificationService->countSentNotifications($userId),
+            'sentNotificationCount' => $this->notificationService->countUnreadNotifications($userId),
             'currentDisplayName' => $displayName,
             'avatarUrl' => $avatarUrl,
             'csrfToken' => CsrfMiddleware::getToken(),

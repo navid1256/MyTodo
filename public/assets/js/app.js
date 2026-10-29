@@ -12,10 +12,13 @@ import { initRepeatPicker } from './modules/repeat/repeat-picker.js';
 import { initTaskCalendar } from './modules/task-calendar.js';
 import { initPasswordChange } from './modules/password-change.js';
 import { initNotificationCenter } from './modules/notification-center.js';
+import { initNotificationArchive } from './modules/notification-archive.js';
+import { initNotificationBadge } from './modules/notification-badge.js';
 import { initTaskCompletion } from './modules/task-completion.js';
 import { initTaskDeletion } from './modules/task-deletion.js';
 import { initHomeDayRefresh } from './modules/home-day-refresh.js';
 import { initActivityFilter } from './modules/activity-filter.js';
+import { initActivityClear } from './modules/activity-clear.js';
 import { initAccountSettings } from './modules/account-settings.js';
 import { initPushNotifications } from './modules/push-notifications.js';
 import { initProfileBirthDate } from './modules/profile/profile-birth-date.js';
@@ -33,10 +36,13 @@ function initDashboardView() {
 
     initTaskCalendar(signal);
     initNotificationCenter(signal);
+    initNotificationArchive(signal);
+    initNotificationBadge(signal);
     initTaskCompletion(signal);
     initTaskDeletion(signal);
     initHomeDayRefresh(signal);
     initActivityFilter(signal);
+    initActivityClear(signal);
     initAccountSettings(signal);
     initPushNotifications(signal);
     initProfileBirthDate(signal);

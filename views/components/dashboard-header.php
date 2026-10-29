@@ -55,9 +55,9 @@ $token = isset($csrfToken) && is_string($csrfToken) ? $csrfToken : '';
         <a
             class="notificationButton"
             href="/notifications"
-            data-i18n-aria-label="header.sent_notifications"
+            data-i18n-aria-label="header.unread_notifications"
             data-count="<?= $sentCount ?>"
-            aria-label="<?= htmlspecialchars($translator->translate('header.sent_notifications', ['count' => $sentCount]), ENT_QUOTES, 'UTF-8') ?>"
+            aria-label="<?= htmlspecialchars($translator->translate('header.unread_notifications', ['count' => $sentCount]), ENT_QUOTES, 'UTF-8') ?>"
             <?= $currentView === 'notifications' ? 'aria-current="page"' : '' ?>>
             <i class="fa-regular fa-bell" aria-hidden="true"></i>
             <?php if ($sentCount > 0): ?>

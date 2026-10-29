@@ -49,6 +49,11 @@ $pageStylesheets = [
     'account-settings' => '/assets/css/pages/account-settings.css',
 ];
 $activePageStylesheet = $pageStylesheets[$activeView] ?? null;
+if ($activePageStylesheet !== null) {
+    // Invalidate the browser's static CSS cache when a page stylesheet changes outside Vite.
+    $stylesheetPath = dirname(__DIR__, 2) . '/public' . $activePageStylesheet;
+    $activePageStylesheet .= '?v=' . filemtime($stylesheetPath);
+}
 $usesTaskModals = in_array($activeView, ['home', 'activity', 'manage-tasks', 'recurring-tasks', 'messages'], true);
 $viewClassMap = [
     'profile' => ' profileView',

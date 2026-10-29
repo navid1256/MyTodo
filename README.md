@@ -137,13 +137,25 @@ These paths are relative to the project root when `npm run dev` is started there
 
 ### 5. Start the application
 
-Start Apache and MySQL, then run Vite from the project root:
+Start Apache and MySQL, then run the development launcher from the project root:
 
 ```bash
 npm run dev
 ```
 
-Open **[https://mytodo.php/](https://mytodo.php/)** and create an account. Keep Vite running while developing. Its address on port `5180` serves assets and HMR; it is not the PHP application's home page.
+This starts Vite and a **real local reminder scheduler**. The first reminder run is at the next minute boundary, then once each minute. It invokes the existing PHP CLI, skips a tick if the preceding run is still active, and displays the worker's report in the same terminal. It processes **all eligible due reminders in the configured database**, including overdue reminders, not only tasks created after startup. Do not point this development command at a production database. `APP_ENV=production` or `NODE_ENV=production` prevents the launcher from starting.
+
+PHP CLI must be available as `php` on PATH. Otherwise add its executable path to `.env.local`, without shell quotes inside the value:
+
+```dotenv
+MYTODO_PHP_BINARY=C:/xampp/php/php.exe
+```
+
+`Ctrl+C` stops Vite and prevents new reminder runs. If a PHP worker is active, shutdown waits for it to finish rather than killing a delivery mid-send; keep the terminal open until shutdown completes. If Vite cannot start (for example, its port is occupied), reminder scheduling does not start. Stop any old Vite terminal before restarting with the new command.
+
+For **Vite only, without sending notifications**, use `npm run dev:vite`. Vite CLI overrides remain available through that command, for example `npm run dev:vite -- --port 5181`; changing its port may also require updating the PHP asset configuration.
+
+Open **[https://mytodo.php/](https://mytodo.php/)** and create an account. Keep the development terminal running. Vite's address on port `5180` serves assets and HMR; it is not the PHP application's home page. This launcher does not start Apache/MySQL or the daily Repeat-generation job, and it does not replace the production Cron scheduler.
 
 PHP needs write access to `storage/logs/`, `storage/cache/`, private key storage when generating VAPID keys, and `public/storage/avatars/` for uploads. Give only the required account access; do not solve permission problems with unrestricted production permissions.
 
@@ -154,6 +166,18 @@ PHP needs write access to `storage/logs/`, `storage/cache/`, private key storage
 3. Manage recurring series from **Recurring Tasks**. Recurrence is independent of completing earlier occurrences.
 4. Use **Messages** to manage reminders and the header bell to open **Sent Notifications**.
 5. Save language, calendar, and timezone preferences in **Account Settings**. Browser notification controls are independent of the settings Save button.
+
+In Activity, **Clear Completed Task** opens a confirmation dialog and permanently deletes all completed tasks belonging to your account, **across all dates**, not just the selected filter. Incomplete tasks and recurring rules remain. Associated reminders and their sent-notification/delivery records are removed by existing foreign-key cascades. This action has no Undo and does not dismiss notifications already shown by the operating system. After success, the list and toolbar/bell counts update without reloading. The authenticated `POST /api/tasks/clear-completed` endpoint requires `csrf_token`; it never accepts a client-supplied owner or deletion date range. No schema migration is required.
+
+### Sent notification archive
+
+The bell counts **unread sent** notifications, not all reminders. Opening Sent Notifications marks the current user's existing sent archive read through a CSRF-protected POST. Later notifications remain unread until the archive is opened again.
+
+The archive starts with 20 notifications and **Load More** retrieves older pages using a stable send-time/ID cursor. **Clear Notifications** asks for confirmation and clears the user's entire sent archive, including unloaded pages. It sets `task_reminders.cleared_at`; it does not delete tasks, scheduled reminders, browser subscriptions, or delivery deduplication history. Clearing the archive does not dismiss notifications already displayed by the operating system.
+
+Existing installations need [20261029_add_notification_archive_state.sql](Database/migrations/20261029_add_notification_archive_state.sql), applied once after a backup. Fresh schema imports already include these columns. The [rollback](Database/migrations/rollbacks/20261029_add_notification_archive_state.sql) removes the read/clear metadata and makes previously cleared sent reminders visible again; it does not restore a previous read state.
+
+Archive APIs require authentication: `GET /api/notifications/sent?cursor=...` returns `items` and `next_cursor` (null on the last page); `GET /api/notifications/unread` returns `unread_count`. `POST /api/notifications/read` and `POST /api/notifications/clear` require `csrf_token`; Clear also returns `cleared_count`. These actions affect only the session user's sent reminders. Invalid cursors return 422, invalid CSRF returns 403, and unauthenticated AJAX requests return 401.
 
 ## Browser push and background jobs
 
@@ -247,6 +271,9 @@ php vendor/bin/phpunit
 
 # Browser-independent JavaScript tests.
 node --test tests/Frontend/*.test.mjs
+
+# Local launcher tests: fake timers/workers; no database access or real Push.
+npm run test:dev
 
 # Representative standalone PHP checks; these do not send real pushes.
 php tests/Backend/push-subscription.test.php

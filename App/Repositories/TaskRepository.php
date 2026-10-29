@@ -422,6 +422,15 @@ final class TaskRepository
         return $stmt->rowCount() > 0;
     }
 
+    /** Deletes only this owner's completed tasks; dependent reminders follow existing foreign-key cascades. */
+    public function deleteCompletedForUser(int $userId): int
+    {
+        $statement = $this->pdo->prepare('DELETE FROM tasks WHERE user_id = :user_id AND is_done = 1');
+        $statement->execute([':user_id' => $userId]);
+
+        return $statement->rowCount();
+    }
+
     public function countCompletedTasksForDate(int $userId, DateTimeInterface $date): int
     {
         $start = DateTimeImmutable::createFromInterface($date)->setTime(0, 0);

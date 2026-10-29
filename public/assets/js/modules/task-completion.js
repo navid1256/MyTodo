@@ -1,5 +1,6 @@
 import { toggleTaskCompletion } from '../services/task-service.js';
 import { translate } from '../utils/i18n.js';
+import { updateCompletedCount } from '../utils/task-counters.js';
 
 function updateTaskItem(toggleButton, task) {
     const taskItem = toggleButton.closest('.taskItem');
@@ -32,23 +33,6 @@ export function initTaskCompletion(signal) {
     }
 
 
-
-    function updateCompletedCount(count) {
-        const completedCount = document.querySelector('.completedCount');
-        const completedButton = document.querySelector('.completedButton');
-        const safeCount = Math.max(0, Number(count) || 0);
-
-        if (completedCount) {
-            completedCount.textContent = String(safeCount);
-        }
-
-        if (completedButton) {
-            completedButton.setAttribute(
-                'aria-label',
-                translate('task.completed_today_label', { count: safeCount })
-            );
-        }
-    }
 
     function removeCompletedTaskFromManageTasks(taskItem, taskId) {
         if (!taskItem || document.body.dataset.activeView !== 'manage-tasks') {

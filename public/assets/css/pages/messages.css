@@ -31,6 +31,87 @@
     font-size: 24px;
 }
 
+.sentNotificationsPageHeader.dashboardSectionHeader {
+    padding-inline: 190px;
+}
+
+.sentNotificationsTitleGroup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.notificationsClearButton,
+.notificationsLoadMore button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: transparent;
+    color: #9b2020;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.notificationsClearButton {
+    position: absolute;
+    inset-inline-end: 0;
+}
+
+.notificationsClearButton:not(:disabled):hover {
+    background: rgb(180 40 40 / 12%);
+}
+
+html.dark-mode .notificationsClearButton {
+    color: #ffabab;
+}
+
+.notificationsLoadMore {
+    display: flex;
+    justify-content: center;
+    margin-block: 20px;
+}
+
+.notificationsLoadMore button {
+    background: #155b6d;
+    color: #fff;
+    border-color: transparent;
+    min-width: 120px;
+}
+
+.notificationsClearButton:focus-visible,
+.notificationsLoadMore button:focus-visible,
+[data-sent-notification]:focus-visible {
+    outline: 2px solid #27899e;
+    outline-offset: 3px;
+}
+
+.notificationsClearButton:disabled,
+.notificationsLoadMore button:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.sentNotificationsPage [hidden] {
+    display: none !important;
+}
+
+.sentNotificationsPage .notificationsPageMessage.is-error {
+    color: #9b2020;
+}
+
+html.dark-mode .sentNotificationsPage .notificationsPageMessage.is-error {
+    color: #ffabab;
+}
+
 .main .view .sentNotificationsPage .notificationsContent {
     position: static;
     margin-top: 0;
@@ -700,5 +781,44 @@ html.dark-mode .sentNotificationsPageHeaderIcon {
     .main .view .content .notificationDetails {
         display: grid;
         gap: 5px;
+    }
+}
+
+/* Keep the title centered and place actions on a second row before they can overlap. */
+@media (max-width: 900px) {
+    .sentNotificationsPageHeader.dashboardSectionHeader {
+        display: grid;
+        grid-template-areas: "title title" "back clear";
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        padding: 14px 0;
+    }
+
+    .sentNotificationsTitleGroup {
+        grid-area: title;
+    }
+
+    .sentNotificationsPageHeader h1 {
+        font-size: 20px;
+    }
+
+    .sentNotificationsPageHeaderIcon {
+        font-size: 24px;
+    }
+
+    .sentNotificationsPageHeader .dashboardBackButton {
+        position: static;
+        grid-area: back;
+        justify-self: start;
+        min-height: 44px;
+        padding-inline: 10px;
+    }
+
+    .notificationsClearButton {
+        position: static;
+        grid-area: clear;
+        justify-self: end;
+        min-height: 44px;
+        padding-inline: 10px;
     }
 }

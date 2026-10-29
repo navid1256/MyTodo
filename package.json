@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite"
+    "dev": "node scripts/dev.mjs",
+    "dev:vite": "vite",
+    "test:dev": "node --test tests/Development/*.test.mjs"
   },
   "devDependencies": {
     "vite": "^8.2.2"
