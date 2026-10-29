@@ -123,13 +123,73 @@ html.dark-mode .main .view .content .list ul li.checked {
     background-color: #1b2a34;
 }
 
+html.dark-mode .main .view .content .list ul li.taskItem .taskTitle {
+    color: #e2ecf2;
+}
+
+html.dark-mode .main .view .content .list ul li.taskItem.checked .taskTitle,
 html.dark-mode .main .view .content .list ul li.taskItem.checked > span {
-    color: #91a2ae;
+    color: #718491;
 }
 
 html.dark-mode .main .view .content .list ul li .taskToggleButton i,
 html.dark-mode .activityTaskItem > i {
     color: #9ec4d2;
+}
+
+html.dark-mode .main .view .content .list ul li .taskToggleButton:hover i,
+html.dark-mode .main .view .content .list ul li .taskToggleButton:focus-visible i {
+    color: #82d847;
+}
+
+html.dark-mode .main .view .content .list ul li .taskToggleButton:focus-visible {
+    outline-color: #82d847;
+}
+
+html.dark-mode .main .view .content .list ul li .editTaskButton {
+    color: #8da5b4;
+    background: transparent;
+}
+
+html.dark-mode .main .view .content .list ul li .editTaskButton:hover {
+    color: #38bdf8;
+    background: transparent;
+}
+
+html.dark-mode .main .view .content .list ul li .editTaskButton:hover i {
+    transform: scale(1.18);
+}
+
+html.dark-mode .main .view .content .list ul li .editTaskButton:active i {
+    transform: scale(0.92);
+}
+
+html.dark-mode .main .view .content .list ul li .editTaskButton:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+}
+
+html.dark-mode .main .view .content .list ul li .deleteTaskButton {
+    color: #f87171;
+    background: transparent;
+}
+
+html.dark-mode .main .view .content .list ul li .deleteTaskButton:hover {
+    color: #fca5a5;
+    background: transparent;
+}
+
+html.dark-mode .main .view .content .list ul li .deleteTaskButton:hover i {
+    transform: scale(1.18);
+}
+
+html.dark-mode .main .view .content .list ul li .deleteTaskButton:active i {
+    transform: scale(0.92);
+}
+
+html.dark-mode .main .view .content .list ul li .deleteTaskButton:focus-visible {
+    outline: 2px solid #f87171;
+    outline-offset: 2px;
 }
 
 html.dark-mode .main .view .content .list ul li.emptyTask {
@@ -381,6 +441,57 @@ html.dark-mode #taskModalText {
 
 html.dark-mode #taskModalText::placeholder {
     color: #bac7cf;
+}
+
+html.dark-mode .taskEditScope {
+    background-color: #202f3a;
+    border-color: #354a5a;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+}
+
+html.dark-mode .taskEditScope:hover {
+    border-color: #38bdf8;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.12);
+}
+
+html.dark-mode .taskEditScopeLabel {
+    color: #dbe6ee;
+}
+
+html.dark-mode .taskEditScopeIcon {
+    color: #38bdf8;
+}
+
+html.dark-mode .taskEditScopeSelectWrapper select {
+    background-color: #16222b;
+    border-color: #3d5364;
+    color: #eaf1f6;
+    color-scheme: dark;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+html.dark-mode .taskEditScopeSelectWrapper select:hover {
+    border-color: #38bdf8;
+    background-color: #192732;
+}
+
+html.dark-mode .taskEditScopeSelectWrapper select:focus-visible {
+    border-color: #38bdf8;
+    outline: 2px solid rgba(56, 189, 248, 0.4);
+    background-color: #192732;
+}
+
+html.dark-mode .taskEditScopeSelectWrapper select option {
+    background-color: #16222b;
+    color: #eaf1f6;
+}
+
+html.dark-mode .taskEditScopeArrow {
+    color: #9cb2c1;
+}
+
+html.dark-mode .taskEditScopeSelectWrapper:focus-within .taskEditScopeArrow {
+    color: #38bdf8;
 }
 
 html.dark-mode .taskDateSummary,

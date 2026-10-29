@@ -1,3 +1,7 @@
+[hidden] {
+    display: none !important;
+}
+
 /* Font Awesome subset used by the dashboard */
 @import url(fontawesome-subset.css);
 
@@ -564,115 +568,112 @@ html.dark-mode .dashboardBackButton:focus-visible {
 
 .main .view .content .list ul li {
     width: 100%;
-    height: 50px;
-    line-height: 50px;
     list-style: none;
     border-top: 1px solid #AAA;
+    box-sizing: border-box;
 }
 
 .main .view .content .list ul li.checked {
     background-color: #F0F4F5;
 }
 
+.main .view .content .list ul li[hidden],
+.main .view .content .list ul li.emptyTask[hidden] {
+    display: none !important;
+}
+
 .main .view .content .list ul li.emptyTask {
+    display: flex;
+    align-items: center;
+    min-height: 50px;
+    padding: 0 14px;
     color: #929b9f;
     font-style: italic;
+    line-height: 1.4;
 }
 
 .main .view .content .list ul li:last-child {
     border-bottom: 1px solid #AAA;
 }
 
-.main .view .content .list ul li i {
-    float: left;
-    width: 30px;
-    height: 50px;
-    line-height: 50px;
-    margin-left: 10px;
-    font-size: 1.4em;
-}
-
-.main .view .content .list ul li .taskToggleButton {
-    float: left;
-    width: 30px;
-    height: 50px;
-    margin: 0px 10px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-}
-
-.main .view .content .list ul li .taskToggleButton i {
-    float: none;
-    width: auto;
+.main .view .content .list ul li.taskItem {
+    display: flex;
+    width: 100%;
+    min-height: 50px;
     height: auto;
-    margin: 0;
-    line-height: 1;
-    color: #74858d;
-    font-size: 18px;
-    transition: color 0.2s ease;
+    align-items: center;
+    padding: 0 8px;
+    gap: 8px;
+    line-height: 1.4;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.main .view .content .list ul li .taskToggleButton:hover,
-.main .view .content .list ul li .taskToggleButton:focus-visible {
-    color: #69bd34;
-    outline: none;
-}
-
-.main .view .content .list ul li .taskToggleButton:hover i,
-.main .view .content .list ul li .taskToggleButton:focus-visible i {
-    color: #69bd34;
-}
-
-.main .view .content .list ul li .taskToggleButton[data-processing="true"] {
-    cursor: wait;
-    opacity: 0.55;
-}
-
-.main .view .content .list ul li .deleteTaskButton {
+.main .view .content .list ul li.taskItem > .taskToggleButton {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 50px;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 36px;
+    margin: 0;
+    margin-inline-start: 4px;
     padding: 0;
     border: 0;
     background: transparent;
     color: inherit;
     cursor: pointer;
-}
-
-.main .view .content .list ul li .deleteTaskButton i {
+    border-radius: 6px;
     float: none;
-    width: auto;
-    height: auto;
-    margin: 0;
-    line-height: 1;
+    transition: color 0.2s ease, transform 0.15s ease;
 }
 
-.main .view .content .list ul li .deleteTaskButton:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: -4px;
+.main .view .content .list ul li.taskItem > .taskToggleButton i {
+    float: none !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    color: #74858d;
+    font-size: 18px !important;
+    transition: color 0.2s ease;
 }
 
-.main .view .content .list ul li .deleteTaskButton:disabled {
-    opacity: 0.55;
+.main .view .content .list ul li.taskItem > .taskToggleButton:hover,
+.main .view .content .list ul li.taskItem > .taskToggleButton:focus-visible {
+    color: #69bd34;
+    outline: none;
+    transform: scale(1.08);
+}
+
+.main .view .content .list ul li.taskItem > .taskToggleButton:hover i,
+.main .view .content .list ul li.taskItem > .taskToggleButton:focus-visible i {
+    color: #69bd34;
+}
+
+.main .view .content .list ul li.taskItem > .taskToggleButton:active {
+    transform: scale(0.92);
+}
+
+.main .view .content .list ul li.taskItem > .taskToggleButton[data-processing="true"] {
     cursor: wait;
+    opacity: 0.55;
 }
 
-.main .view .content .list ul li span {
-    float: left;
+.main .view .content .list ul li.taskItem .taskTitle {
+    flex: 1 1 auto;
+    min-width: 0;
+    float: none;
+    padding: 8px 0;
     font-weight: 600;
-}
-
-.main .view .content .list ul li.taskItem>span {
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: anywhere;
     position: relative;
     transition: color 0.3s ease;
 }
 
-.main .view .content .list ul li.taskItem>span::after {
+.main .view .content .list ul li.taskItem .taskTitle::after {
     content: "";
     position: absolute;
     top: 50%;
@@ -687,49 +688,125 @@ html.dark-mode .dashboardBackButton:focus-visible {
     transition: transform 0.4s ease;
 }
 
-.main .view .content .list ul li.taskItem.checked>span {
+.main .view .content .list ul li.taskItem.checked .taskTitle {
     color: #7c898f;
 }
 
-.main .view .content .list ul li.taskItem.checked>span::after {
+.main .view .content .list ul li.taskItem.checked .taskTitle::after {
     transform: scaleX(1);
     transform-origin: left center;
 }
 
 @media (prefers-reduced-motion: reduce) {
-
-    .main .view .content .list ul li.taskItem>span,
-    .main .view .content .list ul li.taskItem>span::after {
+    .main .view .content .list ul li.taskItem .taskTitle,
+    .main .view .content .list ul li.taskItem .taskTitle::after {
         transition: none;
     }
 }
 
-.main .view .content .list ul li .info {
-    float: right;
+.main .view .content .list ul li.taskItem .info {
+    display: flex;
+    flex: 0 0 auto;
+    float: none;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: auto;
+    padding-inline-end: 4px;
 }
 
-.main .view .content .list ul li .info span {
-    font-weight: 300;
+.main .view .content .list ul li.taskItem .info span,
+.main .view .content .list ul li.taskItem .info i {
+    float: none;
 }
 
-.main .view .content .list ul li .info .button {
-    float: right;
-    width: 100px;
-    height: 30px;
-    line-height: 30px;
-    background-color: #AAA;
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px;
-    border-radius: 4px;
-    margin: 10px 10px;
-    text-align: center;
+.main .view .content .list ul li.taskItem .info .created-at {
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1;
+    margin-inline-end: 2px;
+}
+
+.main .view .content .list ul li .editTaskButton,
+.main .view .content .list ul li .deleteTaskButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    padding: 2px;
+    margin: 0 3px;
+    border: 0;
+    background: transparent;
     cursor: pointer;
-    color: White;
-    font-weight: 700;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    line-height: 1;
 }
 
-.main .view .content .list ul li .info .button.green {
-    background-color: #85C157;
+.main .view .content .list ul li .editTaskButton i,
+.main .view .content .list ul li .deleteTaskButton i {
+    float: none !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    font-size: 18px !important;
+    color: inherit !important;
+    transition: color 0.18s ease, transform 0.15s ease;
+}
+
+.main .view .content .list ul li .editTaskButton {
+    color: #5c6f7c;
+    background: transparent;
+}
+
+.main .view .content .list ul li .editTaskButton:hover {
+    color: #168df0;
+    background: transparent;
+}
+
+.main .view .content .list ul li .editTaskButton:hover i {
+    transform: scale(1.18);
+}
+
+.main .view .content .list ul li .editTaskButton:active i {
+    transform: scale(0.92);
+}
+
+.main .view .content .list ul li .editTaskButton:focus-visible {
+    outline: 2px solid #168df0;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.main .view .content .list ul li .deleteTaskButton {
+    color: #c93b3b;
+    background: transparent;
+}
+
+.main .view .content .list ul li .deleteTaskButton:hover {
+    color: #d32f2f;
+    background: transparent;
+}
+
+.main .view .content .list ul li .deleteTaskButton:hover i {
+    transform: scale(1.18);
+}
+
+.main .view .content .list ul li .deleteTaskButton:active i {
+    transform: scale(0.92);
+}
+
+.main .view .content .list ul li .deleteTaskButton:focus-visible {
+    outline: 2px solid #d32f2f;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.main .view .content .list ul li .deleteTaskButton:disabled {
+    opacity: 0.55;
+    cursor: wait;
 }
 
 .clear {
@@ -1001,18 +1078,39 @@ body[data-calendar-system="jalali"] :is(
         margin-block: 6px;
     }
 
-    /* Home task list: flex row instead of floats */
+    /* Home & shared task list: responsive flex row */
     .main .view .content .list ul li.taskItem {
         display: flex;
+        align-items: flex-start;
+        flex-wrap: wrap;
         height: auto;
         min-height: 50px;
-        align-items: center;
-        gap: 8px;
+        padding: 8px 4px;
+        gap: 6px;
         line-height: 1.4;
     }
 
+    .main .view .content .list ul li.taskItem > .taskToggleButton {
+        height: 32px;
+    }
+
     .main .view .content .list ul li.taskItem .info {
-        margin-inline-start: auto;
+        width: 100%;
+        box-sizing: border-box;
+        padding-inline: 42px 0;
+        justify-content: space-between;
+        margin-inline-start: 0;
+    }
+
+    .main .view .content .list ul li.taskItem .info .created-at {
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .main .view .content .list ul li.taskItem .info .editTaskButton,
+    .main .view .content .list ul li.taskItem .info .deleteTaskButton {
+        flex-shrink: 0;
     }
 }
 
