@@ -137,13 +137,25 @@ These paths are relative to the project root when `npm run dev` is started there
 
 ### 5. Start the application
 
-Start Apache and MySQL, then run Vite from the project root:
+Start Apache and MySQL, then run the development launcher from the project root:
 
 ```bash
 npm run dev
 ```
 
-Open **[https://mytodo.php/](https://mytodo.php/)** and create an account. Keep Vite running while developing. Its address on port `5180` serves assets and HMR; it is not the PHP application's home page.
+This starts Vite and a **real local reminder scheduler**. The first reminder run is at the next minute boundary, then once each minute. It invokes the existing PHP CLI, skips a tick if the preceding run is still active, and displays the worker's report in the same terminal. It processes **all eligible due reminders in the configured database**, including overdue reminders, not only tasks created after startup. Do not point this development command at a production database. `APP_ENV=production` or `NODE_ENV=production` prevents the launcher from starting.
+
+PHP CLI must be available as `php` on PATH. Otherwise add its executable path to `.env.local`, without shell quotes inside the value:
+
+```dotenv
+MYTODO_PHP_BINARY=C:/xampp/php/php.exe
+```
+
+`Ctrl+C` stops Vite and prevents new reminder runs. If a PHP worker is active, shutdown waits for it to finish rather than killing a delivery mid-send; keep the terminal open until shutdown completes. If Vite cannot start (for example, its port is occupied), reminder scheduling does not start. Stop any old Vite terminal before restarting with the new command.
+
+For **Vite only, without sending notifications**, use `npm run dev:vite`. Vite CLI overrides remain available through that command, for example `npm run dev:vite -- --port 5181`; changing its port may also require updating the PHP asset configuration.
+
+Open **[https://mytodo.php/](https://mytodo.php/)** and create an account. Keep the development terminal running. Vite's address on port `5180` serves assets and HMR; it is not the PHP application's home page. This launcher does not start Apache/MySQL or the daily Repeat-generation job, and it does not replace the production Cron scheduler.
 
 PHP needs write access to `storage/logs/`, `storage/cache/`, private key storage when generating VAPID keys, and `public/storage/avatars/` for uploads. Give only the required account access; do not solve permission problems with unrestricted production permissions.
 
@@ -257,6 +269,9 @@ php vendor/bin/phpunit
 
 # Browser-independent JavaScript tests.
 node --test tests/Frontend/*.test.mjs
+
+# Local launcher tests: fake timers/workers; no database access or real Push.
+npm run test:dev
 
 # Representative standalone PHP checks; these do not send real pushes.
 php tests/Backend/push-subscription.test.php
