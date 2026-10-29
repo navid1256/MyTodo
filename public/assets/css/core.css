@@ -1,3 +1,7 @@
+[hidden] {
+    display: none !important;
+}
+
 /* Font Awesome subset used by the dashboard */
 @import url(fontawesome-subset.css);
 
@@ -571,6 +575,11 @@ html.dark-mode .dashboardBackButton:focus-visible {
 
 .main .view .content .list ul li.checked {
     background-color: #F0F4F5;
+}
+
+.main .view .content .list ul li[hidden],
+.main .view .content .list ul li.emptyTask[hidden] {
+    display: none !important;
 }
 
 .main .view .content .list ul li.emptyTask {

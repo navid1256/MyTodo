@@ -107,9 +107,9 @@ export async function startDevelopment({
         throw error;
     }
     server.printUrls();
-    console.log('[reminders] REAL delivery enabled for ALL due reminders in the configured local database.');
-    console.log('[reminders] First run: next minute boundary. Ctrl+C stops scheduling and waits for any active worker.');
-    scheduler = startReminderScheduler(runWorker ?? (() => runReminderWorker(phpBinary)));
+    // console.log('[reminders] REAL delivery enabled for ALL due reminders in the configured local database.');
+    // console.log('[reminders] First run: next minute boundary. Ctrl+C stops scheduling and waits for any active worker.');
+    // scheduler = startReminderScheduler(runWorker ?? (() => runReminderWorker(phpBinary)));
     let shutdown = null;
 
     return {
