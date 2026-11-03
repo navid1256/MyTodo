@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { installMessageDialog } from './helpers/message-dialog.mjs';
 
 globalThis.document = { getElementById: () => null };
 const { initMessageNotificationsClear } = await import('../../public/assets/js/modules/message-notifications-clear.js');
@@ -146,7 +147,8 @@ test('the existing success-only Cancel response enables Clear without reloading 
     const view = setup();
     view.rows().filter(row => ['sent', 'cancelled'].includes(row.dataset.notificationState)).forEach(row => row.remove());
     const row = view.rows()[0];
-    const cancel = { disabled: false, closest: () => row };
+    row.isConnected = true;
+    const cancel = { disabled: false, dataset: {}, closest: () => row };
     const edit = {};
     const status = { classList: { remove() {}, add() {} } };
     row.querySelector = selector => ({ '[data-notification-status]': status, '[data-notification-edit]': edit, '[data-notification-cancel]': cancel })[selector];
@@ -157,7 +159,7 @@ test('the existing success-only Cancel response enables Clear without reloading 
     fields.notificationEditForm = form;
     fields.notificationsPageMessage = view.message;
     document.getElementById = id => fields[id];
-    globalThis.window = { confirm: () => true };
+    installMessageDialog(document);
     globalThis.fetch = async () => response({ success: true });
     initNotificationCenter(view.controller.signal);
     initMessageNotificationsClear(view.controller.signal);

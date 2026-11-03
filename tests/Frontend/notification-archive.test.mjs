@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { installMessageDialog } from './helpers/message-dialog.mjs';
 
 globalThis.document = { getElementById: () => null };
 const { initNotificationArchive } = await import('../../public/assets/js/modules/notification-archive.js');
@@ -34,14 +35,14 @@ function setup() {
         querySelectorAll: () => [],
         createElement: () => ({ dataset: {} }),
     };
-    globalThis.window = { confirm: () => true };
+    const dialogs = installMessageDialog(document);
     const controller = new AbortController();
     const requests = [];
     globalThis.fetch = async (url, options) => {
         requests.push({ url, options });
         return json({ success: true, unread_count: 0 });
     };
-    return { controller, requests, page, list, clear, more, message, title, clonedRow, fields };
+    return { controller, requests, page, list, clear, more, message, title, clonedRow, fields, dialogs };
 }
 
 /** Returns a fetch-compatible JSON response for both shared API clients. */
@@ -76,6 +77,7 @@ test('clear waits for server success, suppresses double clicks, then renders the
     };
     page.clear.dispatchEvent(new Event('click'));
     page.clear.dispatchEvent(new Event('click'));
+    await settle();
     assert.equal(page.list.rows[0].dataset.sentNotification, '1');
     assert.equal(page.requests.length, 2);
     assert.equal(page.requests[1].url, '/api/notifications/clear');
@@ -93,10 +95,11 @@ test('cancelled confirmation and failed clear preserve the archive and permit re
     const page = setup();
     initNotificationArchive(page.controller.signal);
     await settle();
-    window.confirm = () => false;
+    page.dialogs.confirmed = false;
     page.clear.dispatchEvent(new Event('click'));
+    await settle();
     assert.equal(page.requests.length, 1);
-    window.confirm = () => true;
+    page.dialogs.confirmed = true;
     globalThis.fetch = async () => json({ success: false }, 500);
     page.clear.dispatchEvent(new Event('click'));
     await settle();
@@ -137,6 +140,7 @@ test('aborted navigation neither sends a read request nor applies a late clear r
     let finish;
     globalThis.fetch = () => new Promise(resolve => { finish = resolve; });
     live.clear.dispatchEvent(new Event('click'));
+    await settle();
     live.controller.abort();
     finish(json({ success: true, unread_count: 0 }));
     await settle();
@@ -146,13 +150,11 @@ test('aborted navigation neither sends a read request nor applies a late clear r
 test('Persian clear confirmation and completion use the shared translation catalog', async () => {
     const page = setup();
     applyTranslations({ 'notifications.clear_confirm': 'اعلان‌ها پاک شوند؟', 'notifications.cleared': 'اعلان‌ها پاک شدند.' });
-    let confirmation;
-    window.confirm = text => { confirmation = text; return true; };
     initNotificationArchive(page.controller.signal);
     await settle();
     page.clear.dispatchEvent(new Event('click'));
     await settle();
-    assert.equal(confirmation, 'اعلان‌ها پاک شوند؟');
+    assert.equal(page.dialogs.confirmations[0], 'اعلان‌ها پاک شوند؟');
     assert.equal(page.message.textContent, 'اعلان‌ها پاک شدند.');
     page.controller.abort();
 });

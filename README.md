@@ -187,6 +187,12 @@ The Messages header has its own **Clear Notifications** button. After confirmati
 
 Existing installations must apply [20261103_add_messages_clear_state.sql](Database/migrations/20261103_add_messages_clear_state.sql) once before deploying this feature; fresh schema imports include the column. The [rollback](Database/migrations/rollbacks/20261103_add_messages_clear_state.sql) removes only Messages clear metadata and makes those entries visible again. `POST /api/notifications/clear-messages` requires session authentication and `csrf_token`; it returns `cleared_count` and the authoritative `remaining_ids`. It does not accept a client-supplied owner or status list. A stale/non-owned Cancel request returns 409 rather than claiming success.
 
+### In-app confirmations and messages
+
+Task deletion, notification cancellation/archive clearing, recurring-task Pause/Cancel, and task request errors use the shared native `<dialog>` in `views/modals/message-dialog.php`, styled by `public/assets/css/message-dialog.css`. JavaScript callers import `confirmAction(message, options)` or `showAlert(message, options)` from `public/assets/js/utils/message-dialog.js` and await the result. Pass the current view's `signal`; destructive operations proceed only when `confirmAction` resolves `true`.
+
+Messages are text-only, localized, theme-aware, and queued instead of overwriting an active message. Escape, cancellation, abandoned views, or unavailable dialog UI never authorize an operation. Existing inline validation/status messages and the browser's notification-permission prompt are unchanged. No database migration is needed.
+
 ### Configure VAPID
 
 Generate a key pair once for your installation:

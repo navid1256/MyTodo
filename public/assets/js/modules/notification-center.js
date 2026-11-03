@@ -1,5 +1,6 @@
 import { cancelNotification, updateNotification } from '../services/notification-service.js';
 import { translate } from '../utils/i18n.js';
+import { confirmAction } from '../utils/message-dialog.js';
 
 const NOTIFICATION_STATUSES = ['pending', 'sent', 'failed', 'cancelled'];
 
@@ -137,27 +138,35 @@ export function initNotificationCenter(signal) {
 
         const cancelButton = event.target.closest('[data-notification-cancel]');
 
-        if (!cancelButton || cancelButton.disabled) {
+        if (!cancelButton || cancelButton.disabled || cancelButton.dataset.processing === 'true') {
             return;
         }
 
         const row = cancelButton.closest('[data-notification-id]');
 
-        if (!row || !window.confirm(translate('notifications.cancel_confirm', {}, 'Cancel this notification?'))) {
+        if (!row) {
             return;
         }
-
-        cancelButton.disabled = true;
-        setPageMessage('', '');
-
+        cancelButton.dataset.processing = 'true';
         try {
+            const confirmed = await confirmAction(translate('notifications.cancel_confirm'), {
+                signal, destructive: true, confirmLabel: translate('dialog.cancel_notification'),
+            });
+            if (!confirmed || signal?.aborted || !row.isConnected) return;
+            cancelButton.disabled = true;
+            setPageMessage('', '');
             await cancelNotification(row.dataset.notificationId, csrfInput.value);
+            if (signal?.aborted || !row.isConnected) return;
             // The cancel endpoint returns success only, not a notification payload.
             setRowStatus(row, 'cancelled');
             setPageMessage(translate('notifications.cancelled'), 'success');
         } catch (error) {
-            cancelButton.disabled = false;
-            setPageMessage(error.message || translate('notifications.cancel_failed', {}, 'The notification could not be cancelled.'), 'error');
+            if (!signal?.aborted && row.isConnected) {
+                cancelButton.disabled = false;
+                setPageMessage(error.message || translate('notifications.cancel_failed', {}, 'The notification could not be cancelled.'), 'error');
+            }
+        } finally {
+            delete cancelButton.dataset.processing;
         }
     });
 

@@ -1,0 +1,90 @@
+.appMessageDialog {
+    box-sizing: border-box;
+    width: min(440px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    padding: 24px;
+    overflow-y: auto;
+    border: 1px solid #74858d;
+    border-radius: 8px;
+    background: #fff;
+    color: #283b46;
+    font: inherit;
+    text-align: start;
+}
+
+.appMessageDialog:modal {
+    overscroll-behavior: contain;
+}
+
+.appMessageDialog::backdrop {
+    background: rgb(0 0 0 / 60%);
+    overflow: hidden;
+    overscroll-behavior: contain;
+}
+
+.appMessageDialog h2 {
+    margin: 0 0 12px;
+    font-size: 18px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.appMessageDialog p {
+    margin: 0 0 24px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.appMessageDialog form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.appMessageDialog button {
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.appMessageDialog .appMessageDialogConfirm {
+    color: #155b6d;
+}
+
+.appMessageDialog.is-destructive .appMessageDialogConfirm {
+    color: #9b2020;
+}
+
+.appMessageDialog button:hover {
+    background: rgb(110 130 145 / 12%);
+}
+
+.appMessageDialog button:focus-visible {
+    outline: 2px solid #27899e;
+    outline-offset: 3px;
+}
+
+.appMessageDialog [hidden] {
+    display: none;
+}
+
+html.dark-mode .appMessageDialog {
+    border-color: #6b8998;
+    background: #18242e;
+    color: #f7fafc;
+}
+
+html.dark-mode .appMessageDialog .appMessageDialogConfirm {
+    color: #9cdeed;
+}
+
+html.dark-mode .appMessageDialog.is-destructive .appMessageDialogConfirm {
+    color: #ffabab;
+}

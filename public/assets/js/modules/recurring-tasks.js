@@ -5,6 +5,7 @@ import {
     resumeRepeatRule
 } from '../services/repeat-service.js';
 import { translate } from '../utils/i18n.js';
+import { confirmAction } from '../utils/message-dialog.js';
 
 const registeredContainers = new WeakMap();
 const pendingRows = new WeakMap();
@@ -166,10 +167,8 @@ function isStale(container, row, signal, requestToken) {
     return signal?.aborted || !container.contains(row) || pendingRows.get(row) !== requestToken;
 }
 
-function confirmLifecycleAction(action) {
-    if (action === 'resume') {
-        return true;
-    }
+/** Requests explicit in-app consent before pausing or permanently cancelling a series. */
+function confirmLifecycleAction(action, signal) {
     const message = translate(
         `recurring.confirm.${action}`,
         {},
@@ -177,9 +176,9 @@ function confirmLifecycleAction(action) {
             ? 'Pause this recurring task?'
             : 'Cancel this recurring task permanently?'
     );
-    return typeof window !== 'undefined' && typeof window.confirm === 'function'
-        ? window.confirm(message)
-        : true;
+    return confirmAction(message, {
+        signal, destructive: true, confirmLabel: translate(`recurring.action.${action}`),
+    });
 }
 
 function sendLifecycleRequest(action, repeatRuleId, csrfToken, signal) {
@@ -193,7 +192,7 @@ function sendLifecycleRequest(action, repeatRuleId, csrfToken, signal) {
 }
 
 /** Dispatches Edit locally and applies successful lifecycle requests only to the originating live row. */
-function handleAction(container, actionButton, signal) {
+async function handleAction(container, actionButton, signal) {
     const action = actionButton.dataset.repeatAction;
     if (action === 'edit') {
         const row = actionButton.closest('.recurringRule');
@@ -209,15 +208,18 @@ function handleAction(container, actionButton, signal) {
 
     const row = actionButton.closest('.recurringRule');
     const repeatRuleId = Number(actionButton.dataset.repeatRuleId || row?.dataset.repeatRuleId);
-    if (!row || !container.contains(row) || !Number.isInteger(repeatRuleId) || repeatRuleId < 1) {
+    if (!row || !container.contains(row) || pendingRows.has(row) || !Number.isInteger(repeatRuleId) || repeatRuleId < 1) {
         return;
     }
-    if (!confirmLifecycleAction(action)) {
-        return;
-    }
-
     const requestToken = Symbol(action);
     pendingRows.set(row, requestToken);
+    if (action !== 'resume') {
+        const confirmed = await confirmLifecycleAction(action, signal);
+        if (!confirmed || isStale(container, row, signal, requestToken)) {
+            if (pendingRows.get(row) === requestToken) pendingRows.delete(row);
+            return;
+        }
+    }
     const previousState = setRowBusy(row, true);
     setPageMessage(container, translate('recurring.message.processing', {}, 'Updating recurring task…'));
 

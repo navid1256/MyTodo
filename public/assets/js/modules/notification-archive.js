@@ -1,6 +1,7 @@
 import { changeNotificationArchive, getNotificationArchive } from '../services/notification-service.js';
 import { updateNotificationBadge } from './notification-badge.js';
 import { translate } from '../utils/i18n.js';
+import { confirmAction } from '../utils/message-dialog.js';
 
 /** Connects read state, bounded Load More, and confirmed Clear to the current archive view. */
 export function initNotificationArchive(signal) {
@@ -78,10 +79,15 @@ export function initNotificationArchive(signal) {
 
     /** Clears rows only after server success, preserving the list on cancellation or failure. */
     async function clearArchive() {
-        if (busy || !window.confirm(translate('notifications.clear_confirm'))) return;
-        setBusy(true, 'clear');
+        if (busy) return;
+        busy = true;
         try {
-            const data = await changeNotificationArchive('clear', csrfToken, signal);
+            const confirmed = await confirmAction(translate('notifications.clear_confirm'), {
+                signal, destructive: true, confirmLabel: translate('notifications.clear'),
+            });
+            if (!confirmed || signal.aborted) return;
+            setBusy(true, 'clear');
+            const data = await changeNotificationArchive('clear', csrfToken);
             if (signal.aborted) return;
             const empty = document.createElement('li');
             empty.className = 'emptyTask notificationsEmpty';

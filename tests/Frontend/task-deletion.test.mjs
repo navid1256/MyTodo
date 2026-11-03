@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { installMessageDialog } from './helpers/message-dialog.mjs';
 
 globalThis.document = { getElementById: () => null };
 const { deleteTask } = await import('../../public/assets/js/services/task-service.js');
@@ -13,8 +14,6 @@ function response(data, status = 200) {
 /** Builds only the DOM contracts involved in deletion, with an abortable delegated listener. */
 function setupPage(view = 'home') {
     const events = [];
-    const alerts = [];
-    const confirmations = [];
     const document = new EventTarget();
     const count = { textContent: '2' };
     const counterButton = { setAttribute(name, value) { this[name] = value; } };
@@ -45,10 +44,8 @@ function setupPage(view = 'home') {
     document.createElement = () => ({ dataset: {}, setAttribute(name, value) { this[name] = value; } });
     document.addEventListener('task:removed-from-manage', (event) => events.push(event.detail));
     globalThis.document = document;
-    globalThis.window = {
-        confirm(message) { confirmations.push(message); return true; },
-        alert(message) { alerts.push(message); },
-    };
+    const dialogs = installMessageDialog(document);
+    const { alerts, confirmations } = dialogs;
     const controller = new AbortController();
     /** Sends a delegated click, including clicks on the button's nested icon. */
     function click() {
@@ -56,7 +53,7 @@ function setupPage(view = 'home') {
         Object.defineProperty(event, 'target', { value: { closest: () => button } });
         document.dispatchEvent(event);
     }
-    return { document, button, row, list, count, events, alerts, confirmations, controller, click };
+    return { document, button, row, list, count, events, alerts, confirmations, dialogs, controller, click };
 }
 
 /** Lets the handler's asynchronous response and cleanup finish deterministically. */
@@ -84,6 +81,7 @@ test('duplicate clicks send once and the row stays until server success', async 
     initTaskDeletion(page.controller.signal);
     page.click();
     page.click();
+    await settle();
     assert.equal(requests, 1);
     assert.equal(page.button.disabled, true);
     assert.equal(page.row.isConnected, true);
@@ -99,7 +97,7 @@ test('duplicate clicks send once and the row stays until server success', async 
 test('confirmation cancellation never sends a request or removes the row', async () => {
     const { initTaskDeletion } = await import('../../public/assets/js/modules/task-deletion.js');
     const page = setupPage();
-    globalThis.window.confirm = () => false;
+    page.dialogs.confirmed = false;
     globalThis.fetch = () => { assert.fail('Cancelled deletion must not send a request.'); };
     initTaskDeletion(page.controller.signal);
     page.click();
@@ -107,6 +105,24 @@ test('confirmation cancellation never sends a request or removes the row', async
     assert.equal(page.row.isConnected, true);
     assert.equal(page.button.disabled, false);
     page.controller.abort();
+});
+
+test('pending confirmation guards duplicate clicks and navigation rejects it before any POST', async () => {
+    const { initTaskDeletion } = await import('../../public/assets/js/modules/task-deletion.js');
+    const page = setupPage();
+    page.dialogs.autoRespond = false;
+    globalThis.fetch = () => assert.fail('Unconfirmed deletion must not reach the API.');
+    initTaskDeletion(page.controller.signal);
+    page.click();
+    page.click();
+    assert.equal(page.confirmations.length, 1);
+    assert.equal(page.dialogs.dialog.open, true);
+    assert.equal(page.button.disabled, false);
+    page.controller.abort();
+    await settle();
+    assert.equal(page.dialogs.dialog.open, false);
+    assert.equal(page.button.dataset.processing, undefined);
+    assert.equal(page.row.isConnected, true);
 });
 
 test('HTTP and network failures keep the task and restore the control for retry', async () => {
@@ -147,6 +163,7 @@ test('an aborted view cannot send new deletions or apply a stale result to the n
     globalThis.fetch = () => new Promise((resolve) => { finish = resolve; });
     initTaskDeletion(page.controller.signal);
     page.click();
+    await settle();
     page.controller.abort();
     finish(response({ success: true, deleted_task_id: 42, completed_today_count: 1 }));
     await settle();

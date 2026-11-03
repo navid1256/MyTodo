@@ -1,6 +1,7 @@
 import { deleteTask } from '../services/task-service.js';
 import { translate } from '../utils/i18n.js';
 import { updateCompletedCount } from '../utils/task-counters.js';
+import { confirmAction, showAlert } from '../utils/message-dialog.js';
 
 /** Restores the translated Home empty state after removing the last task from a section. */
 function updateEmptyList(list) {
@@ -35,17 +36,17 @@ export function initTaskDeletion(signal) {
         }
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         if (!csrfToken) {
-            window.alert(translate('settings.validation.session_expired'));
+            await showAlert(translate('settings.validation.session_expired'), { signal });
             return;
         }
-        if (!window.confirm(translate('task.delete_confirmation', { title: button.dataset.title || '' }))) {
-            return;
-        }
-
-        button.disabled = true;
         button.dataset.processing = 'true';
-        button.setAttribute('aria-busy', 'true');
         try {
+            const confirmed = await confirmAction(translate('task.delete_confirmation', { title: button.dataset.title || '' }), {
+                signal, destructive: true, confirmLabel: translate('dialog.delete'),
+            });
+            if (!confirmed || signal?.aborted || !taskItem.isConnected) return;
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
             // Do not abort a destructive request on navigation: it may already have reached the server.
             const response = await deleteTask(taskId, csrfToken);
             if (signal?.aborted || !taskItem.isConnected) {
@@ -62,7 +63,10 @@ export function initTaskDeletion(signal) {
             nextControl?.focus();
         } catch (error) {
             if (!signal?.aborted && taskItem.isConnected) {
-                window.alert(error.message || translate('task.delete_failed'));
+                button.disabled = false;
+                // Restore a focusable invoker before opening the asynchronous error message.
+                button.focus?.();
+                await showAlert(error.message || translate('task.delete_failed'), { signal });
             }
         } finally {
             button.disabled = false;

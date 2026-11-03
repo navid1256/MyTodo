@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { installMessageDialog } from './helpers/message-dialog.mjs';
 
 class FakeClassList {
   constructor(value = '') { this.values = new Set(value.split(/\s+/).filter(Boolean)); }
@@ -114,11 +115,11 @@ function setupPage(status = 'active') {
   actions.appendChild(new FakeElement('button', { 'data-repeat-action': status === 'paused' ? 'resume' : 'pause', 'data-repeat-rule-id': '7', textContent: status === 'paused' ? 'Resume' : 'Pause' }));
   actions.appendChild(new FakeElement('button', { 'data-repeat-action': 'cancel', 'data-repeat-rule-id': '7', textContent: 'Cancel' }));
   container.appendChild(new FakeElement('p', { id: 'recurringTasksStatus' }));
-  return { document, container, row, actions };
+  const dialogs = installMessageDialog(document);
+  return { document, container, row, actions, dialogs };
 }
 
 globalThis.document = setupPage().document;
-globalThis.window = { confirm: () => true };
 const recurringModule = await import('../../public/assets/js/modules/recurring-tasks.js');
 const { applyTranslations } = await import('../../public/assets/js/utils/i18n.js');
 delete globalThis.document;
@@ -137,6 +138,7 @@ test('pause disables row actions while pending and renders paused Resume state',
     recurringModule.initRecurringTasks(controller.signal);
     const pause = row.querySelector('[data-repeat-action="pause"]');
     container.click(pause);
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(pause.disabled, true);
     resolveRequest({ ok: true, text: async () => JSON.stringify({ success: true, status: 'paused' }) });
     await new Promise(resolve => setImmediate(resolve));
@@ -329,6 +331,7 @@ for (const change of ['abort', 'remove']) {
       let resolveRequest;
       globalThis.fetch = () => new Promise(resolve => { resolveRequest = resolve; });
       container.click(row.querySelector('[data-repeat-action="pause"]'));
+      await new Promise(resolve => setImmediate(resolve));
       if (change === 'abort') controller.abort(); else row.remove();
       resolveRequest({ ok: true, text: async () => JSON.stringify({ success: true, status: 'paused' }) });
       await new Promise(resolve => setImmediate(resolve));

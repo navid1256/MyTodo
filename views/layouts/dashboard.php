@@ -92,6 +92,7 @@ if ($isPartial) {
         }
     </script>
     <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/message-dialog.css?v=<?= filemtime(dirname(__DIR__, 2) . '/public/assets/css/message-dialog.css') ?>">
     <link rel="stylesheet" href="/assets/css/fontawesome.css">
     <?php if ($usesTaskModals): ?>
         <link id="taskModalStylesheet" rel="stylesheet" href="/assets/css/task-modal.css">
@@ -146,6 +147,7 @@ if ($isPartial) {
 <?php if (!$isPartial): ?>
         </div>
     </div>
+    <?php require_once dirname(__DIR__) . '/modals/message-dialog.php'; ?>
     <script id="appTranslations" type="application/json"><?= json_encode(
         $translator->all(),
         JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT

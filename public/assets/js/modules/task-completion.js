@@ -1,6 +1,7 @@
 import { toggleTaskCompletion } from '../services/task-service.js';
 import { translate } from '../utils/i18n.js';
 import { updateCompletedCount } from '../utils/task-counters.js';
+import { showAlert } from '../utils/message-dialog.js';
 
 function updateTaskItem(toggleButton, task) {
     const taskItem = toggleButton.closest('.taskItem');
@@ -78,9 +79,11 @@ export function initTaskCompletion(signal) {
                 toggleButton.removeAttribute('aria-disabled');
             })
             .catch(function (error) {
-                window.alert(error.message || translate('task.toggle_failed', {}, 'The task status could not be updated.'));
                 delete toggleButton.dataset.processing;
                 toggleButton.removeAttribute('aria-disabled');
+                if (!signal?.aborted && toggleButton.isConnected) {
+                    return showAlert(error.message || translate('task.toggle_failed', {}, 'The task status could not be updated.'), { signal });
+                }
             });
     }, signal ? { signal } : undefined);
 }
