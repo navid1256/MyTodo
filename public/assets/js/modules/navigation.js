@@ -1,4 +1,5 @@
 import { applyTranslations, translate } from '../utils/i18n.js';
+import { updateNotificationBadge } from './notification-badge.js';
 
 const DASHBOARD_AJAX_VIEWS = ['home', 'activity', 'manage-tasks', 'recurring-tasks', 'messages'];
 
@@ -98,35 +99,6 @@ export function initNavigation(options) {
 
       link.href = href;
     });
-  }
-
-  function updateNotificationBadge(count) {
-    const notificationButton = document.querySelector('.notificationButton');
-
-    if (!notificationButton) {
-      return;
-    }
-
-    const safeCount = Math.max(0, Number(count) || 0);
-    let badge = notificationButton.querySelector('.notificationBadge');
-
-    notificationButton.setAttribute('aria-label', translate('header.sent_notifications', { count: safeCount }));
-
-    if (safeCount === 0) {
-      if (badge) {
-        badge.remove();
-      }
-
-      return;
-    }
-
-    if (!badge) {
-      badge = document.createElement('span');
-      badge.className = 'notificationBadge';
-      notificationButton.appendChild(badge);
-    }
-
-    badge.textContent = safeCount > 99 ? '99+' : String(safeCount);
   }
 
   function replaceDashboardView(html) {

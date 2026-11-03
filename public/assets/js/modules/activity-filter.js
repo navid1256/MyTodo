@@ -57,7 +57,6 @@ function normalizeFilter(filter) {
 
 export function initActivityFilter(signal) {
     const filterSelect = document.getElementById('activityFilter');
-    const dateGroups = document.querySelectorAll('[data-completed-date]');
     const emptyMessage = document.getElementById('activityFilterEmpty');
     const todayKey = document.body.dataset.renderDate || '';
 
@@ -66,6 +65,8 @@ export function initActivityFilter(signal) {
     }
 
     function applyFilter(filter) {
+        // Re-read groups because clearing Activity removes them without replacing the view.
+        const dateGroups = document.querySelectorAll('[data-completed-date]');
         const activeFilter = normalizeFilter(filter);
         let visibleGroupCount = 0;
 

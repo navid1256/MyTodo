@@ -53,18 +53,34 @@ if (!in_array($selectedFilter, ['today', 'yesterday', 'week', 'month', 'all'], t
     <section class="activityPage" aria-labelledby="activityPageTitle">
         <div class="activityPageHeader">
             <h1 class="activityPageTitle" id="activityPageTitle" data-i18n="activity.title"><?= htmlspecialchars($translator->translate('activity.title'), ENT_QUOTES, 'UTF-8') ?></h1>
-            <label class="srOnly" for="activityFilter" data-i18n="activity.filter_label"><?= htmlspecialchars($translator->translate('activity.filter_label'), ENT_QUOTES, 'UTF-8') ?></label>
-            <div class="activityFilterControl">
-                <select class="activityFilter" id="activityFilter" data-i18n-aria-label="activity.filter_label" aria-label="<?= htmlspecialchars($translator->translate('activity.filter_label'), ENT_QUOTES, 'UTF-8') ?>">
-                    <option value="today" data-i18n="activity.filter.today" <?= $selectedFilter === 'today' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.today'), ENT_QUOTES, 'UTF-8') ?></option>
-                    <option value="yesterday" data-i18n="activity.filter.yesterday" <?= $selectedFilter === 'yesterday' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.yesterday'), ENT_QUOTES, 'UTF-8') ?></option>
-                    <option value="week" data-i18n="activity.filter.week" <?= $selectedFilter === 'week' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.week'), ENT_QUOTES, 'UTF-8') ?></option>
-                    <option value="month" data-i18n="activity.filter.month" <?= $selectedFilter === 'month' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.month'), ENT_QUOTES, 'UTF-8') ?></option>
-                    <option value="all" data-i18n="activity.filter.all" <?= $selectedFilter === 'all' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.all'), ENT_QUOTES, 'UTF-8') ?></option>
-                </select>
-                <i class="activityFilterArrow fa-solid fa-chevron-down" aria-hidden="true"></i>
+            <div class="activityPageActions">
+                <button class="activityClearButton" type="button" data-clear-completed-tasks <?= empty($completedTasks) ? 'disabled' : '' ?>>
+                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                    <span data-i18n="activity.clear"><?= htmlspecialchars($translator->translate('activity.clear'), ENT_QUOTES, 'UTF-8') ?></span>
+                </button>
+                <label class="srOnly" for="activityFilter" data-i18n="activity.filter_label"><?= htmlspecialchars($translator->translate('activity.filter_label'), ENT_QUOTES, 'UTF-8') ?></label>
+                <div class="activityFilterControl">
+                    <select class="activityFilter" id="activityFilter" data-i18n-aria-label="activity.filter_label" aria-label="<?= htmlspecialchars($translator->translate('activity.filter_label'), ENT_QUOTES, 'UTF-8') ?>">
+                        <option value="today" data-i18n="activity.filter.today" <?= $selectedFilter === 'today' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.today'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="yesterday" data-i18n="activity.filter.yesterday" <?= $selectedFilter === 'yesterday' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.yesterday'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="week" data-i18n="activity.filter.week" <?= $selectedFilter === 'week' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.week'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="month" data-i18n="activity.filter.month" <?= $selectedFilter === 'month' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.month'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="all" data-i18n="activity.filter.all" <?= $selectedFilter === 'all' ? 'selected' : '' ?>><?= htmlspecialchars($translator->translate('activity.filter.all'), ENT_QUOTES, 'UTF-8') ?></option>
+                    </select>
+                    <i class="activityFilterArrow fa-solid fa-chevron-down" aria-hidden="true"></i>
+                </div>
             </div>
         </div>
+
+        <p class="activityClearMessage" data-activity-clear-message role="status" aria-live="polite" hidden></p>
+        <dialog class="activityClearDialog" data-clear-completed-dialog aria-labelledby="activityClearDialogTitle" aria-describedby="activityClearDialogDescription">
+            <h2 id="activityClearDialogTitle" data-i18n="activity.clear_title"><?= htmlspecialchars($translator->translate('activity.clear_title'), ENT_QUOTES, 'UTF-8') ?></h2>
+            <p id="activityClearDialogDescription" data-i18n="activity.clear_confirmation"><?= htmlspecialchars($translator->translate('activity.clear_confirmation'), ENT_QUOTES, 'UTF-8') ?></p>
+            <form method="dialog">
+                <button type="submit" value="cancel" autofocus data-i18n="common.cancel"><?= htmlspecialchars($translator->translate('common.cancel'), ENT_QUOTES, 'UTF-8') ?></button>
+                <button class="activityClearButton" type="submit" value="clear" data-i18n="activity.clear_confirm"><?= htmlspecialchars($translator->translate('activity.clear_confirm'), ENT_QUOTES, 'UTF-8') ?></button>
+            </form>
+        </dialog>
 
         <p class="activityEmpty" id="activityFilterEmpty" data-i18n="activity.empty" <?= !empty($completedTaskGroups) ? 'hidden' : '' ?>><?= htmlspecialchars($translator->translate('activity.empty'), ENT_QUOTES, 'UTF-8') ?></p>
 

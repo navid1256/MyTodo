@@ -64,7 +64,7 @@ final class RepeatController
             ),
             'repeatFilter' => $filter,
             'completedTasksToday' => $this->taskService->countCompletedTasksForDate($userId, $clientToday),
-            'sentNotificationCount' => $this->notificationService->countSentNotifications($userId),
+            'sentNotificationCount' => $this->notificationService->countUnreadNotifications($userId),
             // The shared dashboard header resolves display name and avatar from these values.
             'currentUser' => $this->authService->getCurrentUser(),
             'userProfile' => $this->userRepository->getProfile($userId),

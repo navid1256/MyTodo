@@ -15,6 +15,7 @@ use Throwable;
 final class NotificationService
 {
     private const ALLOWED_STATUSES = ['pending', 'failed', 'sent', 'cancelled'];
+    private const ARCHIVE_PAGE_SIZE = 20;
 
     public function __construct(
         private readonly NotificationRepository $notificationRepository,
@@ -36,6 +37,48 @@ final class NotificationService
     public function countSentNotifications(int $userId): int
     {
         return $this->notificationRepository->countSentNotifications($userId);
+    }
+
+    /** Returns the bell badge count without counting pending or cleared notifications. */
+    public function countUnreadNotifications(int $userId): int
+    {
+        return $this->notificationRepository->countUnreadNotifications($userId);
+    }
+
+    /** Validates the cursor and returns a fixed-size page with an optional continuation cursor. */
+    public function getSentPage(int $userId, ?string $cursor = null): array
+    {
+        $beforeTime = null;
+        $beforeId = null;
+        if ($cursor !== null && $cursor !== '') {
+            if (!preg_match('/\A(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|([1-9]\d{0,9})\z/', $cursor, $parts)) {
+                throw new NotificationValidationException('Invalid notification cursor.');
+            }
+            $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $parts[1]);
+            if ($date === false || $date->format('Y-m-d H:i:s') !== $parts[1]) {
+                throw new NotificationValidationException('Invalid notification cursor.');
+            }
+            $beforeTime = $parts[1];
+            $beforeId = (int) $parts[2];
+        }
+        $items = $this->notificationRepository->getSentPage($userId, $beforeTime, $beforeId, self::ARCHIVE_PAGE_SIZE + 1);
+        $hasMore = count($items) > self::ARCHIVE_PAGE_SIZE;
+        $items = array_slice($items, 0, self::ARCHIVE_PAGE_SIZE);
+        $last = $items === [] ? null : $items[array_key_last($items)];
+
+        return ['items' => $items, 'next_cursor' => $hasMore ? $last->archive_time . '|' . $last->id : null];
+    }
+
+    /** Records archive viewing without changing reminder scheduling or send results. */
+    public function markSentRead(int $userId): void
+    {
+        $this->notificationRepository->markSentRead($userId, (new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone()))->format('Y-m-d H:i:s'));
+    }
+
+    /** Clears the whole visible sent archive, not only the page currently loaded in the browser. */
+    public function clearSent(int $userId): int
+    {
+        return $this->notificationRepository->clearSent($userId, (new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone()))->format('Y-m-d H:i:s'));
     }
 
     public function updateNotification(

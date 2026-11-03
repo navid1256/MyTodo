@@ -5,4 +5,18 @@
 
 .main .view .content .list ul {
     padding-inline: 10px;
+    margin: 0;
+}
+
+.main .view .content .list {
+    margin-bottom: 20px;
+}
+
+.main .view .content .list .title {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 10px 12px 8px;
+    user-select: none;
 }

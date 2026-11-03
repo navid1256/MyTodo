@@ -36,6 +36,15 @@ export async function deleteTask(taskId, csrfToken) {
     });
 }
 
+/** Clears all completed tasks for the authenticated owner, without automatic retries or navigation aborts. */
+export function clearCompletedTasks(csrfToken) {
+    const formData = new FormData();
+    formData.set('csrf_token', csrfToken);
+    return sendJsonFormRequest('/api/tasks/clear-completed', formData, {
+        errorMessage: translate('activity.clear_failed'),
+    });
+}
+
 export async function previewTaskReminders(data, signal) {
     const formData = new FormData();
     formData.set('action', 'previewReminders');

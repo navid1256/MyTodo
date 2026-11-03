@@ -161,6 +161,154 @@
     box-shadow: 0 6px 14px rgba(32, 185, 85, 0.28);
 }
 
+/* Task Edit Scope Control */
+.taskEditScope {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 14px 6px 10px;
+    padding: 10px 16px;
+    background-color: #ffffff;
+    border: 1px solid #d4e0e8;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(17, 41, 58, 0.05);
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.taskEditScope[hidden] {
+    display: none !important;
+}
+
+@keyframes scopeFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.taskEditScope:not([hidden]) {
+    animation: scopeFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .taskEditScope:not([hidden]) {
+        animation: none;
+    }
+}
+
+.taskEditScope:hover {
+    border-color: #168df0;
+    box-shadow: 0 4px 12px rgba(22, 141, 240, 0.1);
+}
+
+.taskEditScopeLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #263842;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.taskEditScopeIcon {
+    color: #168df0;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.taskEditScopeSelectWrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: 175px;
+    flex: 0 1 auto;
+}
+
+.taskEditScopeSelectWrapper select {
+    width: 100%;
+    height: 38px;
+    padding: 0 36px 0 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: 1px solid #c2d4e0;
+    border-radius: 10px;
+    background-color: #f7f9fa;
+    color: #172027;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 36px;
+    cursor: pointer;
+    box-sizing: border-box;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.taskEditScopeSelectWrapper select:hover {
+    border-color: #168df0;
+    background-color: #ffffff;
+}
+
+.taskEditScopeSelectWrapper select:focus-visible {
+    border-color: #168df0;
+    outline: 2px solid rgba(22, 141, 240, 0.35);
+    outline-offset: 1px;
+    background-color: #ffffff;
+}
+
+.taskEditScopeArrow {
+    position: absolute;
+    right: 12px;
+    color: #647a88;
+    font-size: 11px;
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.taskEditScopeSelectWrapper:focus-within .taskEditScopeArrow {
+    color: #168df0;
+    transform: rotate(180deg);
+}
+
+html[dir="rtl"] .taskEditScopeSelectWrapper select {
+    padding: 0 14px 0 36px;
+    text-align: right;
+}
+
+html[dir="rtl"] .taskEditScopeArrow {
+    right: auto;
+    left: 12px;
+}
+
+html[dir="rtl"] .taskModalClose {
+    right: auto;
+    left: 19px;
+}
+
+@media (max-width: 480px) {
+    .taskEditScope {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .taskEditScopeSelectWrapper {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
 .taskModalMessage {
     min-height: 18px;
     margin: 8px 8px 0;
