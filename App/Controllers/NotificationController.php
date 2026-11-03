@@ -157,10 +157,14 @@ final class NotificationController
             $response = Response::json(['success' => false, 'message' => 'Invalid notification.'], 422);
         } else {
             try {
-                $this->notificationService->cancelNotification(
+                $cancelled = $this->notificationService->cancelNotification(
                     $notificationId,
                     $this->authService->getCurrentUserId()
                 );
+
+                if (!$cancelled) {
+                    return Response::json(['success' => false, 'message' => 'Only pending or failed notifications can be cancelled.'], 409);
+                }
 
                 $response = Response::json(['success' => true]);
             } catch (NotificationNotFoundException $exception) {
@@ -232,6 +236,24 @@ final class NotificationController
         $clearedCount = $this->notificationService->clearSent($userId);
 
         return Response::json(['success' => true, 'cleared_count' => $clearedCount, 'unread_count' => $this->notificationService->countUnreadNotifications($userId)]);
+    }
+
+    /** Clears owned sent/cancelled Messages entries and returns the authoritative IDs that remain visible. */
+    public function clearMessages(Request $request): Response
+    {
+        $guard = $this->guardRequest($request);
+        if ($guard !== null) {
+            return $guard;
+        }
+        $userId = $this->authService->getCurrentUserId();
+        $clearedCount = $this->notificationService->clearMessages($userId);
+        $remainingNotifications = $this->notificationService->getNotificationsForUser($userId);
+
+        return Response::json([
+            'success' => true,
+            'cleared_count' => $clearedCount,
+            'remaining_ids' => array_map(static fn(object $notification): int => (int) $notification->id, $remainingNotifications),
+        ], 200, ['Cache-Control' => 'no-store']);
     }
 
     /** Formats optional archive dates with saved calendar and timezone preferences. */

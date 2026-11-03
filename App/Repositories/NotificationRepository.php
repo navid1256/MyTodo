@@ -34,7 +34,8 @@ final class NotificationRepository
                     task.due_at AS task_due_at
                 FROM task_reminders AS reminder
                 INNER JOIN tasks AS task ON task.id = reminder.task_id
-                WHERE task.user_id = :user_id{$statusCondition}
+                WHERE task.user_id = :user_id
+                  AND reminder.messages_cleared_at IS NULL{$statusCondition}
                 ORDER BY
                     CASE reminder.status
                         WHEN 'pending' THEN 1
@@ -132,6 +133,19 @@ final class NotificationRepository
         $statement = $this->pdo->prepare(
             "UPDATE task_reminders SET cleared_at = :cleared_at, updated_at = updated_at
              WHERE status = 'sent' AND cleared_at IS NULL
+               AND task_id IN (SELECT task.id FROM tasks AS task WHERE task.user_id = :user_id)"
+        );
+        $statement->execute([':cleared_at' => $clearedAt, ':user_id' => $userId]);
+
+        return $statement->rowCount();
+    }
+
+    /** Hides only this owner's sent/cancelled Messages entries without changing operational reminder state. */
+    public function clearMessages(int $userId, string $clearedAt): int
+    {
+        $statement = $this->pdo->prepare(
+            "UPDATE task_reminders SET messages_cleared_at = :cleared_at, updated_at = updated_at
+             WHERE status IN ('sent', 'cancelled') AND messages_cleared_at IS NULL
                AND task_id IN (SELECT task.id FROM tasks AS task WHERE task.user_id = :user_id)"
         );
         $statement->execute([':cleared_at' => $clearedAt, ':user_id' => $userId]);

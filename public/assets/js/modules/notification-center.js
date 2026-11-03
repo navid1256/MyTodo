@@ -20,7 +20,9 @@ function formatOffset(value, unit) {
     );
 }
 
+/** Updates a reminder's visible state and notifies Messages cleanup when it becomes clearable. */
 function setRowStatus(row, status) {
+    row.dataset.notificationState = status;
     const statusElement = row.querySelector('[data-notification-status]');
     const editButton = row.querySelector('[data-notification-edit]');
     const cancelButton = row.querySelector('[data-notification-cancel]');
@@ -41,6 +43,7 @@ function setRowStatus(row, status) {
     if (cancelButton) {
         cancelButton.disabled = !canManage;
     }
+    row.dispatchEvent(new CustomEvent('notification:status-changed', { bubbles: true }));
 }
 
 export function initNotificationCenter(signal) {
@@ -148,9 +151,10 @@ export function initNotificationCenter(signal) {
         setPageMessage('', '');
 
         try {
-            const result = await cancelNotification(row.dataset.notificationId, csrfInput.value);
-            setRowStatus(row, result.notification.status);
-            setPageMessage(result.message, 'success');
+            await cancelNotification(row.dataset.notificationId, csrfInput.value);
+            // The cancel endpoint returns success only, not a notification payload.
+            setRowStatus(row, 'cancelled');
+            setPageMessage(translate('notifications.cancelled'), 'success');
         } catch (error) {
             cancelButton.disabled = false;
             setPageMessage(error.message || translate('notifications.cancel_failed', {}, 'The notification could not be cancelled.'), 'error');

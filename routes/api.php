@@ -30,6 +30,7 @@ return static function (Router $router): void {
     $router->get('/api/notifications/unread', [NotificationController::class, 'unread'], [AuthMiddleware::class]);
     $router->post('/api/notifications/read', [NotificationController::class, 'read'], [AuthMiddleware::class]);
     $router->post('/api/notifications/clear', [NotificationController::class, 'clear'], [AuthMiddleware::class]);
+    $router->post('/api/notifications/clear-messages', [NotificationController::class, 'clearMessages'], [AuthMiddleware::class]);
     $router->post('/api/reminders/preview', [ReminderController::class, 'preview'], [AuthMiddleware::class]);
     $router->post('/api/repeat-rules/pause', [RepeatController::class, 'pause'], [AuthMiddleware::class]);
     $router->post('/api/repeat-rules/resume', [RepeatController::class, 'resume'], [AuthMiddleware::class]);

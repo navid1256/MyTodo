@@ -181,6 +181,12 @@ Archive APIs require authentication: `GET /api/notifications/sent?cursor=...` re
 
 ## Browser push and background jobs
 
+### Clear finished notifications from Messages
+
+The Messages header has its own **Clear Notifications** button. After confirmation, it hides only the current user's `sent` and `cancelled` reminders from Messages using `task_reminders.messages_cleared_at`. Pending and failed reminders remain manageable; tasks, delivery deduplication records, the Sent Notifications archive, and the unread bell count are unchanged. This does not dismiss operating-system notifications. The list updates without a reload, and clearing stays disabled until another sent/cancelled entry is visible.
+
+Existing installations must apply [20261103_add_messages_clear_state.sql](Database/migrations/20261103_add_messages_clear_state.sql) once before deploying this feature; fresh schema imports include the column. The [rollback](Database/migrations/rollbacks/20261103_add_messages_clear_state.sql) removes only Messages clear metadata and makes those entries visible again. `POST /api/notifications/clear-messages` requires session authentication and `csrf_token`; it returns `cleared_count` and the authoritative `remaining_ids`. It does not accept a client-supplied owner or status list. A stale/non-owned Cancel request returns 409 rather than claiming success.
+
 ### Configure VAPID
 
 Generate a key pair once for your installation:

@@ -12,6 +12,7 @@ import { initRepeatPicker } from './modules/repeat/repeat-picker.js';
 import { initTaskCalendar } from './modules/task-calendar.js';
 import { initPasswordChange } from './modules/password-change.js';
 import { initNotificationCenter } from './modules/notification-center.js';
+import { initMessageNotificationsClear } from './modules/message-notifications-clear.js';
 import { initNotificationArchive } from './modules/notification-archive.js';
 import { initNotificationBadge } from './modules/notification-badge.js';
 import { initTaskCompletion } from './modules/task-completion.js';
@@ -36,6 +37,7 @@ function initDashboardView() {
 
     initTaskCalendar(signal);
     initNotificationCenter(signal);
+    initMessageNotificationsClear(signal);
     initNotificationArchive(signal);
     initNotificationBadge(signal);
     initTaskCompletion(signal);

@@ -13,6 +13,13 @@ use App\Helpers\TimezoneHelper;
 /** @var DateTimeZone|null $notificationTimezone */
 
 $notifications = isset($notifications) && is_array($notifications) ? $notifications : [];
+$hasClearableNotifications = false;
+foreach ($notifications as $notification) {
+    if (in_array($notification->status ?? '', ['sent', 'cancelled'], true)) {
+        $hasClearableNotifications = true;
+        break;
+    }
+}
 $statusLabels = $notificationStatusLabels ?? [
     'pending' => $translator->translate('notifications.status.pending'),
     'sent' => $translator->translate('notifications.status.sent'),
@@ -49,9 +56,20 @@ $offsetFormatter = $formatNotificationOffset ?? static function (int $value, str
 ?>
 <div class="content notificationsContent">
     <section class="list notificationsPanel" aria-labelledby="notificationsPageTitle">
-        <div class="title notificationsTitle" id="notificationsPageTitle">
-            <span data-i18n="notifications.title"><?= htmlspecialchars($translator->translate('notifications.title'), ENT_QUOTES, 'UTF-8') ?></span>
+        <div class="title notificationsTitle">
+            <span id="notificationsPageTitle" tabindex="-1" data-i18n="notifications.title"><?= htmlspecialchars($translator->translate('notifications.title'), ENT_QUOTES, 'UTF-8') ?></span>
+            <button class="notificationsClearButton" type="button" data-clear-message-notifications <?= $hasClearableNotifications ? '' : 'disabled' ?>>
+                <span data-i18n="notifications.clear"><?= htmlspecialchars($translator->translate('notifications.clear'), ENT_QUOTES, 'UTF-8') ?></span>
+            </button>
         </div>
+        <dialog class="messagesClearDialog" data-messages-clear-dialog aria-labelledby="messagesClearTitle" aria-describedby="messagesClearDescription">
+            <h2 id="messagesClearTitle" data-i18n="notifications.messages_clear_title"><?= htmlspecialchars($translator->translate('notifications.messages_clear_title'), ENT_QUOTES, 'UTF-8') ?></h2>
+            <p id="messagesClearDescription" data-i18n="notifications.messages_clear_confirm"><?= htmlspecialchars($translator->translate('notifications.messages_clear_confirm'), ENT_QUOTES, 'UTF-8') ?></p>
+            <form method="dialog">
+                <button type="submit" value="cancel" autofocus data-i18n="common.cancel"><?= htmlspecialchars($translator->translate('common.cancel'), ENT_QUOTES, 'UTF-8') ?></button>
+                <button class="notificationsClearButton" type="submit" value="clear" data-i18n="notifications.clear"><?= htmlspecialchars($translator->translate('notifications.clear'), ENT_QUOTES, 'UTF-8') ?></button>
+            </form>
+        </dialog>
         <output class="notificationsPageMessage" id="notificationsPageMessage" aria-live="polite" hidden></output>
         <ul class="notificationsList" id="notificationsList">
             <?php if (empty($notifications)): ?>
@@ -66,7 +84,7 @@ $offsetFormatter = $formatNotificationOffset ?? static function (int $value, str
                     $offsetUnit = (string) ($notification->offset_unit ?? 'minute');
                     $taskTitle = (string) ($notification->task_title ?? $translator->translate('notifications.default_task'));
                     ?>
-                    <li class="notificationItem" data-notification-id="<?= (int) ($notification->id ?? 0) ?>">
+                    <li class="notificationItem" data-notification-id="<?= (int) ($notification->id ?? 0) ?>" data-notification-state="<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>">
                         <div class="notificationItemIcon" aria-hidden="true">
                             <i class="fa-regular fa-bell"></i>
                         </div>

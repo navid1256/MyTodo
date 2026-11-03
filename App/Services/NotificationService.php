@@ -81,6 +81,14 @@ final class NotificationService
         return $this->notificationRepository->clearSent($userId, (new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone()))->format('Y-m-d H:i:s'));
     }
 
+    /** Clears terminal Messages entries independently of the sent archive and unread badge. */
+    public function clearMessages(int $userId): int
+    {
+        $clearedAt = new DateTimeImmutable('now', TimezoneHelper::getApplicationTimezone());
+
+        return $this->notificationRepository->clearMessages($userId, $clearedAt->format('Y-m-d H:i:s'));
+    }
+
     public function updateNotification(
         int $notificationId,
         int $userId,

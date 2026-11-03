@@ -103,6 +103,7 @@ CREATE TABLE `task_reminders` (
   `sent_at` datetime DEFAULT NULL,
   `read_at` datetime DEFAULT NULL,
   `cleared_at` datetime DEFAULT NULL,
+  `messages_cleared_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

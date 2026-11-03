@@ -40,3 +40,12 @@ export function changeNotificationArchive(action, csrfToken, signal) {
         signal, errorMessage: translate('notifications.request_failed'),
     });
 }
+
+/** Clears terminal Messages entries without retrying or aborting a possibly committed request. */
+export function clearMessageNotifications(csrfToken) {
+    const formData = new FormData();
+    formData.set('csrf_token', csrfToken);
+    return sendJsonFormRequest('/api/notifications/clear-messages', formData, {
+        errorMessage: translate('notifications.request_failed'),
+    });
+}
